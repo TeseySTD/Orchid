@@ -1,4 +1,3 @@
-# Orchid
-![alt text](https://github.com/TeseySTD/Orchid/blob/main/social-media-preview.png?raw=true)
+<img src="social-media-preview.png" max-height="150px" alt="Orchid logo with title">
 
-## Sync book reader.
+**Sync book reader on .NET MAUI Blazor Hybrid.**

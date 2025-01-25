@@ -400,3 +400,6 @@ FodyWeavers.xsd
 *.sln.iml
 .idea/
 /src/Orchid/.idea/
+
+#Custom
+/src/test-data/
