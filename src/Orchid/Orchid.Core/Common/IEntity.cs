@@ -1,6 +1,6 @@
 ﻿namespace Orchid.Core.Common;
 
-public abstract class Entity<TId>
-{
+public interface  IEntity<TId>
+{ 
     public TId Id { get; set; }
 }

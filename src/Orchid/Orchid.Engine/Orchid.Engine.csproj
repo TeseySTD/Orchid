@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ Orchid.Core\Orchid.Core.csproj" />
+      <ProjectReference Include="..\Orchid.Core\Orchid.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
