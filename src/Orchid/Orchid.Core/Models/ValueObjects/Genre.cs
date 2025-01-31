@@ -1,6 +1,5 @@
-﻿using Orchid.Core.Common;
-
-namespace Orchid.Core.Models.Book.ValueObjects;
+﻿
+namespace Orchid.Core.Models.ValueObjects;
 
 public record Genre
 {

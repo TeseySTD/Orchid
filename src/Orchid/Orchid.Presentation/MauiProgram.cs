@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Orchid.Engine;
 
 namespace Orchid.Presentation;
 
@@ -15,6 +16,7 @@ public static class MauiProgram
 			});
 
 		builder.Services.AddMauiBlazorWebView();
+		builder.Services.AddEngineServices();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

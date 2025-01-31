@@ -1,5 +1,82 @@
 ﻿@page "/"
+@using System.Text.RegularExpressions
+@using Orchid.Core.Models
+@using Orchid.Core.Models.ValueObjects
+@using Orchid.Engine.Common
+@inject IBookServiceProvider BookServiceProvider;
 
 <h1>Hello, world!</h1>
 
-Welcome to your new app.
+<button @onclick="PickFile">Choose a file</button>
+@if (!string.IsNullOrEmpty(filePath))
+{
+    <p>Selected file: @filePath</p>
+    <button @onclick="ReadBook">Read book</button>
+}
+
+@if (_showBookData)
+{
+    <h2>Book Details</h2>
+    <p>Title: @_title</p>
+    <p>Author: @_author</p>
+    <p>Chapters count: @_chaptersCount</p>
+
+    <p>Content:</p>
+    <ChapterView ChapterHtml="@_currentChapter.Html"/>
+    
+    
+    <button @onclick="NextChapter">></button>
+}
+
+@code
+{
+    private string? filePath;
+    private BookTitle _title;
+    private Author _author;
+    private int _chaptersCount;
+    private bool _showBookData = false;
+    private int _currentIndex = 0;
+    private Chapter _currentChapter;
+
+    private async Task PickFile()
+    {
+        var result = await FilePicker.PickAsync();
+        if (result != null)
+        {
+            filePath = result.FullPath;
+        }
+    }
+
+    private async Task ReadBook()
+    {
+        if (filePath is not null)
+        {
+            var bookService = BookServiceProvider.GetService(filePath);
+            var book = await bookService.ReadAsync(filePath);
+            _title = book.Title;
+            _author = book.Authors[0];
+            _chaptersCount = book.Metadata.ChaptersCount;
+            _showBookData = true;
+            _currentChapter = await bookService.ReadChapterAsync(filePath, _currentIndex);
+        }
+    }
+
+    public async Task NextChapter()
+    {
+        _currentIndex++;
+        var bookService = BookServiceProvider.GetService(filePath);
+        _currentChapter = await bookService.ReadChapterAsync(filePath, _currentIndex);
+    }
+
+    public static string ExtractContent(string html)
+    {
+        // Знаходимо контент між <body> і </body>
+        var match = Regex.Match(html, @"<body.*?>(.*)</body>", RegexOptions.Singleline);
+        if (match.Success)
+        {
+            return match.Groups[1].Value;
+        }
+
+        return html;
+    }
+}

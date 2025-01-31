@@ -11,10 +11,14 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Common\" />
-      <Folder Include="Epub\" />
       <Folder Include="Fb2\" />
-      <Folder Include="PDF\" />
+      <Folder Include="Pdf\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+      <PackageReference Include="VersOne.Epub" Version="3.3.3" />
     </ItemGroup>
 
 </Project>

@@ -1,21 +1,19 @@
-﻿using Orchid.Core.Common;
-using Orchid.Core.Models.Book.Entities;
-using Orchid.Core.Models.Book.ValueObjects;
+﻿using Orchid.Core.Models.ValueObjects;
 
-namespace Orchid.Core.Models.Book;
+namespace Orchid.Core.Models;
 
-public class Book : AggregateRoot<BookId>
+public class Book
 {
     public BookTitle Title { get; private set; }
     public BookMetadata Metadata { get; private set; }
     public BookContent Content { get; private set; }
-    public List<Author> Authors { get;  set; }
+    public List<Author> Authors { get;  set; } = new List<Author>();
     public Cover Cover { get; private set; }
     public PublishingInfo PublishingInfo { get; private set; }
 
     private Book(BookTitle title,
         BookMetadata metadata, BookContent content,
-        Cover cover, PublishingInfo publishingInfo) : base(BookId.Create(Guid.NewGuid()))
+        Cover cover, PublishingInfo publishingInfo)
     {
         Title = title;
         Metadata = metadata;

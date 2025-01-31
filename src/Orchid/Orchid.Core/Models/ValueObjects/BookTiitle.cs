@@ -1,4 +1,4 @@
-﻿namespace Orchid.Core.Models.Book.ValueObjects;
+﻿namespace Orchid.Core.Models.ValueObjects;
 
 public record BookTitle
 {
@@ -10,4 +10,6 @@ public record BookTitle
         string.IsNullOrWhiteSpace(value) 
             ? throw new ArgumentException("Title cannot be empty") 
             : new BookTitle(value);
+    
+    public override string ToString() => Value;
 };

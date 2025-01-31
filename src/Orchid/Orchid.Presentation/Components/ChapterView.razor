@@ -1,0 +1,30 @@
+﻿@using System.Text.RegularExpressions
+@using HtmlAgilityPack
+<div class="chapter-container">
+    @if (!string.IsNullOrEmpty(_chapterHtml))
+    {
+        @* <style> *@
+        @*     @((MarkupString)_bookCss) *@
+        @* </style> *@
+        @((MarkupString)_chapterHtml)
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string ChapterHtml { get; set; }
+    // [Parameter]
+    // public Dictionary<string,string> BookCss { get; set; }
+    private string _chapterHtml;
+    private Dictionary<string,string> _bookCss;
+    
+    protected override  Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(ChapterHtml))
+        {
+            // _bookCss = BookCss;
+            _chapterHtml = ChapterHtml;
+        }
+        return base.OnParametersSetAsync();
+    }
+}
