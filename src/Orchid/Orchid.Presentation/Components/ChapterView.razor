@@ -1,30 +1,29 @@
-﻿@using System.Text.RegularExpressions
-@using HtmlAgilityPack
+﻿@using Orchid.Core.Models.ValueObjects
 <div class="chapter-container">
     @if (!string.IsNullOrEmpty(_chapterHtml))
     {
-        @* <style> *@
-        @*     @((MarkupString)_bookCss) *@
-        @* </style> *@
+        <style>
+            @((MarkupString)_bookCss)
+        </style>
         @((MarkupString)_chapterHtml)
     }
 </div>
 
 @code {
-    [Parameter]
-    public string ChapterHtml { get; set; }
-    // [Parameter]
-    // public Dictionary<string,string> BookCss { get; set; }
+    [Parameter] public string ChapterHtml { get; set; }
+    [Parameter] public IEnumerable<CssFile> BookCss { get; set; }
     private string _chapterHtml;
-    private Dictionary<string,string> _bookCss;
-    
-    protected override  Task OnParametersSetAsync()
+    private string _bookCss;
+
+    protected override Task OnParametersSetAsync()
     {
         if (!string.IsNullOrEmpty(ChapterHtml))
         {
-            // _bookCss = BookCss;
+            _bookCss = string.Join("\n", BookCss.Select(d => d.Content));
             _chapterHtml = ChapterHtml;
         }
+
         return base.OnParametersSetAsync();
     }
+
 }

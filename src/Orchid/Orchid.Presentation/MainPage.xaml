@@ -5,10 +5,10 @@
              x:Class="Orchid.Presentation.MainPage"
              Title="Orchid">
 
-    <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
+    <local:AppBlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
         <BlazorWebView.RootComponents>
             <RootComponent Selector="#app" ComponentType="{x:Type local:Components.Routes}" />
         </BlazorWebView.RootComponents>
-    </BlazorWebView>
+    </local:AppBlazorWebView>
 
 </ContentPage>

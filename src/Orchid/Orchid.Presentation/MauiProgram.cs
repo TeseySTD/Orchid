@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
+using Orchid.Application;
 using Orchid.Engine;
+using Orchid.Infrastructure;
+using FileSystem = Microsoft.VisualBasic.FileIO.FileSystem;
 
 namespace Orchid.Presentation;
 
@@ -14,9 +17,14 @@ public static class MauiProgram
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 			});
+		
 
 		builder.Services.AddMauiBlazorWebView();
-		builder.Services.AddEngineServices();
+		builder.Services
+			.AddEngineServices()
+			.AddInfrastructureServices()
+			.AddApplicationServices()
+			.AddPresentationServices();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

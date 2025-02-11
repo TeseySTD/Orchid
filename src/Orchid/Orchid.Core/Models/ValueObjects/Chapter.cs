@@ -7,7 +7,7 @@ public record Chapter
         Html = html;
     }
 
-    public string Html { get; set; }
+    public string Html { get; init; }
 
-    public static Chapter Create(string html) => new Chapter(html);
+    public static Chapter Create(string html) => new (html);
 }
