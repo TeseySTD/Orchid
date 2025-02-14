@@ -10,4 +10,8 @@
       <ProjectReference Include="..\Orchid.Engine\Orchid.Engine.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Services\" />
+    </ItemGroup>
+
 </Project>

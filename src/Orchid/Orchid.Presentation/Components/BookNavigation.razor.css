@@ -1,0 +1,12 @@
+﻿.nav-menu {
+    max-width: 100%;
+    margin: 1rem;
+}
+
+::deep .nav-item {
+    transition: background-color 0.2s;
+}
+
+::deep .nav-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}

@@ -39,7 +39,7 @@ public class BookResourcesManager : IBookResourcesManager
         var book = await bookService.ReadAsync(bookPath);
         
         var bookChapter = await bookService.ReadChapterAsync(bookPath, chapterIndex);
-        bookChapter = Chapter.Create(ProcessHtmlImages(bookChapter.Html, book.Metadata.FileName));
+        bookChapter = Chapter.Create(bookChapter.Title, ProcessHtmlImages(bookChapter.Html, book.Metadata.FileName));
         return bookChapter;
     }
 

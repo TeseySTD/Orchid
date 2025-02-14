@@ -14,7 +14,8 @@ public class EpubBookService : IBookService
         List<Author> authors = epubBook.AuthorList.Select(Author.Create).ToList();
         Cover? cover = Cover.Create("book_cover.png", epubBook.CoverImage);
         string? language = epubBook.Schema.Package.Language;
-        int chaptersCount = epubBook.ReadingOrder.Count;
+        Navigation navigation = GetNavigation(epubBook);
+        int chaptersCount = navigation.Count;
 
         BookMetadata bookMetadata = BookMetadata.Create(
             language: language,
@@ -36,7 +37,8 @@ public class EpubBookService : IBookService
             title: title,
             cover: cover,
             metadata: bookMetadata,
-            publishingInfo: publishingInfo
+            publishingInfo: publishingInfo,
+            navigation: navigation
         );
 
         book.Authors = authors;
@@ -47,11 +49,42 @@ public class EpubBookService : IBookService
     public async Task<Chapter> ReadChapterAsync(string bookFilePath, int chapterIndex)
     {
         EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
-        
+
         var index = chapterIndex % epubBook.ReadingOrder.Count;
-        var chapterHtml = epubBook.ReadingOrder.ElementAt(index).Content;
-        
-        return Chapter.Create(chapterHtml);
+        var chapterHtml = epubBook.ReadingOrder[index].Content;
+        var chapterKey = epubBook.ReadingOrder[index].Key;
+        string title;
+
+        if (epubBook.Navigation != null && epubBook.Navigation.Count > 0)
+        {
+            var navItem = FindNavItemRecursive(epubBook.Navigation, chapterKey);
+            if (navItem != null)
+                title = navItem.Title;
+            else
+                title = Chapter.UndefinedTitle;
+        }
+        else
+            title = epubBook.Title;
+
+        return Chapter.Create(title, chapterHtml);
+    }
+
+    private EpubNavigationItem? FindNavItemRecursive(IEnumerable<EpubNavigationItem> navItems, string chapterKey)
+    {
+        foreach (var item in navItems)
+        {
+            if (item.HtmlContentFile != null && item.HtmlContentFile.Key == chapterKey)
+                return item;
+
+            if (item.NestedItems != null && item.NestedItems.Any())
+            {
+                var found = FindNavItemRecursive(item.NestedItems, chapterKey);
+                if (found != null)
+                    return found;
+            }
+        }
+
+        return null;
     }
 
     public async Task<IEnumerable<CssFile>> GetBookCssAsync(string bookFilePath)
@@ -66,5 +99,39 @@ public class EpubBookService : IBookService
         EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
         var raw = epubBook.Content.Images.Local;
         return raw.Select(css => Image.Create(css.Key, css.Content));
+    }
+
+    private Navigation GetNavigation(EpubBook epubBook)
+    {
+        List<NavItem> navItems = new List<NavItem>();
+
+        if (epubBook.Navigation != null && epubBook.Navigation.Count > 0)
+        {
+            foreach (var epubNavItem in epubBook.Navigation)
+            {
+                int chapterIndex = epubBook.ReadingOrder.FindIndex(ro => ro.Key == epubNavItem.HtmlContentFile!.Key);
+                navItems.Add(ConvertEpubNavItemToNavItem(epubNavItem, chapterIndex, epubBook));
+            }
+        }
+        else
+            navItems.Add(NavItem.Create(epubBook.Title, 0));
+
+        return Navigation.Create(navItems);
+    }
+
+    private NavItem ConvertEpubNavItemToNavItem(EpubNavigationItem epubNavItem, int chapterIndex, EpubBook epubBook)
+    {
+        List<NavItem> childNavItems = new List<NavItem>();
+
+        if (epubNavItem.NestedItems != null && epubNavItem.NestedItems.Count > 0)
+        {
+            foreach (var child in epubNavItem.NestedItems)
+            {
+                int childIndex = epubBook.ReadingOrder.FindIndex(ro => ro.Key == child.HtmlContentFile!.Key);
+                childNavItems.Add(ConvertEpubNavItemToNavItem(child, childIndex, epubBook));
+            }
+        }
+
+        return NavItem.Create(epubNavItem.Title, chapterIndex, childNavItems);
     }
 }

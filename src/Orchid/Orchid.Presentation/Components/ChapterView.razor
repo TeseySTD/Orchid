@@ -1,26 +1,27 @@
 ﻿@using Orchid.Core.Models.ValueObjects
 <div class="chapter-container">
-    @if (!string.IsNullOrEmpty(_chapterHtml))
+    <h1>@_chapter.Title</h1>
+    @if (!string.IsNullOrEmpty(_chapter.Html))
     {
         <style>
             @((MarkupString)_bookCss)
         </style>
-        @((MarkupString)_chapterHtml)
+        @((MarkupString)_chapter.Html)
     }
 </div>
 
 @code {
-    [Parameter] public string ChapterHtml { get; set; }
+    [Parameter] public Chapter Chapter { get; set; }
     [Parameter] public IEnumerable<CssFile> BookCss { get; set; }
-    private string _chapterHtml;
+    private Chapter _chapter;
     private string _bookCss;
 
     protected override Task OnParametersSetAsync()
     {
-        if (!string.IsNullOrEmpty(ChapterHtml))
+        if (!string.IsNullOrEmpty(Chapter.Html))
         {
             _bookCss = string.Join("\n", BookCss.Select(d => d.Content));
-            _chapterHtml = ChapterHtml;
+            _chapter = Chapter;
         }
 
         return base.OnParametersSetAsync();

@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Orchid.Application.Common
+@using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
 @inject IBookResourcesManager BookResourceManager;
 
@@ -19,10 +20,13 @@
     <p>Author: @_author</p>
     <p>Cover: </p>
     <img src="@_cover.Path" width="150px" height="auto" alt="Cover"/>
-    <p>Chapters count: @_chaptersCount</p>
+    <p>
+        Chapters count: @_chaptersCount
+    </p>
+    <BookNavigation Navigation="@_navigation" OnChapterSelect="@OnChapterChange"/>
 
     <p>Content:</p>
-    <ChapterView ChapterHtml="@_currentChapter.Html" BookCss="@_css"/>
+    <ChapterView Chapter="@_currentChapter" BookCss="@_css"/>
     <p>Current chapter: @_currentIndex</p>
     
     <button @onclick="NextChapter">></button>
@@ -34,6 +38,7 @@
     private BookTitle _title;
     private Author _author;
     private Cover _cover;
+    private Navigation _navigation;
     private IEnumerable<CssFile> _css;
     private int _chaptersCount;
     private bool _showBookData = false;
@@ -59,6 +64,7 @@
             _chaptersCount = book.Metadata.ChaptersCount;
             _cover = book.Cover ?? await DefaultCover();
             _css = await BookResourceManager.GetBookCssFilesAsync(filePath);
+            _navigation = book.Navigation;
             _showBookData = true;
             _currentChapter = await BookResourceManager.ReadChapterAsync(filePath, _currentIndex);
         }
@@ -67,6 +73,12 @@
     public async Task NextChapter()
     {
         _currentIndex++;
+        _currentChapter = await BookResourceManager.ReadChapterAsync(filePath, _currentIndex);
+    }
+
+    public async Task OnChapterChange(int index)
+    {
+        _currentIndex = index;
         _currentChapter = await BookResourceManager.ReadChapterAsync(filePath, _currentIndex);
     }
     
