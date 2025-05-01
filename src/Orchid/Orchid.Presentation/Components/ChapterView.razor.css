@@ -1,0 +1,43 @@
+﻿/*.reader-container {*/
+/*    width: 100%;*/
+/*    height: 80vh;*/
+/*    overflow: hidden;*/
+/*    position: relative;*/
+/*}*/
+
+/*.chapters-container {*/
+/*    height: 100%;*/
+/*    width: 100%;*/
+/*    overflow: hidden;*/
+/*    scroll-snap-type: x mandatory;*/
+/*    scroll-behavior: smooth;*/
+/*}*/
+
+/*.chapter-container {*/
+/*    width: 100%;*/
+/*    height: 100%;*/
+/*    column-width: max-content;*/
+/*    column-gap: 0;*/
+/*    column-fill: auto;*/
+/*    overflow: hidden;*/
+/*    scroll-snap-align: start;*/
+/*}*/
+
+/*.chapter-content {*/
+/*    overflow: visible;*/
+/*}*/
+
+/*h1, h2, h3, h4, h5, h6 {*/
+/*    break-after: avoid;*/
+/*    break-inside: avoid;*/
+/*}*/
+
+/*p {*/
+/*    text-align: justify;*/
+/*    margin: 0.5em 0;*/
+/*}*/
+
+/*img {*/
+/*    max-width: 100%;*/
+/*    break-inside: avoid;*/
+/*}*/

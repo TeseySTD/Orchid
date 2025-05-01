@@ -43,6 +43,18 @@ public class BookResourcesManager : IBookResourcesManager
         return bookChapter;
     }
 
+    public async Task<List<Chapter>> ReadChaptersAsync(string bookPath)
+    {
+        var bookService = _bookServiceProvider.GetService(bookPath);
+        var book = await bookService.ReadAsync(bookPath);
+
+        var chapters = await bookService.ReadChaptersAsync(bookPath);
+    
+        return chapters
+            .Select(c => Chapter.Create(c.Title, ProcessHtmlImages(c.Html, book.Metadata.FileName)))
+            .ToList();
+    }
+
     private string ProcessHtmlImages(string html, string bookFileName)
     {
         html = Regex.Replace(html, @"(xlink:href="")([^""]+)("")", match =>

@@ -1,11 +1,15 @@
 ﻿@using Orchid.Core.Models.ValueObjects
-<div class="chapter-container">
-    <h1>@_chapter.Title</h1>
+@using Orchid.Application.Common
+
+<style>
+    @((MarkupString)_bookCss)
+</style>
+
+<h1>@_chapter.Title</h1>
+
+<div @ref="chapterContent" class="chapter-container" id="@_elementId">
     @if (!string.IsNullOrEmpty(_chapter.Html))
     {
-        <style>
-            @((MarkupString)_bookCss)
-        </style>
         @((MarkupString)_chapter.Html)
     }
 </div>
@@ -13,18 +17,22 @@
 @code {
     [Parameter] public Chapter Chapter { get; set; }
     [Parameter] public IEnumerable<CssFile> BookCss { get; set; }
+    private ElementReference chapterContent;
     private Chapter _chapter;
     private string _bookCss;
+    private string _elementId = $"chapter-{Guid.NewGuid()}";
 
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (!string.IsNullOrEmpty(Chapter.Html))
         {
             _bookCss = string.Join("\n", BookCss.Select(d => d.Content));
             _chapter = Chapter;
+            await InvokeAsync(StateHasChanged);
         }
-
-        return base.OnParametersSetAsync();
+        
+        await base.OnParametersSetAsync();
     }
 
+    
 }

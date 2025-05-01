@@ -50,6 +50,13 @@ public class EpubBookService : IBookService
     {
         EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
 
+        var chapter = ReadChapter(chapterIndex, epubBook);
+
+        return chapter;
+    }
+
+    private Chapter ReadChapter(int chapterIndex, EpubBook epubBook)
+    {
         var index = chapterIndex % epubBook.ReadingOrder.Count;
         var chapterHtml = epubBook.ReadingOrder[index].Content;
         var chapterKey = epubBook.ReadingOrder[index].Key;
@@ -68,6 +75,20 @@ public class EpubBookService : IBookService
 
         return Chapter.Create(title, chapterHtml);
     }
+
+    public async Task<List<Chapter>> ReadChaptersAsync(string bookFilePath)
+    {
+        EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
+        var chapters = new List<Chapter>();
+
+        for (int i = 0; i < epubBook.ReadingOrder.Count; i++)
+        {
+            var chapter = ReadChapter(i, epubBook);
+            chapters.Add(chapter);
+        }
+        return chapters;
+    }
+    
 
     private EpubNavigationItem? FindNavItemRecursive(IEnumerable<EpubNavigationItem> navItems, string chapterKey)
     {

@@ -11,4 +11,5 @@ public interface IBookResourcesManager
     public Task<IEnumerable<Image>> GetBookImagesAsync(string bookPath);
 
     public Task<Chapter> ReadChapterAsync(string bookPath, int chapterIndex);
+    public Task<List<Chapter>> ReadChaptersAsync(string bookPath);
 }

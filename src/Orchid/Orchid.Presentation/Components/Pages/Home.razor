@@ -13,6 +13,11 @@
     <button @onclick="ReadBook">Read book</button>
 }
 
+@if (_isBookLoading)
+{
+    <LoadingOverlay Text="Loading book..."/>
+}
+
 @if (_showBookData)
 {
     <h2>Book Details</h2>
@@ -20,9 +25,7 @@
     <p>Author: @_author</p>
     <p>Cover: </p>
     <img src="@_cover.Path" width="150px" height="auto" alt="Cover"/>
-    <p>
-        Chapters count: @_chaptersCount
-    </p>
+    <p>Chapters count: @_chaptersCount</p>
     <BookNavigation Navigation="@_navigation" OnChapterSelect="@OnChapterChange"/>
 
     <p>Content:</p>
@@ -42,8 +45,10 @@
     private IEnumerable<CssFile> _css;
     private int _chaptersCount;
     private bool _showBookData = false;
+    private bool _isBookLoading = false;
     private int _currentIndex = 0;
     private Chapter _currentChapter;
+    private List<Chapter> _chapters = new List<Chapter>();
 
     private async Task PickFile()
     {
@@ -58,6 +63,9 @@
     {
         if (filePath is not null)
         {
+            _isBookLoading = true;
+            StateHasChanged();
+            
             var book = await BookResourceManager.ReadBookAsync(filePath, FileSystem.Current.CacheDirectory);
             _title = book.Title;
             _author = book.Authors[0];
@@ -66,20 +74,20 @@
             _css = await BookResourceManager.GetBookCssFilesAsync(filePath);
             _navigation = book.Navigation;
             _showBookData = true;
-            _currentChapter = await BookResourceManager.ReadChapterAsync(filePath, _currentIndex);
+            _chapters = await BookResourceManager.ReadChaptersAsync(filePath);
+            _currentChapter = _chapters[0];
+            
+            _isBookLoading = false;
+            StateHasChanged();
         }
     }
 
-    public async Task NextChapter()
-    {
-        _currentIndex++;
-        _currentChapter = await BookResourceManager.ReadChapterAsync(filePath, _currentIndex);
-    }
+    private async Task NextChapter() => await OnChapterChange(_currentIndex + 1);
 
-    public async Task OnChapterChange(int index)
+    private async Task OnChapterChange(int index)
     {
         _currentIndex = index;
-        _currentChapter = await BookResourceManager.ReadChapterAsync(filePath, _currentIndex);
+        _currentChapter = _chapters[_currentIndex];
     }
     
     private async Task<Cover> DefaultCover()

@@ -78,6 +78,7 @@
 
     <ItemGroup>
       <Folder Include="Resources\Images\" />
+      <Folder Include="Services\" />
     </ItemGroup>
 
 </Project>
