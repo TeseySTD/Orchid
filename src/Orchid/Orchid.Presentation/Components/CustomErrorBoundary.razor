@@ -1,0 +1,40 @@
+﻿@inject NavigationManager NavigationManager
+<CascadingValue Value="this">
+    <ErrorBoundary>
+        <ChildContent>
+            @ChildContent
+        </ChildContent>
+        <ErrorContent Context="exception">
+            <div class="error-container">
+                <h2>Exception raised</h2>
+                <div class="error-details">
+                    <h3>@exception.GetType().Name</h3>
+                    <p>@exception.Message</p>
+                    <details>
+                        <summary>Stack Trace</summary>
+                        <pre>@exception.StackTrace</pre>
+                    </details>
+                    @if (exception.InnerException != null)
+                    {
+                        <details>
+                            <summary>Inner Exception</summary>
+                            <pre>@exception.InnerException.Message
+                                @exception.InnerException.StackTrace</pre>
+                        </details>
+                    }
+                </div>
+                <button @onclick="Reload">Reload</button>
+            </div>
+        </ErrorContent>
+    </ErrorBoundary>
+</CascadingValue>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private void Reload()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+}

@@ -1,0 +1,33 @@
+﻿.error-container {
+    padding: 20px;
+    background: #3c4243;
+    border: 2px solid #dc3545;
+    border-radius: 8px;
+    margin: 20px;
+    max-width: 75vw;
+    max-height: 80vh;
+}
+
+.error-details {
+    background: #636161;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 15px 0;
+    overflow: auto;
+}
+
+.error-details pre {
+    background: #3c4243;
+    color: #dc3545;
+    padding: 10px;
+    font-size: 12px;
+}
+
+.error-container button {
+    background: #9029d1;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
