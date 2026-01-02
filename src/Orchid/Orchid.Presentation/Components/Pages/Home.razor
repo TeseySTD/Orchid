@@ -2,98 +2,161 @@
 @using Orchid.Application.Common
 @using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
-@inject IBookResourcesManager BookResourceManager;
+@inject IBookResourcesManager BookResourceManager
 
-<h1>Orchid - sync book reader.</h1>
-
-<button @onclick="PickFile">Choose a file</button>
-@if (!string.IsNullOrEmpty(filePath))
+@if (!_showBookData)
 {
-    <p>Selected file: @filePath</p>
-    <button @onclick="ReadBook">Read book</button>
+    <h1>Orchid - sync book reader.</h1>
+
+    <button @onclick="PickFile">Choose a file</button>
+    @if (!string.IsNullOrEmpty(_filePath))
+    {
+        <p>Selected file: @_filePath</p>
+        <button @onclick="ReadBook">Read book</button>
+    }
+
+    @if (_isBookLoading)
+    {
+        <LoadingOverlay Text="Loading book..."/>
+    }
 }
-
-@if (_isBookLoading)
+else
 {
-    <LoadingOverlay Text="Loading book..."/>
-}
+    <div class="reader-layout">
+        <div class="reader-header">
+            <img src="@_currentBookCover.Path" alt="Cover"/>
+            @_currentBook?.Title.Value - @_currentChapter?.Title
+        </div>
 
-@if (_showBookData)
-{
-    <h2>Book Details</h2>
-    <p>Title: @_title</p>
-    <p>Author: @_author</p>
-    <p>Cover: </p>
-    <img src="@_cover.Path" width="150px" height="auto" alt="Cover"/>
-    <p>Chapters count: @_chaptersCount</p>
-    <BookNavigation Navigation="@_navigation" OnChapterSelect="@OnChapterChange"/>
+        <div class="reader-content" id="readerContainer">
+            <ChapterView @ref="_chapterView"
+                         Chapter="@_currentChapter"
+                         BookCss="@_css"
+                         OnPageCountChanged="OnChapterPageCountChanged"/>
+        </div>
 
-    <p>Content:</p>
-    <ChapterView Chapter="@_currentChapter" BookCss="@_css"/>
-    <p>Current chapter: @_currentIndex</p>
-    
-    <button @onclick="NextChapter">></button>
+        <div class="reader-controls">
+            <button class="btn btn-secondary" @onclick="PreviousPage" disabled="@IsFirstPage">Prev</button>
+            <span>@(_currentChapterPageIndex + 1) / @_currentChapterTotalPages</span>
+            <button class="btn btn-primary" @onclick="NextPage" disabled="@IsLastPage">Next</button>
+        </div>
+    </div>
 }
 
 @code
 {
-    private string? filePath;
-    private BookTitle _title;
-    private Author _author;
-    private Cover _cover;
-    private Navigation _navigation;
-    private IEnumerable<CssFile> _css;
-    private int _chaptersCount;
-    private bool _showBookData = false;
-    private bool _isBookLoading = false;
-    private int _currentIndex = 0;
-    private Chapter _currentChapter;
-    private List<Chapter> _chapters = new List<Chapter>();
+    private string? _filePath;
+    private Book? _currentBook;
+    private Cover _currentBookCover = null!;
+    private IEnumerable<CssFile> _css = [];
+
+    private bool _showBookData;
+    private bool _isBookLoading;
+
+    private int _currentChapterIndex;
+    private Chapter? _currentChapter;
+    private List<Chapter?> _chapters = [];
+
+    private ChapterView _chapterView = null!;
+    private int _currentChapterPageIndex;
+    private int _currentChapterTotalPages = 1;
+
+    private int _initialPageTarget;
+
+    private bool IsFirstPage => _currentChapterIndex == 0 && _currentChapterPageIndex == 0;
+    private bool IsLastPage => _currentChapterIndex >= _chapters.Count - 1 && _currentChapterPageIndex >= _currentChapterTotalPages - 1;
 
     private async Task PickFile()
     {
         var result = await FilePicker.PickAsync();
         if (result != null)
         {
-            filePath = result.FullPath;
+            _filePath = result.FullPath;
         }
     }
 
     private async Task ReadBook()
     {
-        if (filePath is not null)
+        if (_filePath is not null)
         {
             _isBookLoading = true;
             StateHasChanged();
-            
-            var book = await BookResourceManager.ReadBookAsync(filePath, FileSystem.Current.CacheDirectory);
-            _title = book.Title;
-            _author = book.Authors[0];
-            _chaptersCount = book.Metadata.ChaptersCount;
-            _cover = book.Cover ?? await DefaultCover();
-            _css = await BookResourceManager.GetBookCssFilesAsync(filePath);
-            _navigation = book.Navigation;
-            _showBookData = true;
-            _chapters = await BookResourceManager.ReadChaptersAsync(filePath);
+
+            _currentBook = await BookResourceManager.ReadBookAsync(_filePath, FileSystem.Current.CacheDirectory);
+
+            _css = await BookResourceManager.GetBookCssFilesAsync(_filePath);
+            _chapters = await BookResourceManager.ReadChaptersAsync(_filePath);
+            _currentBookCover = _currentBook.Cover ?? await DefaultCover();
+
+            _currentChapterIndex = 0;
             _currentChapter = _chapters[0];
-            
+
+            _showBookData = true;
             _isBookLoading = false;
             StateHasChanged();
         }
     }
 
-    private async Task NextChapter() => await OnChapterChange(_currentIndex + 1);
 
-    private async Task OnChapterChange(int index)
+    private async Task NextPage()
     {
-        _currentIndex = index;
-        _currentChapter = _chapters[_currentIndex];
+        if (_currentChapterPageIndex < _currentChapterTotalPages - 1)
+        {
+            _currentChapterPageIndex++;
+            await _chapterView.GoToPageAsync(_currentChapterPageIndex);
+        }
+        else if (_currentChapterIndex < _chapters.Count - 1)
+        {
+            _currentChapterIndex += 1;
+            OpenChapter(startAtEnd: false);
+        }
     }
-    
+
+    private async Task PreviousPage()
+    {
+        if (_currentChapterPageIndex > 0)
+        {
+            _currentChapterPageIndex--;
+            await _chapterView.GoToPageAsync(_currentChapterPageIndex);
+        }
+        else if (_currentChapterIndex > 0)
+        {
+            _currentChapterIndex -= 1;
+            OpenChapter(startAtEnd: true);
+        }
+    }
+
+    private void OpenChapter(bool startAtEnd)
+    {
+        _currentChapter = _chapters[_currentChapterIndex];
+
+        _currentChapterPageIndex = 0;
+        _initialPageTarget = startAtEnd ? -1 : 0;
+
+        StateHasChanged();
+    }
+
+    private async Task OnChapterPageCountChanged(int totalPages)
+    {
+        _currentChapterTotalPages = totalPages;
+
+        if (_initialPageTarget == -1)
+        {
+            _currentChapterPageIndex = _currentChapterTotalPages - 1;
+            await _chapterView.GoToPageAsync(_currentChapterPageIndex);
+            _initialPageTarget = 0; // Reset
+        }
+        else
+        {
+            _currentChapterPageIndex = 0;
+            await _chapterView.GoToPageAsync(0);
+        }
+    }
+
+
     private async Task<Cover> DefaultCover()
     {
         var imageName = "no_cover_image.png";
-        ImageSource.FromFile(imageName);
         using Stream fileStream = await FileSystem.OpenAppPackageFileAsync($"wwwroot/images/{imageName}");
         using MemoryStream memoryStream = new();
         await fileStream.CopyToAsync(memoryStream);

@@ -1,15 +1,17 @@
 /* Base styles */
 html, body {
-    height: 100%;
+    height: 100vh;
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 
 .page {
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Use viewport height */
+    height: 100vh; /* Use viewport height */
+    overflow: hidden; 
 }
 
 main {
@@ -18,13 +20,17 @@ main {
     color: #E8E0D7;
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Ensure main takes full viewport height */
+    height: 100%; 
+    overflow: hidden;
 }
 
 .content {
     flex: 1; /* Allow content to grow */
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
 }
 
 .sidebar {
@@ -38,6 +44,7 @@ main {
     height: 3.5rem;
     display: flex;
     align-items: center;
+    flex-shrink: 0; /* Header must not shrink */
 }
 
 .top-row ::deep a,
@@ -56,27 +63,17 @@ main {
 /* Mobile styles */
 @media (max-width: 640.98px) {
     .page {
-        min-height: 100vh;
-        overflow-x: hidden; /* Prevent horizontal scroll */
+        height: 100vh;
+        width: 100vw;
     }
 
     main {
-        min-height: 100vh;
         width: 100%;
-    }
-
-    .content {
-        min-height: calc(100vh - 3.5rem); /* Subtract header height */
+        height: 100%;
     }
 
     .top-row {
-        justify-content: space-between;
-        display: none;
-    }
-
-    .top-row ::deep a,
-    .top-row ::deep .btn-link {
-        margin-left: 0;
+        display: none; 
     }
 }
 
@@ -91,6 +88,7 @@ main {
         height: 100vh;
         position: sticky;
         top: 0;
+        flex-shrink: 0; /* Sidebar does not shrink */
     }
 
     .top-row {
@@ -105,8 +103,7 @@ main {
         width: 0;
     }
 
-    .top-row,
-    article {
+    .top-row {
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
     }

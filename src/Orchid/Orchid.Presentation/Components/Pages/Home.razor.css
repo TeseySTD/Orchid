@@ -1,0 +1,36 @@
+﻿.reader-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: 4px;
+}
+
+.reader-header {
+    padding: 10px 5px;     
+    display: flex;
+    flex-direction: column; 
+    align-items: center;    
+    justify-content: center;
+    text-align: center;
+    gap: 5px;              
+    background-color: #1e1e1e; 
+}
+
+.reader-header img {
+    height: 60px;          
+    width: auto;           
+    max-width: 100%;        
+    object-fit: contain;   
+    border-radius: 4px;     
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
+}
+
+
+.reader-content {
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+}

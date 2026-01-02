@@ -1,38 +1,113 @@
 ﻿@using Orchid.Core.Models.ValueObjects
-@using Orchid.Application.Common
+@inject IJSRuntime Js
+@implements IAsyncDisposable
 
 <style>
     @((MarkupString)_bookCss)
 </style>
 
-<h1>@_chapter.Title</h1>
-
-<div @ref="chapterContent" class="chapter-container" id="@_elementId">
-    @if (!string.IsNullOrEmpty(_chapter.Html))
-    {
-        @((MarkupString)_chapter.Html)
-    }
+<div class="chapter-viewport">
+    <div @ref="_chapterElement" class="chapter-content" id="@_elementId">
+        @if (!string.IsNullOrEmpty(_currentChapter?.Html))
+        {
+            @((MarkupString)_currentChapter.Html)
+        }
+    </div>
 </div>
 
 @code {
-    [Parameter] public Chapter Chapter { get; set; }
-    [Parameter] public IEnumerable<CssFile> BookCss { get; set; }
-    private ElementReference chapterContent;
-    private Chapter _chapter;
-    private string _bookCss;
+    [Parameter] [EditorRequired] public required Chapter Chapter { get; set; }
+    [Parameter] public IEnumerable<CssFile> BookCss { get; set; } = [];
+    [Parameter] public EventCallback<int> OnPageCountChanged { get; set; }
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+    
+
+    private ElementReference _chapterElement;
+    private Chapter? _currentChapter = null;
+    private string _bookCss = string.Empty;
     private string _elementId = $"chapter-{Guid.NewGuid()}";
+    private int _totalPages = 1;
+    private int _currentPage = 0;
+    private bool _neededPageRecalculation = false;
+    private DotNetObjectReference<ChapterView>? _dotNetRef;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!string.IsNullOrEmpty(Chapter.Html))
+        var isNewChapter = _currentChapter != Chapter;
+        _bookCss = string.Join("\n", BookCss.Select(d => d.Content));
+        _currentChapter = Chapter;
+
+        if (isNewChapter)
         {
-            _bookCss = string.Join("\n", BookCss.Select(d => d.Content));
-            _chapter = Chapter;
-            await InvokeAsync(StateHasChanged);
+            _currentPage = 0;
+            await CalculatePagesWithRenderAsync();
         }
-        
-        await base.OnParametersSetAsync();
     }
 
-    
+    private async Task CalculatePagesAsync()
+    {
+        var pages = await Js.InvokeAsync<int>("orchidReader.getPageCount", _chapterElement);
+        if (pages != _totalPages && pages > 0)
+        {
+            _totalPages = pages;
+            await OnPageCountChanged.InvokeAsync(_totalPages);
+        }
+    }
+
+    private async Task CalculatePagesWithRenderAsync()
+    {
+        _neededPageRecalculation = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task GoToPageAsync(int pageIndex)
+    {
+        if (pageIndex >= 0 && pageIndex < _totalPages)
+        {
+            _currentPage = pageIndex;
+            await Js.InvokeVoidAsync("orchidReader.scrollToPage", _chapterElement, _currentPage);
+            await OnPageChanged.InvokeAsync(_currentPage);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await Js.InvokeVoidAsync("utils.resizeObserve", _chapterElement, _dotNetRef);
+        }
+
+        if (_neededPageRecalculation)
+        {
+            _neededPageRecalculation = false;
+            await CalculatePagesAsync();
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnResize() => await CalculatePagesWithRenderAsync();
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_dotNetRef != null)
+        {
+            try
+            {
+                await Js.InvokeVoidAsync("utils.resizeUnobserve", _chapterElement);
+            }
+            catch (JSDisconnectedException)
+            {
+                // Ignored: The circuit/browser is already gone
+            }
+            finally
+            {
+                _dotNetRef.Dispose();
+            }
+        }
+    }
+
 }
+
+
+
