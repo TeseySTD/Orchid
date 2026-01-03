@@ -9,19 +9,31 @@
         return element.getBoundingClientRect().height;
     },
 
-    pageWidthTolerance: 0.01,
+    pageWidthTolerance: 20,
 
-    getPageCount: (element) => {
+    getPageCount: async (element) => {
+        if (!element) return 0;
+
+        // Wait until all fonts will be ready
+        await document.fonts.ready;
+
+        // Wait until all pics will load
+        const images = Array.from(element.querySelectorAll('img'));
+        if (images.length > 0) {
+            await Promise.all(images.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                });
+            }));
+        }
+
         return new Promise((resolve) => {
             // First rAF - wait until current frame will be completed
             requestAnimationFrame(() => {
                 // Second rAF - wait for next frame
                 requestAnimationFrame(() => {
-                    if (!element) {
-                        resolve(0);
-                        return;
-                    }
-
                     const width = element.getBoundingClientRect().width;
                     if (width === 0) {
                         resolve(0);
@@ -29,13 +41,10 @@
                     }
 
                     const scrollWidth = element.scrollWidth;
-                    const ratio = scrollWidth / width;
-                    // If difference is less than page tolerance then count that it is full page
-                    const count = Math.abs(ratio - Math.floor(ratio)) < window.orchidReader.pageWidthTolerance
-                        ? Math.floor(ratio)
-                        : Math.ceil(ratio);
 
-                    resolve(count);
+                    const count = Math.ceil((scrollWidth - window.orchidReader.pageWidthTolerance) / width);
+
+                    resolve(Math.max(1, count));
                 });
             });
         });
