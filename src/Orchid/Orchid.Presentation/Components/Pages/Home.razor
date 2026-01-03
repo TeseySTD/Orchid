@@ -32,7 +32,8 @@ else
             <ChapterView @ref="_chapterView"
                          Chapter="@_currentChapter"
                          BookCss="@_css"
-                         OnPageCountChanged="OnChapterPageCountChanged"/>
+                         OnNewChapterProcessed="OnNewChapterProcessed"
+                         OnPagesCountChanged="OnPagesCountChanged"/>
         </div>
 
         <div class="reader-controls">
@@ -55,7 +56,7 @@ else
 
     private int _currentChapterIndex;
     private Chapter? _currentChapter;
-    private List<Chapter?> _chapters = [];
+    private List<Chapter> _chapters = [];
 
     private ChapterView _chapterView = null!;
     private int _currentChapterPageIndex;
@@ -136,10 +137,8 @@ else
         StateHasChanged();
     }
 
-    private async Task OnChapterPageCountChanged(int totalPages)
+    private async Task OnNewChapterProcessed()
     {
-        _currentChapterTotalPages = totalPages;
-
         if (_initialPageTarget == -1)
         {
             _currentChapterPageIndex = _currentChapterTotalPages - 1;
@@ -151,6 +150,13 @@ else
             _currentChapterPageIndex = 0;
             await _chapterView.GoToPageAsync(0);
         }
+    }
+
+    private async Task OnPagesCountChanged(int totalPages)
+    {
+        _currentChapterTotalPages = totalPages;
+        _currentChapterPageIndex = 0;
+        await _chapterView.GoToPageAsync(0); // First page is in chapters with any size
     }
 
 
