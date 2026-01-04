@@ -9,6 +9,7 @@
     height: 100%;
     width: 100%;
     
+    /* Core pagination logic: forces content into horizontal columns */
     column-width: 100vw; 
     column-gap: 0; 
     column-fill: auto; 
@@ -17,14 +18,40 @@
     overflow-y: hidden;
     
     word-wrap: break-word;
+    
+    /* Enables Container Query units for children */
+    container-type: size;      
+    container-name: chapterPage;
+    
+    font-size: clamp(8px, 3cqmin, 14px);
 }
 
 ::deep img {
-    max-width: 100%;
-    max-height: 100%;
+    display: block;
+    margin: 0 auto;
+
+    /* Reset inline styles from the book source */
+    width: auto !important;
+    height: auto !important;
+    
+    max-height: 90cqh !important; 
+    max-width: 100% !important;
+    
     object-fit: contain;
-    break-inside: avoid;
+    break-inside: avoid !important;
 }
+
+/* Fix for image wrappers (div, p, figure) in multi-column layout */
+::deep div:has(> img), 
+::deep p:has(> img), 
+::deep figure:has(> img) {
+    /* 'inline-block' prevents the renderer from splitting wrappers across columns */
+    display: inline-block; 
+    width: 100%;
+    break-inside: avoid !important;
+    contain: content;
+}
+
 
 ::deep h1, ::deep h2, ::deep h3, ::deep h4, ::deep h5, ::deep h6 {
     break-inside: avoid; 
