@@ -1,8 +1,13 @@
 ﻿@page "/"
+@using System.Collections.Concurrent
 @using Orchid.Application.Common
 @using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
+@using Orchid.Presentation.Services
 @inject IBookResourcesManager BookResourceManager
+@inject BookPaginationService BookPaginationService
+@inject IJSRuntime Js
+@implements IDisposable
 
 @if (!_showBookData)
 {
@@ -25,7 +30,7 @@ else
     <div class="reader-layout">
         <div class="reader-header">
             <img src="@_currentBookCover.Path" alt="Cover"/>
-            @_currentBook?.Title.Value - @_currentChapter?.Title
+            @_currentBook?.Title.Value - @_currentChapter?.Title, Pages: @TotalBookPages
         </div>
 
         <div class="reader-content" id="readerContainer">
@@ -61,6 +66,8 @@ else
     private ChapterView _chapterView = null!;
     private int _currentChapterPageIndex;
     private int _currentChapterTotalPages = 1;
+    private readonly ConcurrentDictionary<int, int> _chaptersPages = new();
+    private int TotalBookPages => _chaptersPages.Sum(kv => kv.Value);
 
     private int _initialPageTarget;
 
@@ -95,9 +102,23 @@ else
             _showBookData = true;
             _isBookLoading = false;
             StateHasChanged();
+            await Task.Delay(50);
+            BookPaginationService.StartBackgroundPageCalculation(
+                _chapters,
+                _css,
+                _chapterView.ChapterElement,
+                SetChapterPagesCount,
+                jsRuntime: Js
+            );
         }
     }
 
+    private async Task SetChapterPagesCount(int chapterIndex, int pages)
+    {
+        _chaptersPages[chapterIndex] = pages;
+
+        await InvokeAsync(StateHasChanged);
+    }
 
     private async Task NextPage()
     {
@@ -157,16 +178,23 @@ else
         _currentChapterTotalPages = totalPages;
         _currentChapterPageIndex = 0;
         await _chapterView.GoToPageAsync(0); // First page is in chapters with any size
+        if (_currentChapter != null) 
+            await SetChapterPagesCount(_chapters.IndexOf(_currentChapter), _currentChapterTotalPages);
     }
 
 
     private async Task<Cover> DefaultCover()
     {
         var imageName = "no_cover_image.png";
-        using Stream fileStream = await FileSystem.OpenAppPackageFileAsync($"wwwroot/images/{imageName}");
+        await using Stream fileStream = await FileSystem.OpenAppPackageFileAsync($"wwwroot/images/{imageName}");
         using MemoryStream memoryStream = new();
         await fileStream.CopyToAsync(memoryStream);
         var bytes = memoryStream.ToArray();
         return Cover.Create($"images/{imageName}", bytes)!;
+    }
+
+    public void Dispose()
+    {
+        BookPaginationService.StopCalculation();
     }
 }

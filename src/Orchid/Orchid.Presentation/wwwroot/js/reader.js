@@ -1,14 +1,4 @@
 ﻿window.orchidReader = {
-    getPreciseWidth: (element) => {
-        if (!element) return 0;
-        return element.getBoundingClientRect().width;
-    },
-
-    getPreciseHeight: (element) => {
-        if (!element) return 0;
-        return element.getBoundingClientRect().height;
-    },
-
     pageWidthTolerance: 20,
 
     getPageCount: async (element) => {
@@ -50,7 +40,6 @@
         });
     },
 
-
     scrollToPage: (element, pageIndex) => {
         if (!element) return;
         const width = element.getBoundingClientRect().width;
@@ -61,38 +50,47 @@
         });
     },
 
-    measureHiddenChapter: (element, htmlContent, cssContent) => {
-        const sandbox = document.createElement('div');
-        const containerWidth = window.orchidReader.getPreciseWidth(element);
-        const containerHeight = window.orchidReader.getPreciseHeight(element);
-        sandbox.style.position = 'absolute';
-        sandbox.style.visibility = 'hidden';
-        sandbox.style.top = '-10000px';
-        sandbox.style.left = '-10000px';
-        sandbox.style.width = `${containerWidth}px`;
-        sandbox.style.height = `${containerHeight}px`;
+    _sandbox: null,
 
-        sandbox.style.columnWidth = `${containerWidth}px`;
-        sandbox.style.columnGap = '0';
-        sandbox.style.columnFill = 'auto';
-        sandbox.style.overflow = 'hidden';
-        sandbox.style.wordBreak = 'break-word';
-        sandbox.className = "chapter-content"
+    measureHiddenChapter: async (element, htmlContent, cssContent) => {
+        if (!element) {
+            console.log("Chapter content element not found.");
+            return 0;
+        }
+        if (!window.orchidReader._sandbox) {
+            console.log("Make new sandbox")
+            const sandbox = element.cloneNode(false);
 
-        const styleTag = document.createElement('style');
-        styleTag.textContent = cssContent;
-        sandbox.appendChild(styleTag);
+            sandbox.style.cssText = `
+            opacity: 0;
+            z-index: -1000;
+            pointer-events: none;
+            position: absolute; 
+            top: 0;
+            left: 0;
+            visibility: hidden; 
+            margin: 0;
+            padding: 0;
+            `;
+            sandbox.removeAttribute('id');
 
-        const contentDiv = document.createElement('div');
-        contentDiv.innerHTML = htmlContent;
-        sandbox.appendChild(contentDiv);
+            element.parentElement.appendChild(sandbox);
+            window.orchidReader._sandbox = sandbox;
+            console.log("Created new sandbox");
+        }
 
-        document.body.appendChild(sandbox);
-
-        const pageCount = Math.ceil(sandbox.scrollWidth / containerWidth);
-
-        document.body.removeChild(sandbox);
-
-        return pageCount;
+        const sandbox = window.orchidReader._sandbox;
+        const rect = element.getBoundingClientRect();
+        sandbox.style.width = `${rect.width}px`;
+        sandbox.style.height = `${rect.height}px`;
+        sandbox.innerHTML = `<style>${cssContent}</style>${htmlContent}`;
+        return await window.orchidReader.getPageCount(sandbox);
     },
+
+    cleanupSandbox: () => {
+        if (window.orchidReader._sandbox) {
+            window.orchidReader._sandbox.remove();
+            window.orchidReader._sandbox = null;
+        }
+    }
 };

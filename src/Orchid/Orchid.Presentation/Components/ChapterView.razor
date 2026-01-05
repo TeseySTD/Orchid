@@ -7,7 +7,7 @@
 </style>
 
 <div class="chapter-viewport" @ref="_chapterViewportElement">
-    <div class="chapter-content" id="@_elementId" @ref="_chapterElement">
+    <div class="chapter-content" id="@_elementId" @ref="ChapterElement">
         @if (!string.IsNullOrEmpty(_currentChapter?.Html))
         {
             @((MarkupString)_currentChapter.Html)
@@ -21,8 +21,8 @@
     [Parameter] public EventCallback OnNewChapterProcessed { get; set; }
     [Parameter] public EventCallback<int> OnPagesCountChanged { get; set; }
 
+    public ElementReference ChapterElement;
     private ElementReference _chapterViewportElement;
-    private ElementReference _chapterElement;
     private Chapter? _currentChapter = null;
     private string _bookCss = string.Empty;
     private string _elementId = $"chapter-{Guid.NewGuid()}";
@@ -48,7 +48,7 @@
 
     private async Task CalculatePagesAsync()
     {
-        _totalPages = await Js.InvokeAsync<int>("orchidReader.getPageCount", _chapterElement);
+        _totalPages = await Js.InvokeAsync<int>("orchidReader.getPageCount", ChapterElement);
     }
 
     private async Task CalculatePagesWithRenderAsync()
@@ -62,7 +62,7 @@
         if (pageIndex >= 0 && pageIndex < _totalPages)
         {
             _currentPage = pageIndex;
-            await Js.InvokeVoidAsync("orchidReader.scrollToPage", _chapterElement, _currentPage);
+            await Js.InvokeVoidAsync("orchidReader.scrollToPage", ChapterElement, _currentPage);
         }
     }
 
