@@ -27,7 +27,7 @@ public class Book
 
     public static Book Create(BookTitle title,
         BookMetadata metadata,
-        Cover? cover, 
+        Cover? cover,
         PublishingInfo publishingInfo,
         Navigation navigation) => new(title, metadata, cover, publishingInfo, navigation);
 }

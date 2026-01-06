@@ -11,5 +11,5 @@ public record CssFile
         Content = content;
     }
 
-    public static CssFile Create(string filename, string content) => new (filename, content);
+    public static CssFile Create(string filename, string content) => new(filename, content);
 }

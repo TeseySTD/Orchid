@@ -12,11 +12,11 @@ public record Cover
     public string Path { get; set; }
 
     public static Cover? Create(string path, byte[]? imageData) =>
-        imageData is not null && imageData.Length > 0 
-            ? new Cover(path, imageData) 
+        imageData is not null && imageData.Length > 0
+            ? new Cover(path, imageData)
             : null;
 
     public string ToBase64() => $"data:image/png;base64,{Convert.ToBase64String(ImageData)}";
 
-    
+
 }

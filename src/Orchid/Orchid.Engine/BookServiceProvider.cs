@@ -24,7 +24,7 @@ public class BookServiceProvider : IBookServiceProvider
         {
             return new EpubBookService();
         }
-    
+
         throw new ArgumentException($"Invalid type of book service: {typeof(TBookService)}");
     }
 

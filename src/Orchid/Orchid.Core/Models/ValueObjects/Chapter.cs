@@ -12,5 +12,5 @@ public record Chapter
     public string Title { get; init; }
     public string Html { get; init; }
 
-    public static Chapter Create(string title, string html) => new (title, html);
+    public static Chapter Create(string title, string html) => new(title, html);
 }

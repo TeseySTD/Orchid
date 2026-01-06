@@ -23,21 +23,21 @@ public class BookResourcesManager : IBookResourcesManager
     {
         var bookService = _bookServiceProvider.GetService(bookPath);
         var book = await bookService.ReadAsync(bookPath);
-        
-        if(book.Cover != null)
+
+        if (book.Cover != null)
             book.Cover.Path = Path.Combine(book.Metadata.FileName, book.Cover.Path);
         var bookImages = await GetBookImagesAsync(bookPath);
-        
+
         await _imagesRepository.SaveImagesAsync(bookImages, cacheDirectoryPath);
-        
+
         return book;
     }
-    
+
     public async Task<Chapter> ReadChapterAsync(string bookPath, int chapterIndex)
     {
         var bookService = _bookServiceProvider.GetService(bookPath);
         var book = await bookService.ReadAsync(bookPath);
-        
+
         var bookChapter = await bookService.ReadChapterAsync(bookPath, chapterIndex);
         bookChapter = Chapter.Create(bookChapter.Title, ProcessHtmlImages(bookChapter.Html, book.Metadata.FileName));
         return bookChapter;
@@ -49,7 +49,7 @@ public class BookResourcesManager : IBookResourcesManager
         var book = await bookService.ReadAsync(bookPath);
 
         var chapters = await bookService.ReadChaptersAsync(bookPath);
-    
+
         return chapters
             .Select(c => Chapter.Create(c.Title, ProcessHtmlImages(c.Html, book.Metadata.FileName)))
             .ToList();
@@ -72,7 +72,7 @@ public class BookResourcesManager : IBookResourcesManager
         var matchBody = Regex.Match(html, @"<body.*?>(.*)</body>", RegexOptions.Singleline);
         return matchBody.Success ? $"<body>{matchBody.Groups[1].Value}</body>" : html;
     }
-    
+
     public async Task<IEnumerable<CssFile>> GetBookCssFilesAsync(string bookPath)
     {
         var bookService = _bookServiceProvider.GetService(bookPath);
@@ -83,11 +83,11 @@ public class BookResourcesManager : IBookResourcesManager
     {
         var bookService = _bookServiceProvider.GetService(bookPath);
         var book = await bookService.ReadAsync(bookPath);
-        
+
         var bookImages = (await bookService.GetBookImagesAsync(bookPath)).ToList();
-        if(book.Cover != null)
+        if (book.Cover != null)
             bookImages.Add(Image.Create(book.Cover.Path, book.Cover.ImageData));
-        
+
         var result = bookImages.Select(i =>
             Image.Create(
                 Path.Combine(Path.GetFileName(bookPath), i.Name),

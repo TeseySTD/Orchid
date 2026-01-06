@@ -10,7 +10,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IBookServiceProvider, BookServiceProvider>();
         services.AddScoped<IBookService, EpubBookService>();
-        
+
         return services;
     }
 }

@@ -88,7 +88,7 @@ public class EpubBookService : IBookService
         }
         return chapters;
     }
-    
+
 
     private EpubNavigationItem? FindNavItemRecursive(IEnumerable<EpubNavigationItem> navItems, string chapterKey)
     {

@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Orchid.Core.Models;
+﻿namespace Orchid.Core.Models;
 
 public class NavItem
 {
@@ -19,5 +17,5 @@ public class NavItem
         new(title, chapterIndex, nestedNavItems);
 
     public static NavItem Create(string title, int chapterIndex) => Create(title, chapterIndex, null);
-    
+
 }
