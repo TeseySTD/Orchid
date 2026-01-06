@@ -10,7 +10,6 @@ public class BookPaginationService : IDisposable
 
     private async Task CalculateAllChaptersPagesAsync(
         IEnumerable<Chapter> chapters,
-        string allCss,
         ElementReference element,
         Func<int, int, Task> onPagesCalculated,
         IJSRuntime jsRuntime,
@@ -32,8 +31,7 @@ public class BookPaginationService : IDisposable
                 "orchidReader.measureHiddenChapter",
                 cancellationToken,
                 element,
-                chapter.Html,
-                allCss
+                chapter.Html
             );
 
             await onPagesCalculated(i, pages);
@@ -45,7 +43,6 @@ public class BookPaginationService : IDisposable
 
     private async Task BackgroundPageCalculation(
         IEnumerable<Chapter> chapters,
-        string allCss,
         ElementReference element,
         Func<int, int, Task> onChapterPagesCalculated,
         IJSRuntime jsRuntime,
@@ -56,7 +53,6 @@ public class BookPaginationService : IDisposable
         {
             await CalculateAllChaptersPagesAsync(
                 chapters,
-                allCss,
                 element,
                 onChapterPagesCalculated,
                 jsRuntime,
@@ -76,7 +72,6 @@ public class BookPaginationService : IDisposable
 
     public void StartBackgroundPageCalculation(
         IEnumerable<Chapter> chapters,
-        IEnumerable<CssFile> allCss,
         ElementReference element,
         Func<int, int, Task> onChapterPagesCalculated,
         IJSRuntime jsRuntime)
@@ -86,7 +81,6 @@ public class BookPaginationService : IDisposable
         _calcPagesCts = new CancellationTokenSource();
         _ = BackgroundPageCalculation(
             chapters,
-            string.Join("\n", allCss.Select(d => d.Content)),
             element,
             onChapterPagesCalculated,
             jsRuntime,

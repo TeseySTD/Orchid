@@ -30,8 +30,15 @@ else
     <div class="reader-layout">
         <div class="reader-header">
             <img src="@_currentBookCover.Path" alt="Cover"/>
-            @_currentBook?.Title.Value - @_currentChapter?.Title, Pages: @TotalBookPages
+
+            <div class="header-title">
+                @_currentBook?.Title.Value - @_currentChapter?.Title
+            </div>
+            <div class="header-title">
+                Pages: @TotalBookPages
+            </div>
         </div>
+
 
         <div class="reader-content" id="readerContainer">
             <ChapterView @ref="_chapterView"
@@ -50,6 +57,7 @@ else
 }
 
 @code
+
 {
     private string? _filePath;
     private Book? _currentBook;
@@ -105,7 +113,6 @@ else
             await Task.Delay(50);
             BookPaginationService.StartBackgroundPageCalculation(
                 _chapters,
-                _css,
                 _chapterView.ChapterElement,
                 SetChapterPagesCount,
                 jsRuntime: Js
@@ -178,7 +185,7 @@ else
         _currentChapterTotalPages = totalPages;
         _currentChapterPageIndex = 0;
         await _chapterView.GoToPageAsync(0); // First page is in chapters with any size
-        if (_currentChapter != null) 
+        if (_currentChapter != null)
             await SetChapterPagesCount(_chapters.IndexOf(_currentChapter), _currentChapterTotalPages);
     }
 

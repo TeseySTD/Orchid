@@ -52,7 +52,7 @@
 
     _sandbox: null,
 
-    measureHiddenChapter: async (element, htmlContent, cssContent) => {
+    measureHiddenChapter: async (element, htmlContent) => {
         if (!element) {
             console.log("Chapter content element not found.");
             return 0;
@@ -62,15 +62,15 @@
             const sandbox = element.cloneNode(false);
 
             sandbox.style.cssText = `
-            opacity: 0;
-            z-index: -1000;
-            pointer-events: none;
-            position: absolute; 
-            top: 0;
-            left: 0;
-            visibility: hidden; 
-            margin: 0;
-            padding: 0;
+                opacity: 0;
+                z-index: -1000;
+                pointer-events: none;
+                position: absolute; 
+                top: 0;
+                left: 0;
+                visibility: hidden; 
+                margin: 0;
+                padding: 0;
             `;
             sandbox.removeAttribute('id');
 
@@ -83,7 +83,7 @@
         const rect = element.getBoundingClientRect();
         sandbox.style.width = `${rect.width}px`;
         sandbox.style.height = `${rect.height}px`;
-        sandbox.innerHTML = `<style>${cssContent}</style>${htmlContent}`;
+        sandbox.innerHTML = htmlContent;
         return await window.orchidReader.getPageCount(sandbox);
     },
 

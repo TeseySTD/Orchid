@@ -18,6 +18,12 @@
     gap: 5px;              
     background-color: #1e1e1e; 
 }
+.header-title {
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     max-width: 100%;
+ }
 
 .reader-header img {
     height: 60px;          
