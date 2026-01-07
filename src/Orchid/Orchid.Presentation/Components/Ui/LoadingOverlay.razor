@@ -1,8 +1,9 @@
-﻿<div class="loading-overlay">
-    <div class="spinner"></div>
-    <p>@Text</p>
+﻿<div class="d-flex justify-center align-center" style="height: 100vh;">
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large"/>
+    <MudText Class="ml-4">@Text</MudText>
 </div>
 
 @code {
-    [Parameter] public string Text { get; set; } = "Loading...";
+    [Parameter] 
+    public string Text { get; set; } = "Loading...";
 }

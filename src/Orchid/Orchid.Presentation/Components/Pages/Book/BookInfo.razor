@@ -1,0 +1,45 @@
+﻿@using Orchid.Core.Models
+@using Orchid.Core.Models.ValueObjects
+
+<MudDrawerHeader>
+    <MudText Typo="Typo.h6">Book Details</MudText>
+</MudDrawerHeader>
+<MudNavMenu>
+    @if (Book != null)
+    {
+        <MudStack AlignItems="AlignItems.Center" Class="pa-4">
+            <MudImage Src="@Cover.Path" Alt="Cover" Width="140" Elevation="25"
+                      Class="rounded-lg mb-4"/>
+            <MudText Typo="Typo.subtitle1" Align="Align.Center"><b>@Book.Title.Value</b></MudText>
+            @if (Book.Authors.Any())
+            {
+                <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary">
+                    @string.Join(", ", Book.Authors.Select(a => a.FirstName + ' ' + a.LastName))
+                </MudText>
+            }
+        </MudStack>
+
+        <MudDivider Class="my-2"/>
+
+        <MudList T="string" Dense="true">
+            <MudListItem Icon="@Icons.Material.Filled.Bookmark" Title="Chapter">
+                @CurrentChapterTitle
+            </MudListItem>
+            <MudListItem Icon="@Icons.Material.Filled.Pages" Title="Total Pages">
+                @TotalBookPages
+            </MudListItem>
+            <MudListItem Icon="@Icons.Material.Filled.Percent" Title="Current Progress">
+                @(CurrentChapterPageIndex + 1) / @CurrentChapterTotalPages
+            </MudListItem>
+        </MudList>
+    }
+</MudNavMenu>
+
+@code {
+    [Parameter] public Book? Book { get; set; }
+    [Parameter] public Cover Cover { get; set; } = null!;
+    [Parameter] public string CurrentChapterTitle { get; set; } = string.Empty;
+    [Parameter] public int TotalBookPages { get; set; }
+    [Parameter] public int CurrentChapterPageIndex { get; set; }
+    [Parameter] public int CurrentChapterTotalPages { get; set; }
+}

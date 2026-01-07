@@ -1,19 +1,15 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="https://github.com/TeseySTD/Orchid">
-            <img src="/images/logo.svg" width="40px" alt="Orchid logo">
-        </a>
-    </div>
-</div>
+﻿<MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-4">
+    <a href="https://github.com/TeseySTD/Orchid" target="_blank" style="line-height: 0;">
+        <MudImage Src="/images/logo.svg" Width="40" Alt="Orchid logo"/>
+    </a>
+    <MudText Typo="Typo.h6" Class="ml-2" Color="Color.Primary">Orchid</MudText>
+</MudStack>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
+<MudDivider Class="my-2"/>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-    </nav>
-</div>
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+    <MudNavLink Href="https://github.com/TeseySTD/Orchid" Target="_blank" Icon="@Icons.Custom.Brands.GitHub">
+        GitHub
+    </MudNavLink>
+</MudNavMenu>

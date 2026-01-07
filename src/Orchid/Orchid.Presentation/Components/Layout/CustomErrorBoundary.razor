@@ -1,33 +1,77 @@
-﻿@inject NavigationManager NavigationManager
-<CascadingValue Value="this">
-    <ErrorBoundary>
-        <ChildContent>
-            @ChildContent
-        </ChildContent>
-        <ErrorContent Context="exception">
-            <div class="error-container">
-                <h2>Exception raised</h2>
-                <div class="error-details">
-                    <h3>@exception.GetType().Name</h3>
-                    <p>@exception.Message</p>
-                    <details>
-                        <summary>Stack Trace</summary>
-                        <pre>@exception.StackTrace</pre>
-                    </details>
-                    @if (exception.InnerException != null)
-                    {
-                        <details>
-                            <summary>Inner Exception</summary>
-                            <pre>@exception.InnerException.Message
-                                @exception.InnerException.StackTrace</pre>
-                        </details>
-                    }
-                </div>
-                <button @onclick="Reload">Reload</button>
-            </div>
-        </ErrorContent>
-    </ErrorBoundary>
-</CascadingValue>
+﻿@using System.Text
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<ErrorBoundary>
+    <ChildContent>
+        @ChildContent
+    </ChildContent>
+    <ErrorContent Context="exception">
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex flex-column justify-center align-center"
+                      Style="height: 100vh; overflow: hidden">
+
+            <MudPaper Elevation="4" Class="pa-6 d-flex flex-column gap-4"
+                      Style="width: 100%; max-height: 90vh; overflow-y: auto;">
+
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large"
+                         Style="width: 64px; height: 64px;"/>
+                <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Error">Something went wrong.</MudText>
+                <MudText Typo="Typo.body1" Align="Align.Center">
+                    Unhandled exception occured.
+                </MudText>
+
+                <MudStack Row="true" Spacing="2" Justify="Justify.Center" Class="mt-4">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               OnClick="Reload">
+                        Reload
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Home"
+                               OnClick="GoHome">
+                        Go to Home
+                    </MudButton>
+                </MudStack>
+
+                <MudExpansionPanels Class="mt-4" Style="width: 100%;">
+                    <MudExpansionPanel Text="Exception details:" Icon="@Icons.Material.Filled.Code">
+                        <div class="d-flex justify-end mb-2">
+                            <MudButton Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.ContentCopy"
+                                       OnClick="@(() => CopyErrorToClipboard(exception))">
+                                Copy
+                            </MudButton>
+                        </div>
+
+                        <MudText Typo="Typo.subtitle2" Color="Color.Error">@exception.GetType().Name</MudText>
+                        <MudText Typo="Typo.body2" Class="mb-2">@exception.Message</MudText>
+
+                        <div class="code-container">
+                            <code>
+                                @exception.StackTrace
+                            </code>
+                        </div>
+
+                        @if (exception.InnerException != null)
+                        {
+                            <MudText Typo="Typo.subtitle2" Color="Color.Error" Class="mt-3">Inner Exception:</MudText>
+                            <MudText Typo="Typo.body2"
+                                     Style="word-break: break-word;">@exception.InnerException.Message</MudText>
+                            <div class="code-container mt-1">
+                                <code>
+                                    @exception.InnerException.StackTrace
+                                </code>
+                            </div>
+                        }
+
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            </MudPaper>
+        </MudContainer>
+    </ErrorContent>
+</ErrorBoundary>
 
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }
@@ -36,5 +80,36 @@
     {
         NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
     }
+
+    private void GoHome()
+    {
+        NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+
+    private async Task CopyErrorToClipboard(Exception ex)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"Exception: {ex.GetType().Name}");
+        sb.AppendLine($"Message: {ex.Message}");
+        sb.AppendLine("Stack Trace:");
+        sb.AppendLine(ex.StackTrace);
+
+        if (ex.InnerException != null)
+        {
+            sb.AppendLine("Inner Exception:");
+            sb.AppendLine(ex.InnerException.Message);
+            sb.AppendLine(ex.InnerException.StackTrace);
+        }
+
+        await Clipboard.Default.SetTextAsync(sb.ToString());
+
+        Snackbar.Add("Details are copied to clipboard.", Severity.Success, options =>
+        {
+            options.ShowTransitionDuration = 300;
+            options.VisibleStateDuration = 1000;
+            options.HideTransitionDuration = 200;
+        });
+    }
+
 
 }

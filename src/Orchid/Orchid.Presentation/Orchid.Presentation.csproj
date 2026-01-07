@@ -67,6 +67,7 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
         <PackageReference Include="Microsoft.Maui.Core" Version="9.0.30" />
         <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2957.106" />
+        <PackageReference Include="MudBlazor" Version="8.15.0" />
     </ItemGroup>
 
     <ItemGroup>

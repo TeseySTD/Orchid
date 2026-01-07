@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 using Orchid.Application;
 using Orchid.Engine;
 using Orchid.Infrastructure;
@@ -19,6 +20,8 @@ public static class MauiProgram
 
 
         builder.Services.AddMauiBlazorWebView();
+        builder.Services.AddMudServices();
+        
         builder.Services
             .AddEngineServices()
             .AddInfrastructureServices()

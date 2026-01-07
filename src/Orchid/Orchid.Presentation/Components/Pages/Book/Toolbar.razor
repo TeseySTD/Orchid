@@ -1,0 +1,29 @@
+﻿<MudPaper Elevation="4" Class="d-flex justify-space-between align-center pa-2"
+          Style="background-color: var(--md-sys-color-surface);">
+    <MudButton Variant="Variant.Text"
+               StartIcon="@Icons.Material.Filled.ArrowBack"
+               OnClick="PreviousPage"
+               Disabled="@IsFirstPage">
+        Prev
+    </MudButton>
+
+    <MudText Typo="Typo.caption">
+        @(CurrentChapterPageIndex + 1) / @CurrentChapterTotalPages
+    </MudText>
+
+    <MudButton Variant="Variant.Text"
+               EndIcon="@Icons.Material.Filled.ArrowForward"
+               OnClick="NextPage"
+               Disabled="@IsLastPage">
+        Next
+    </MudButton>
+</MudPaper>
+
+@code {
+    [Parameter] public EventCallback<MouseEventArgs> NextPage { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> PreviousPage { get; set; }
+    [Parameter] public bool IsFirstPage { get; set; }
+    [Parameter] public bool IsLastPage { get; set; }
+    [Parameter] public int CurrentChapterPageIndex { get; set; }
+    [Parameter] public int CurrentChapterTotalPages { get; set; }
+}
