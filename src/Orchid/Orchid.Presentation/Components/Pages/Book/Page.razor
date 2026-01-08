@@ -22,7 +22,7 @@
     />
 </MudDrawer>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="pa-0" Style="height: 100%; display: flex; flex-direction: column;">
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-0" Style="height: 100%; display: flex; flex-direction: column;">
     @if (_isBookLoading)
     {
         <LoadingOverlay Text="Loading book..."/>
@@ -34,7 +34,7 @@
         />
 
         <div style="flex-grow: 1; overflow: hidden; position: relative;" class="d-flex justify-center">
-            <div class="reader-content" id="readerContainer" style="width: 100%; height: 100%; padding-left: 10px; padding-right: 10px;">
+            <div class="reader-content" id="readerContainer" style="width: 100%; height: 100%; padding-left: 15px; padding-right: 15px;">
                 <ChapterView @ref="_chapterView"
                              Chapter="@_currentChapter"
                              BookCss="@_css"
