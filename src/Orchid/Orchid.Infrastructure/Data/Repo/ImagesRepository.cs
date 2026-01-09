@@ -18,7 +18,7 @@ public class ImagesRepository : IImagesRepository
             if (!string.IsNullOrEmpty(directory))
                 FileSystem.CreateDirectory(directory);
 
-            await File.WriteAllBytesAsync(filePath, image.Data!);
+            await File.WriteAllBytesAsync(filePath, image.Data);
         }
     }
 

@@ -203,7 +203,7 @@
         using MemoryStream memoryStream = new();
         await fileStream.CopyToAsync(memoryStream);
         var bytes = memoryStream.ToArray();
-        return Cover.Create($"images/{imageName}", bytes)!;
+        return Cover.Create(imageName, $"images/{imageName}", bytes)!;
     }
 
     public void Dispose()

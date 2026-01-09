@@ -1,22 +1,22 @@
 ﻿namespace Orchid.Core.Models.ValueObjects;
 
-public record Cover
+public record Cover : Image
 {
-    private Cover(string path, byte[] imageData)
+    private Cover(string name, byte[] data): base(name, data) {}
+
+    private Cover(string name, string path, byte[] data) : base(name, data)
     {
         Path = path;
-        ImageData = imageData;
     }
 
-    public byte[] ImageData { get; }
-    public string Path { get; set; }
+    public string Path { get; set; } = string.Empty;
 
-    public static Cover? Create(string path, byte[]? imageData) =>
-        imageData is not null && imageData.Length > 0
-            ? new Cover(path, imageData)
+    public new static Cover? Create(string name, byte[]? data) =>
+        data is not null && data.Length > 0
+            ? new Cover(name, data)
             : null;
-
-    public string ToBase64() => $"data:image/png;base64,{Convert.ToBase64String(ImageData)}";
-
-
+    public static Cover? Create(string name, string path, byte[]? data) =>
+        data is not null && data.Length > 0
+            ? new Cover(name, path, data)
+            : null;
 }

@@ -7,35 +7,28 @@ using Orchid.Engine.Common;
 
 namespace Orchid.Application;
 
-public class BookResourcesManager : IBookResourcesManager
+public class BookResourcesManager(
+    IBookServiceProvider bookServiceProvider,
+    IImagesRepository imagesRepository)
+    : IBookResourcesManager
 {
-    private readonly IBookServiceProvider _bookServiceProvider;
-    private readonly IImagesRepository _imagesRepository;
-
-    public BookResourcesManager(IBookServiceProvider bookServiceProvider,
-        IImagesRepository imagesRepository)
-    {
-        _bookServiceProvider = bookServiceProvider;
-        _imagesRepository = imagesRepository;
-    }
-
     public async Task<Book> ReadBookAsync(string bookPath, string cacheDirectoryPath)
     {
-        var bookService = _bookServiceProvider.GetService(bookPath);
+        var bookService = bookServiceProvider.GetService(bookPath);
         var book = await bookService.ReadAsync(bookPath);
 
         if (book.Cover != null)
-            book.Cover.Path = Path.Combine(book.Metadata.FileName, book.Cover.Path);
+            book.Cover.Path = Path.Combine(book.Metadata.FileName, book.Cover.Name);
         var bookImages = await GetBookImagesAsync(bookPath);
 
-        await _imagesRepository.SaveImagesAsync(bookImages, cacheDirectoryPath);
+        await imagesRepository.SaveImagesAsync(bookImages, cacheDirectoryPath);
 
         return book;
     }
 
     public async Task<Chapter> ReadChapterAsync(string bookPath, int chapterIndex)
     {
-        var bookService = _bookServiceProvider.GetService(bookPath);
+        var bookService = bookServiceProvider.GetService(bookPath);
         var book = await bookService.ReadAsync(bookPath);
 
         var bookChapter = await bookService.ReadChapterAsync(bookPath, chapterIndex);
@@ -45,7 +38,7 @@ public class BookResourcesManager : IBookResourcesManager
 
     public async Task<List<Chapter>> ReadChaptersAsync(string bookPath)
     {
-        var bookService = _bookServiceProvider.GetService(bookPath);
+        var bookService = bookServiceProvider.GetService(bookPath);
         var book = await bookService.ReadAsync(bookPath);
 
         var chapters = await bookService.ReadChaptersAsync(bookPath);
@@ -75,18 +68,18 @@ public class BookResourcesManager : IBookResourcesManager
 
     public async Task<IEnumerable<CssFile>> GetBookCssFilesAsync(string bookPath)
     {
-        var bookService = _bookServiceProvider.GetService(bookPath);
+        var bookService = bookServiceProvider.GetService(bookPath);
         return await bookService.GetBookCssAsync(bookPath);
     }
 
     public async Task<IEnumerable<Image>> GetBookImagesAsync(string bookPath)
     {
-        var bookService = _bookServiceProvider.GetService(bookPath);
+        var bookService = bookServiceProvider.GetService(bookPath);
         var book = await bookService.ReadAsync(bookPath);
 
         var bookImages = (await bookService.GetBookImagesAsync(bookPath)).ToList();
         if (book.Cover != null)
-            bookImages.Add(Image.Create(book.Cover.Path, book.Cover.ImageData));
+            bookImages.Add(book.Cover);
 
         var result = bookImages.Select(i =>
             Image.Create(

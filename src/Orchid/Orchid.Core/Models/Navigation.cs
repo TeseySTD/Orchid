@@ -18,7 +18,7 @@ public class Navigation
         int totalNavItemCount = navItems.Count();
 
         foreach (var item in navItems)
-            if (item.NestedItems?.Any() ?? false)
+            if (item.NestedItems.Any())
                 totalNavItemCount += GetRecursiveCount(item.NestedItems);
 
         return totalNavItemCount;

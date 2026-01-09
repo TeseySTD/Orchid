@@ -3,9 +3,9 @@
 public record Image
 {
     public string Name { get; init; }
-    public byte[]? Data { get; init; }
+    public byte[] Data { get; init; }
 
-    private Image(string name, byte[] data)
+    protected Image(string name, byte[] data)
     {
         Name = name;
         Data = data;
@@ -13,5 +13,5 @@ public record Image
 
     public static Image Create(string imageName, byte[] data) => new(imageName, data);
 
-    public string ToBase64() => Convert.ToBase64String(Data);
+    public string ToBase64() => $"data:image/png;base64,{Convert.ToBase64String(Data)}";
 }

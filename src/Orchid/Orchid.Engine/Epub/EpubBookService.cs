@@ -97,7 +97,7 @@ public class EpubBookService : IBookService
             if (item.HtmlContentFile != null && item.HtmlContentFile.Key == chapterKey)
                 return item;
 
-            if (item.NestedItems != null && item.NestedItems.Any())
+            if (item.NestedItems.Any())
             {
                 var found = FindNavItemRecursive(item.NestedItems, chapterKey);
                 if (found != null)
@@ -119,7 +119,7 @@ public class EpubBookService : IBookService
     {
         EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
         var raw = epubBook.Content.Images.Local;
-        return raw.Select(css => Image.Create(css.Key, css.Content));
+        return raw.Select(img => Image.Create(img.Key, img.Content));
     }
 
     private Navigation GetNavigation(EpubBook epubBook)
@@ -144,7 +144,7 @@ public class EpubBookService : IBookService
     {
         List<NavItem> childNavItems = new List<NavItem>();
 
-        if (epubNavItem.NestedItems != null && epubNavItem.NestedItems.Count > 0)
+        if (epubNavItem.NestedItems.Any())
         {
             foreach (var child in epubNavItem.NestedItems)
             {

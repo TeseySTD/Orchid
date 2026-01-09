@@ -8,13 +8,13 @@
     @if (Book != null)
     {
         <MudStack AlignItems="AlignItems.Center" Class="pa-4">
-            <MudImage Src="@Cover.Path" Alt="Cover" Width="140" Elevation="25"
+            <MudImage Src="@Cover.Path" Alt=@($"Book Cover: {Cover.Name}") Title=@($"Book Cover: {Cover.Name}") Width="140" Elevation="25"
                       Class="rounded-lg mb-4"/>
             <MudText Typo="Typo.subtitle1" Align="Align.Center"><b>@Book.Title.Value</b></MudText>
             @if (Book.Authors.Any())
             {
                 <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary">
-                    @string.Join(", ", Book.Authors.Select(a => a.FirstName + ' ' + a.LastName))
+                    @string.Join(", ", Book.Authors.Select(a => a.ToString()))
                 </MudText>
             }
         </MudStack>
