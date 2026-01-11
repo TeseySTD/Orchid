@@ -98,6 +98,18 @@ public class BookPaginationService : IDisposable
         }
     }
 
+    public async Task<string> GetCurrentPageLocator(ElementReference chapterElement, IJSRuntime jsRuntime)
+    {
+        try
+        {
+            return await jsRuntime.InvokeAsync<string>("orchidReader.getCurrentLocator", chapterElement);
+        }
+        catch (JSException)
+        {
+            return string.Empty;
+        }
+    }
+
     public void Dispose()
     {
         StopCalculation();

@@ -66,6 +66,23 @@
         }
     }
 
+    public async Task<int> GoToPageLocatorAsync(string locator)
+    {
+        try
+        {
+            var pageIndex = await Js.InvokeAsync<int>("orchidReader.scrollToLocator", ChapterElement, locator);
+
+            _currentPage = pageIndex;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Cannot scroll to locator: {ex.Message}");
+        }
+
+        return _currentPage;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
