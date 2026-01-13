@@ -196,10 +196,17 @@
     private async Task OnPagesCountChanged(int totalPages)
     {
         _currentChapterTotalPages = totalPages;
-        _currentChapterPageIndex = await _chapterView.GoToPageLocatorAsync(_currentPageIdentifier.Locator);
+
         if (_currentChapter != null)
+        {
+            // Prevent scroll on new chapter
+            if (_chapters.IndexOf(_currentChapter) == _currentPageIdentifier.ChapterIndex)
+                _currentChapterPageIndex = await _chapterView.GoToPageLocatorAsync(_currentPageIdentifier.Locator);
+            
             await SetChapterPagesCount(_chapters.IndexOf(_currentChapter), _currentChapterTotalPages);
+        }
     }
+
 
     private async Task SetCurrentPageIdentifier()
     {

@@ -7,7 +7,10 @@
 </style>
 
 <div class="chapter-viewport" @ref="_chapterViewportElement">
-    <div class="chapter-content" id="@_elementId" @ref="ChapterElement">
+    <div class="chapter-content" 
+         id="@_elementId" 
+         @ref="ChapterElement"
+         style="@VisibilityStyle">
         @if (!string.IsNullOrEmpty(_currentChapter?.Html))
         {
             @((MarkupString)_currentChapter.Html)
@@ -30,6 +33,8 @@
     private int _currentPage = 0;
     private bool _newChapterRecalculating = false;
     private bool _neededPageRecalculation = false;
+    private bool _isReady = false; // Controls visibility to prevent flickering before scroll is set
+    private string VisibilityStyle => _isReady ? "opacity: 1;" : "opacity: 0;";
     private DotNetObjectReference<ChapterView>? _dotNetRef;
 
     protected override async Task OnParametersSetAsync()
@@ -40,6 +45,7 @@
 
         if (isNewChapter)
         {
+            _isReady = false;
             _currentPage = 0;
             _newChapterRecalculating = true;
             await CalculatePagesWithRenderAsync();
@@ -63,6 +69,7 @@
         {
             _currentPage = pageIndex;
             await Js.InvokeVoidAsync("orchidReader.scrollToPage", ChapterElement, _currentPage);
+            _isReady = true;
         }
     }
 
@@ -73,6 +80,7 @@
             var pageIndex = await Js.InvokeAsync<int>("orchidReader.scrollToLocator", ChapterElement, locator);
 
             _currentPage = pageIndex;
+            _isReady = true;
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)

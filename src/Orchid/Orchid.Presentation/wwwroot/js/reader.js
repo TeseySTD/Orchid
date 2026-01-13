@@ -39,7 +39,6 @@
             });
         });
     },
-
     
     _getPointData: (x, y) => {
         if (typeof document.caretPositionFromPoint === 'function') {
@@ -178,7 +177,6 @@
 
         return pageIndex;
     },
-
 
     scrollToPage: (element, pageIndex) => {
         if (!element) return;
