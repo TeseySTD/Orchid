@@ -7,8 +7,8 @@
 </style>
 
 <div class="chapter-viewport" @ref="_chapterViewportElement">
-    <div class="chapter-content" 
-         id="@_elementId" 
+    <div class="chapter-content"
+         id="@_elementId"
          @ref="ChapterElement"
          style="@VisibilityStyle">
         @if (!string.IsNullOrEmpty(_currentChapter?.Html))
@@ -23,6 +23,8 @@
     [Parameter] public IEnumerable<CssFile> BookCss { get; set; } = [];
     [Parameter] public EventCallback OnNewChapterProcessed { get; set; }
     [Parameter] public EventCallback<int> OnPagesCountChanged { get; set; }
+    [Parameter] public EventCallback OnResizeCallback { get; set; }
+    [Parameter] public EventCallback OnResizeEndCallback { get; set; }
 
     public ElementReference ChapterElement;
     private ElementReference _chapterViewportElement;
@@ -117,6 +119,13 @@
     {
         if (!_newChapterRecalculating) // Lock for new chapter case
             await CalculatePagesWithRenderAsync();
+        await OnResizeCallback.InvokeAsync();
+    }
+
+    [JSInvokable]
+    public async Task OnResizeEnd()
+    {
+        await OnResizeEndCallback.InvokeAsync();
     }
 
     public async ValueTask DisposeAsync()

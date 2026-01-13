@@ -40,7 +40,9 @@
                              Chapter="@_currentChapter"
                              BookCss="@_css"
                              OnNewChapterProcessed="OnNewChapterProcessed"
-                             OnPagesCountChanged="OnPagesCountChanged"/>
+                             OnPagesCountChanged="OnPagesCountChanged"
+                             OnResizeCallback="OnResize"
+                             OnResizeEndCallback="OnResizeEnd"/>
             </div>
         </div>
 
@@ -198,15 +200,25 @@
         _currentChapterTotalPages = totalPages;
 
         if (_currentChapter != null)
-        {
-            // Prevent scroll on new chapter
-            if (_chapters.IndexOf(_currentChapter) == _currentPageIdentifier.ChapterIndex)
-                _currentChapterPageIndex = await _chapterView.GoToPageLocatorAsync(_currentPageIdentifier.Locator);
-            
             await SetChapterPagesCount(_chapters.IndexOf(_currentChapter), _currentChapterTotalPages);
-        }
     }
 
+    private async Task OnResize()
+    {
+        // Prevent scroll on new chapter
+        if (_currentChapter != null && _chapters.IndexOf(_currentChapter) == _currentPageIdentifier.ChapterIndex)
+            _currentChapterPageIndex = await _chapterView.GoToPageLocatorAsync(_currentPageIdentifier.Locator);
+    }
+
+    private void OnResizeEnd()
+    {
+        BookPaginationService.StartBackgroundPageCalculation(
+            _chapters,
+            _chapterView.ChapterElement,
+            SetChapterPagesCount,
+            jsRuntime: Js
+        );
+    }
 
     private async Task SetCurrentPageIdentifier()
     {
