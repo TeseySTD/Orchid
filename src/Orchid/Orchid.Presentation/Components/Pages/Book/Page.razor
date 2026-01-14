@@ -105,7 +105,7 @@
 
         try
         {
-            _currentBook = await BookResourceManager.ReadBookAsync(path, FileSystem.Current.CacheDirectory);
+            _currentBook = await BookResourceManager.ReadBookAsync(path);
             _css = await BookResourceManager.GetBookCssFilesAsync(path);
             _chapters = await BookResourceManager.ReadChaptersAsync(path);
             _currentBookCover = _currentBook.Cover ?? await DefaultCover();

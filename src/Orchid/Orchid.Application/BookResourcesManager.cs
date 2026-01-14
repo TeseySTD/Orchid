@@ -12,7 +12,7 @@ public class BookResourcesManager(
     IImagesRepository imagesRepository)
     : IBookResourcesManager
 {
-    public async Task<Book> ReadBookAsync(string bookPath, string cacheDirectoryPath)
+    public async Task<Book> ReadBookAsync(string bookPath)
     {
         var bookService = bookServiceProvider.GetService(bookPath);
         var book = await bookService.ReadAsync(bookPath);
@@ -21,7 +21,7 @@ public class BookResourcesManager(
             book.Cover.Path = Path.Combine(book.Metadata.FileName, book.Cover.Name);
         var bookImages = await GetBookImagesAsync(bookPath);
 
-        await imagesRepository.SaveImagesAsync(bookImages, cacheDirectoryPath);
+        await imagesRepository.SaveImagesAsync(bookImages);
 
         return book;
     }

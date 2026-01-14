@@ -5,7 +5,7 @@ namespace Orchid.Application.Common;
 
 public interface IBookResourcesManager
 {
-    public Task<Book> ReadBookAsync(string bookPath, string cacheDirectoryPath);
+    public Task<Book> ReadBookAsync(string bookPath);
 
     public Task<IEnumerable<CssFile>> GetBookCssFilesAsync(string bookPath);
     public Task<IEnumerable<Image>> GetBookImagesAsync(string bookPath);

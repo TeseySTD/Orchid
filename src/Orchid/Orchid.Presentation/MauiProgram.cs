@@ -24,7 +24,10 @@ public static class MauiProgram
         
         builder.Services
             .AddEngineServices()
-            .AddInfrastructureServices()
+            .AddInfrastructureServices(options =>
+            {
+                options.DiskCacheServiceOptions.BaseDirectory = FileSystem.Current.CacheDirectory;
+            })
             .AddApplicationServices()
             .AddPresentationServices();
 

@@ -1,29 +1,19 @@
-﻿using Microsoft.VisualBasic.FileIO;
+﻿using Orchid.Application.Common;
 using Orchid.Application.Common.Repo;
 using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Infrastructure.Data.Repo;
 
-public class ImagesRepository : IImagesRepository
+public class ImagesRepository(DiskCacheService diskCacheService) : IImagesRepository
 {
-    public async Task SaveImagesAsync(IEnumerable<Image> images, string cacheDirectory)
+    private DiskCacheService DiskCacheService { get; } = diskCacheService;
+    public async Task SaveImagesAsync(IEnumerable<Image> images)
     {
-        FileSystem.CreateDirectory(cacheDirectory);
-
         foreach (var image in images)
         {
-            var filePath = Path.Combine(cacheDirectory, image.Name);
-            var directory = Path.GetDirectoryName(filePath);
-
-            if (!string.IsNullOrEmpty(directory))
-                FileSystem.CreateDirectory(directory);
-
-            await File.WriteAllBytesAsync(filePath, image.Data);
+            await DiskCacheService.SaveBytesAsync(image.Name, image.Data);
         }
     }
 
-    public bool ImageExists(string imageName, string cacheDirectory)
-    {
-        return File.Exists(Path.Combine(cacheDirectory, imageName));
-    }
+    public bool ImageExists(string imageName) => DiskCacheService.Exists(imageName);
 }
