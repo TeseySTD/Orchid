@@ -1,5 +1,6 @@
 using Orchid.Core.Models;
 using Orchid.Core.Models.ValueObjects;
+using Orchid.Core.Services;
 using Orchid.Engine.Common;
 using VersOne.Epub;
 
@@ -10,6 +11,16 @@ public class EpubBookService : IBookService
     public async Task<Book> ReadAsync(string bookFilePath)
     {
         EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
+        BookId bookId;
+        await using (var stream = File.OpenRead(bookFilePath))
+        {
+            bookId = BookId.Create(
+                BookIdentityService.GenerateId(
+                    stream
+                )
+            );
+        }
+
         BookTitle title = BookTitle.Create(epubBook.Title);
         List<Author> authors = epubBook.AuthorList.Select(Author.Create).ToList();
         Cover? cover = Cover.Create("book_cover.png", epubBook.CoverImage);
@@ -34,6 +45,7 @@ public class EpubBookService : IBookService
         );
 
         Book book = Book.Create(
+            id: bookId,
             title: title,
             cover: cover,
             metadata: bookMetadata,
@@ -86,6 +98,7 @@ public class EpubBookService : IBookService
             var chapter = ReadChapter(i, epubBook);
             chapters.Add(chapter);
         }
+
         return chapters;
     }
 
