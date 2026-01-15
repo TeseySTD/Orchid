@@ -120,6 +120,7 @@
             await Task.Delay(50);
 
             BookPaginationService.StartBackgroundPageCalculation(
+                _currentBook.Id,
                 _chapters,
                 _chapterView.ChapterElement,
                 SetChapterPagesCount,
@@ -213,6 +214,7 @@
     private void OnResizeEnd()
     {
         BookPaginationService.StartBackgroundPageCalculation(
+            _currentBook!.Id,
             _chapters,
             _chapterView.ChapterElement,
             SetChapterPagesCount,

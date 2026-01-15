@@ -1,4 +1,29 @@
 ﻿window.utils = {
+    getPaginationContext: (element) => {
+        if (!element) return null;
+
+        const style = window.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+
+        const parsePx = (val) => {
+            const floatVal = parseFloat(val);
+            return isNaN(floatVal) ? 0 : floatVal;
+        };
+
+        let lh = parsePx(style.lineHeight);
+        if (style.lineHeight === 'normal') {
+            lh = parsePx(style.fontSize) * 1.2;
+        }
+
+        return {
+            width: rect.width,
+            height: rect.height,
+            fontSize: parsePx(style.fontSize),
+            fontFamily: style.fontFamily.replace(/['"]/g, ''),
+            lineHeight: lh
+        };
+    },
+    
     resizeObserve: (element, dotNetReference) => {
         let debounceTimer;
         let throttleTimer;
@@ -16,15 +41,15 @@
             debounceTimer = setTimeout(() => {
                 // Call the C# method 'OnResizeEnd' after debounce
                 dotNetReference.invokeMethodAsync('OnResizeEnd');
-            }, 500); 
+            }, 500);
         });
 
         resizeObserver.observe(element);
 
         element._resizeObserver = resizeObserver;
         element._resizeCleanup = () => {
-             clearTimeout(debounceTimer);
-             cancelAnimationFrame(throttleTimer);
+            clearTimeout(debounceTimer);
+            cancelAnimationFrame(throttleTimer);
         };
     },
 
