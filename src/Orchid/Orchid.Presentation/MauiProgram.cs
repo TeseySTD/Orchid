@@ -27,6 +27,7 @@ public static class MauiProgram
             .AddInfrastructureServices(options =>
             {
                 options.DiskCacheServiceOptions.BaseDirectory = FileSystem.Current.CacheDirectory;
+                options.JsonStorageServiceOptions.StoragePath = FileSystem.Current.AppDataDirectory;
             })
             .AddApplicationServices()
             .AddPresentationServices();
