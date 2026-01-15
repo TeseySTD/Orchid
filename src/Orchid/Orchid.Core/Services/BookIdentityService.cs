@@ -38,15 +38,13 @@ public static class BookIdentityService
                 ReadFullBuffer(stream, bufferEnd);
 
                 var sizeBytes = BitConverter.GetBytes(fileSize);
-                
+
                 byte[] combinedData = new byte[bufferStart.Length + bufferEnd.Length + sizeBytes.Length];
-                
+
                 Buffer.BlockCopy(bufferStart, 0, combinedData, 0, bufferStart.Length);
                 Buffer.BlockCopy(bufferEnd, 0, combinedData, bufferStart.Length, bufferEnd.Length);
                 Buffer.BlockCopy(sizeBytes, 0, combinedData, bufferStart.Length + bufferEnd.Length, sizeBytes.Length);
-
-                using var md5 = MD5.Create();
-                var hashBytes = md5.ComputeHash(combinedData);
+                var hashBytes = MD5.HashData(combinedData);
                 hash = Convert.ToHexString(hashBytes).ToLowerInvariant();
             }
         }

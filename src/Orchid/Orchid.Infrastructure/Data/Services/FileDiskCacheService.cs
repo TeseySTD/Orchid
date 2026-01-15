@@ -1,8 +1,9 @@
 ﻿using System.Text;
-using Orchid.Application.Common;
 using Microsoft.Extensions.Options;
+using Orchid.Application.Common;
+using Orchid.Infrastructure.Data.Services.Options;
 
-namespace Orchid.Infrastructure.Data;
+namespace Orchid.Infrastructure.Data.Services;
 
 public class FileDiskCacheService : DiskCacheService
 {
