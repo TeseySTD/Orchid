@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Orchid.Application.Common;
 using Orchid.Application.Common.Repo;
+using Orchid.Application.Common.Services;
 using Orchid.Infrastructure.Data.Repo;
 using Orchid.Infrastructure.Data.Services;
 

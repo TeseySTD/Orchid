@@ -1,16 +1,16 @@
 ﻿using System.Text.RegularExpressions;
-using Orchid.Application.Common;
 using Orchid.Application.Common.Repo;
+using Orchid.Application.Common.Services;
 using Orchid.Core.Models;
 using Orchid.Core.Models.ValueObjects;
 using Orchid.Engine.Common;
 
-namespace Orchid.Application;
+namespace Orchid.Application.Services;
 
-public class BookResourcesManager(
+public class BookResourcesService(
     IBookServiceProvider bookServiceProvider,
     IImagesRepository imagesRepository)
-    : IBookResourcesManager
+    : IBookResourcesService
 {
     public async Task<Book> ReadBookAsync(string bookPath)
     {

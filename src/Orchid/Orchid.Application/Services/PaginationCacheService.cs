@@ -1,11 +1,11 @@
-﻿using Orchid.Application.Common;
+﻿using Orchid.Application.Common.Services;
 using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Application.Services;
 
 public record PaginationContext(double Width, double Height, double FontSize, string FontFamily, double LineHeight);
 
-public class PaginationCacheService
+public class PaginationCacheService : IPaginationCacheService
 {
     private readonly IJsonStorageService _storage;
     private const string FolderName = "pagination";

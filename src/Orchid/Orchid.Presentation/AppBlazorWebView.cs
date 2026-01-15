@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.WebView.Maui;
 using Microsoft.Extensions.FileProviders;
-using Orchid.Application.Common;
+using Orchid.Application.Common.Services;
 
 namespace Orchid.Presentation;
 

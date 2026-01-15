@@ -1,5 +1,5 @@
-﻿using Orchid.Application.Common;
-using Orchid.Application.Common.Repo;
+﻿using Orchid.Application.Common.Repo;
+using Orchid.Application.Common.Services;
 using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Infrastructure.Data.Repo;

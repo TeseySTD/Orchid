@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Options;
-using Orchid.Application.Common;
+using Orchid.Application.Common.Services;
 using Orchid.Infrastructure.Data.Services.Options;
 
 namespace Orchid.Infrastructure.Data.Services;

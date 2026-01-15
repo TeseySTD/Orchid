@@ -1,11 +1,11 @@
 ﻿@page "/book"
 @using System.Collections.Concurrent
-@using Orchid.Application.Common
+@using Orchid.Application.Common.Services
 @using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
 @using Orchid.Presentation.Components.Layout
 @using Orchid.Presentation.Services
-@inject IBookResourcesManager BookResourceManager
+@inject IBookResourcesService BookResourceService
 @inject BookPaginationService BookPaginationService
 @inject NavigationManager NavManager
 @inject IJSRuntime Js
@@ -105,9 +105,9 @@
 
         try
         {
-            _currentBook = await BookResourceManager.ReadBookAsync(path);
-            _css = await BookResourceManager.GetBookCssFilesAsync(path);
-            _chapters = await BookResourceManager.ReadChaptersAsync(path);
+            _currentBook = await BookResourceService.ReadBookAsync(path);
+            _css = await BookResourceService.GetBookCssFilesAsync(path);
+            _chapters = await BookResourceService.ReadChaptersAsync(path);
             _currentBookCover = _currentBook.Cover ?? await DefaultCover();
 
             _currentChapterIndex = 0;
