@@ -9,7 +9,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddTransient<IBookResourcesService, BookResourcesService>();
-        services.AddTransient<IPaginationCacheService,PaginationCacheService>();
+        services.AddTransient<IPaginationCacheService, PaginationCacheService>();
 
         return services;
     }

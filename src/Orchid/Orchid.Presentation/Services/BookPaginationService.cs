@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using Orchid.Application.Common.Services;
 using Orchid.Application.Services;
 using Orchid.Core.Models.ValueObjects;
 
@@ -8,9 +9,9 @@ namespace Orchid.Presentation.Services;
 public class BookPaginationService : IDisposable
 {
     private CancellationTokenSource? _calcPagesCts;
-    private readonly PaginationCacheService _paginationCacheService;
+    private readonly IPaginationCacheService _paginationCacheService;
 
-    public BookPaginationService(PaginationCacheService paginationCacheService)
+    public BookPaginationService(IPaginationCacheService paginationCacheService)
     {
         _paginationCacheService = paginationCacheService;
     }

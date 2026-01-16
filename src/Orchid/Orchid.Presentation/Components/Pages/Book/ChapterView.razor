@@ -23,8 +23,8 @@
     [Parameter] public IEnumerable<CssFile> BookCss { get; set; } = [];
     [Parameter] public EventCallback OnNewChapterProcessed { get; set; }
     [Parameter] public EventCallback<int> OnPagesCountChanged { get; set; }
-    [Parameter] public EventCallback OnResizeCallback { get; set; }
-    [Parameter] public EventCallback OnResizeEndCallback { get; set; }
+    [Parameter] public EventCallback OnPageContextChangeCallback { get; set; }
+    [Parameter] public EventCallback OnPageContextChangeEndCallback { get; set; }
 
     public ElementReference ChapterElement;
     private ElementReference _chapterViewportElement;
@@ -98,7 +98,7 @@
         if (firstRender)
         {
             _dotNetRef = DotNetObjectReference.Create(this);
-            await Js.InvokeVoidAsync("utils.resizeObserve", _chapterViewportElement, _dotNetRef);
+            await Js.InvokeVoidAsync("utils.pageContextObserve", _chapterViewportElement, _dotNetRef);
         }
 
         if (_neededPageRecalculation)
@@ -115,17 +115,17 @@
     }
 
     [JSInvokable]
-    public async Task OnResize()
+    public async Task OnPageContextChange()
     {
         if (!_newChapterRecalculating) // Lock for new chapter case
             await CalculatePagesWithRenderAsync();
-        await OnResizeCallback.InvokeAsync();
+        await OnPageContextChangeCallback.InvokeAsync();
     }
 
     [JSInvokable]
-    public async Task OnResizeEnd()
+    public async Task OnPageContextChangeEnd()
     {
-        await OnResizeEndCallback.InvokeAsync();
+        await OnPageContextChangeEndCallback.InvokeAsync();
     }
 
     public async ValueTask DisposeAsync()
@@ -134,7 +134,7 @@
         {
             try
             {
-                await Js.InvokeVoidAsync("utils.resizeUnobserve", _chapterViewportElement);
+                await Js.InvokeVoidAsync("utils.pageContextUnobserve", _chapterViewportElement);
             }
             catch (JSDisconnectedException)
             {

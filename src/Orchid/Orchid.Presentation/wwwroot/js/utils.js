@@ -23,46 +23,82 @@
             lineHeight: lh
         };
     },
-    
-    resizeObserve: (element, dotNetReference) => {
+
+    pageContextObserve: (element, dotNetReference) => {
+        if (!element) return;
+
+        let lastContext = window.utils.getPaginationContext(element);
+        let lastClass = element.getAttribute('class');
         let debounceTimer;
         let throttleTimer;
+        let isFirstResizeObserverCall = true;
 
-        const resizeObserver = new ResizeObserver((entries) => {
+        const triggerChange = () => {
+            if (!hasContextChanged()) return;
+
             if (!throttleTimer) {
                 throttleTimer = requestAnimationFrame(() => {
-                    // Call the C# method 'OnResize'
-                    dotNetReference.invokeMethodAsync('OnResize');
+                    dotNetReference.invokeMethodAsync('OnPageContextChange');
                     throttleTimer = null;
                 });
             }
 
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                // Call the C# method 'OnResizeEnd' after debounce
-                dotNetReference.invokeMethodAsync('OnResizeEnd');
+                dotNetReference.invokeMethodAsync('OnPageContextChangeEnd');
             }, 500);
-        });
+        };
 
+        const hasContextChanged = () => {
+            const newContext = window.utils.getPaginationContext(element);
+            const newClass = element.getAttribute('class');
+            if (!lastContext || !newContext) return false;
+
+            const isDifferent =
+                newContext.width !== lastContext.width ||
+                newContext.height !== lastContext.height ||
+                newContext.fontSize !== lastContext.fontSize ||
+                newContext.lineHeight !== lastContext.lineHeight ||
+                newContext.fontFamily !== lastContext.fontFamily ||
+                lastClass !== newClass;
+
+            if (isDifferent) {
+                lastContext = newContext;
+                lastClass = newClass; 
+                return true;
+            }
+            return false;
+        };
+
+        const resizeObserver = new ResizeObserver(() => {
+            if (isFirstResizeObserverCall) {
+                isFirstResizeObserverCall = false;
+                return;
+            }
+            triggerChange();
+        });
         resizeObserver.observe(element);
 
-        element._resizeObserver = resizeObserver;
-        element._resizeCleanup = () => {
+        const mutationObserver = new MutationObserver(() => {
+            triggerChange();
+        });
+        mutationObserver.observe(element, {
+            attributes: true,
+            attributeFilter: ['style', 'class']
+        });
+
+        element._pageContextCleanup = () => {
             clearTimeout(debounceTimer);
             cancelAnimationFrame(throttleTimer);
+            resizeObserver.disconnect();
+            mutationObserver.disconnect();
         };
     },
 
-    resizeUnobserve: (element) => {
-        if (element) {
-            if (element._resizeCleanup) {
-                element._resizeCleanup();
-                delete element._resizeCleanup;
-            }
-            if (element._resizeObserver) {
-                element._resizeObserver.disconnect();
-                delete element._resizeObserver;
-            }
+    pageContextUnobserve: (element) => {
+        if (element && element._pageContextCleanup) {
+            element._pageContextCleanup();
+            delete element._pageContextCleanup;
         }
     }
 };
