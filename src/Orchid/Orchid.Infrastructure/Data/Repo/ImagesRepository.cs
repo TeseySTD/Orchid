@@ -7,12 +7,10 @@ namespace Orchid.Infrastructure.Data.Repo;
 public class ImagesRepository(DiskCacheService diskCacheService) : IImagesRepository
 {
     private DiskCacheService DiskCacheService { get; } = diskCacheService;
-    public async Task SaveImagesAsync(IEnumerable<Image> images)
+
+    public async Task SaveImageAsync(Image image)
     {
-        foreach (var image in images)
-        {
-            await DiskCacheService.SaveBytesAsync(image.Name, image.Data);
-        }
+        await DiskCacheService.SaveBytesAsync(image.Name, image.Data);
     }
 
     public bool ImageExists(string imageName) => DiskCacheService.Exists(imageName);

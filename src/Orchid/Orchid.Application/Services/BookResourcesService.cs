@@ -18,10 +18,25 @@ public class BookResourcesService(
         var book = await bookService.ReadAsync(bookPath);
 
         if (book.Cover != null)
+        {
             book.Cover.Path = Path.Combine(book.Metadata.FileName, book.Cover.Name);
-        var bookImages = await GetBookImagesAsync(bookPath);
+            await imagesRepository.SaveImageAsync(
+                Image.Create(
+                    book.Cover.Path, 
+                    book.Cover.Data
+                )
+            );
+        }
 
-        await imagesRepository.SaveImagesAsync(bookImages);
+        await foreach (var img in bookService.GetBookImagesAsync(bookPath))
+        {
+            await imagesRepository.SaveImageAsync(
+                Image.Create(
+                    Path.Combine(book.Metadata.FileName, img.Name),
+                    img.Data
+                )
+            );
+        }
 
         return book;
     }
@@ -29,22 +44,22 @@ public class BookResourcesService(
     public async Task<Chapter> ReadChapterAsync(string bookPath, int chapterIndex)
     {
         var bookService = bookServiceProvider.GetService(bookPath);
-        var book = await bookService.ReadAsync(bookPath);
+        var bookFileName = Path.GetFileName(bookPath);
 
         var bookChapter = await bookService.ReadChapterAsync(bookPath, chapterIndex);
-        bookChapter = Chapter.Create(bookChapter.Title, ProcessHtmlImages(bookChapter.Html, book.Metadata.FileName));
+        bookChapter = Chapter.Create(bookChapter.Title, ProcessHtmlImages(bookChapter.Html, bookFileName));
         return bookChapter;
     }
 
     public async Task<List<Chapter>> ReadChaptersAsync(string bookPath)
     {
         var bookService = bookServiceProvider.GetService(bookPath);
-        var book = await bookService.ReadAsync(bookPath);
+        var bookFileName = Path.GetFileName(bookPath);
 
         var chapters = await bookService.ReadChaptersAsync(bookPath);
 
         return chapters
-            .Select(c => Chapter.Create(c.Title, ProcessHtmlImages(c.Html, book.Metadata.FileName)))
+            .Select(c => Chapter.Create(c.Title, ProcessHtmlImages(c.Html, bookFileName)))
             .ToList();
     }
 
@@ -70,23 +85,5 @@ public class BookResourcesService(
     {
         var bookService = bookServiceProvider.GetService(bookPath);
         return await bookService.GetBookCssAsync(bookPath);
-    }
-
-    public async Task<IEnumerable<Image>> GetBookImagesAsync(string bookPath)
-    {
-        var bookService = bookServiceProvider.GetService(bookPath);
-        var book = await bookService.ReadAsync(bookPath);
-
-        var bookImages = (await bookService.GetBookImagesAsync(bookPath)).ToList();
-        if (book.Cover != null)
-            bookImages.Add(book.Cover);
-
-        var result = bookImages.Select(i =>
-            Image.Create(
-                Path.Combine(Path.GetFileName(bookPath), i.Name),
-                i.Data
-            )
-        );
-        return result;
     }
 }

@@ -4,6 +4,6 @@ namespace Orchid.Application.Common.Repo;
 
 public interface IImagesRepository
 {
-    public Task SaveImagesAsync(IEnumerable<Image> images);
+    public Task SaveImageAsync(Image image);
     public bool ImageExists(string imageName);
 }

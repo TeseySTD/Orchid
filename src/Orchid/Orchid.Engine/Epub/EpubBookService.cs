@@ -10,7 +10,7 @@ public class EpubBookService : IBookService
 {
     public async Task<Book> ReadAsync(string bookFilePath)
     {
-        EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
+        EpubBookRef epubBook = await EpubReader.OpenBookAsync(bookFilePath);
         BookId bookId;
         await using (var stream = File.OpenRead(bookFilePath))
         {
@@ -23,7 +23,8 @@ public class EpubBookService : IBookService
 
         BookTitle title = BookTitle.Create(epubBook.Title);
         List<Author> authors = epubBook.AuthorList.Select(Author.Create).ToList();
-        Cover? cover = Cover.Create("book_cover.png", epubBook.CoverImage);
+        var coverImage = await epubBook.ReadCoverAsync();
+        Cover? cover = Cover.Create("book_cover.png", coverImage);
         string? language = epubBook.Schema.Package.Language;
         Navigation navigation = GetNavigation(epubBook);
         int chaptersCount = navigation.Count;
@@ -60,23 +61,25 @@ public class EpubBookService : IBookService
 
     public async Task<Chapter> ReadChapterAsync(string bookFilePath, int chapterIndex)
     {
-        EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
+        EpubBookRef epubBook = await EpubReader.OpenBookAsync(bookFilePath);
 
-        var chapter = ReadChapter(chapterIndex, epubBook);
+        var chapter = await ReadChapterFromRefAsync(chapterIndex, epubBook);
 
         return chapter;
     }
 
-    private Chapter ReadChapter(int chapterIndex, EpubBook epubBook)
+    private async Task<Chapter> ReadChapterFromRefAsync(int chapterIndex, EpubBookRef epubBook)
     {
-        var index = chapterIndex % epubBook.ReadingOrder.Count;
-        var chapterHtml = epubBook.ReadingOrder[index].Content;
-        var chapterKey = epubBook.ReadingOrder[index].Key;
+        var readingOrder = await epubBook.GetReadingOrderAsync();
+        var navigation = await epubBook.GetNavigationAsync();
+        var index = chapterIndex % readingOrder.Count;
+        var chapterHtml = await readingOrder[index].ReadContentAsync();
+        var chapterKey = readingOrder[index].Key;
         string title;
 
-        if (epubBook.Navigation != null && epubBook.Navigation.Count > 0)
+        if (navigation != null && navigation.Count > 0)
         {
-            var navItem = FindNavItemRecursive(epubBook.Navigation, chapterKey);
+            var navItem = FindNavItemRecursive(navigation, chapterKey);
             if (navItem != null)
                 title = navItem.Title;
             else
@@ -90,12 +93,13 @@ public class EpubBookService : IBookService
 
     public async Task<List<Chapter>> ReadChaptersAsync(string bookFilePath)
     {
-        EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
+        EpubBookRef epubBook = await EpubReader.OpenBookAsync(bookFilePath);
+        var readingOrder = await epubBook.GetReadingOrderAsync();
         var chapters = new List<Chapter>();
 
-        for (int i = 0; i < epubBook.ReadingOrder.Count; i++)
+        for (int i = 0; i < readingOrder.Count; i++)
         {
-            var chapter = ReadChapter(i, epubBook);
+            var chapter = await ReadChapterFromRefAsync(i, epubBook);
             chapters.Add(chapter);
         }
 
@@ -103,11 +107,11 @@ public class EpubBookService : IBookService
     }
 
 
-    private EpubNavigationItem? FindNavItemRecursive(IEnumerable<EpubNavigationItem> navItems, string chapterKey)
+    private EpubNavigationItemRef? FindNavItemRecursive(IEnumerable<EpubNavigationItemRef> navItems, string chapterKey)
     {
         foreach (var item in navItems)
         {
-            if (item.HtmlContentFile != null && item.HtmlContentFile.Key == chapterKey)
+            if (item.HtmlContentFileRef != null && item.HtmlContentFileRef.Key == chapterKey)
                 return item;
 
             if (item.NestedItems.Any())
@@ -123,28 +127,32 @@ public class EpubBookService : IBookService
 
     public async Task<IEnumerable<CssFile>> GetBookCssAsync(string bookFilePath)
     {
-        EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
+        EpubBookRef epubBook = await EpubReader.OpenBookAsync(bookFilePath);
         var raw = epubBook.Content.Css.Local;
-        return raw.Select(css => CssFile.Create(css.Key, css.Content));
+        return raw.Select(css => CssFile.Create(css.Key, css.ReadContent()));
     }
 
-    public async Task<IEnumerable<Image>> GetBookImagesAsync(string bookFilePath)
+    public async IAsyncEnumerable<Image> GetBookImagesAsync(string bookFilePath)
     {
-        EpubBook epubBook = await EpubReader.ReadBookAsync(bookFilePath);
-        var raw = epubBook.Content.Images.Local;
-        return raw.Select(img => Image.Create(img.Key, img.Content));
+        EpubBookRef epubBook = await EpubReader.OpenBookAsync(bookFilePath);
+        foreach (var img in epubBook.Content.Images.Local)
+        {
+            yield return Image.Create(img.Key, await img.ReadContentAsync());
+        }
     }
 
-    private Navigation GetNavigation(EpubBook epubBook)
+    private Navigation GetNavigation(EpubBookRef epubBook)
     {
         List<NavItem> navItems = new List<NavItem>();
+        var navigation = epubBook.GetNavigation();
+        var readingOrder = epubBook.GetReadingOrder();
 
-        if (epubBook.Navigation != null && epubBook.Navigation.Count > 0)
+        if (navigation != null && navigation.Count > 0)
         {
-            foreach (var epubNavItem in epubBook.Navigation)
+            foreach (var epubNavItem in navigation)
             {
-                int chapterIndex = epubBook.ReadingOrder.FindIndex(ro => ro.Key == epubNavItem.HtmlContentFile!.Key);
-                navItems.Add(ConvertEpubNavItemToNavItem(epubNavItem, chapterIndex, epubBook));
+                int chapterIndex = readingOrder.FindIndex(ro => ro.Key == epubNavItem.HtmlContentFileRef!.Key);
+                navItems.Add(ConvertEpubNavItemToNavItem(epubNavItem, chapterIndex, readingOrder));
             }
         }
         else
@@ -153,7 +161,7 @@ public class EpubBookService : IBookService
         return Navigation.Create(navItems);
     }
 
-    private NavItem ConvertEpubNavItemToNavItem(EpubNavigationItem epubNavItem, int chapterIndex, EpubBook epubBook)
+    private NavItem ConvertEpubNavItemToNavItem(EpubNavigationItemRef epubNavItem, int chapterIndex, List<EpubLocalTextContentFileRef> readingOrder)
     {
         List<NavItem> childNavItems = new List<NavItem>();
 
@@ -161,8 +169,8 @@ public class EpubBookService : IBookService
         {
             foreach (var child in epubNavItem.NestedItems)
             {
-                int childIndex = epubBook.ReadingOrder.FindIndex(ro => ro.Key == child.HtmlContentFile!.Key);
-                childNavItems.Add(ConvertEpubNavItemToNavItem(child, childIndex, epubBook));
+                int childIndex = readingOrder.FindIndex(ro => ro.Key == child.HtmlContentFileRef!.Key);
+                childNavItems.Add(ConvertEpubNavItemToNavItem(child, childIndex, readingOrder));
             }
         }
 

@@ -10,5 +10,5 @@ public interface IBookService
     Task<List<Chapter>> ReadChaptersAsync(string bookFilePath);
 
     Task<IEnumerable<CssFile>> GetBookCssAsync(string bookFilePath);
-    Task<IEnumerable<Image>> GetBookImagesAsync(string bookFilePath);
+    IAsyncEnumerable<Image> GetBookImagesAsync(string bookFilePath);
 }
