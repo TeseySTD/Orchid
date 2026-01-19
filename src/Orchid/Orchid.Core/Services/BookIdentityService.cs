@@ -1,10 +1,11 @@
 ﻿using System.Security.Cryptography;
+using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Core.Services;
 
 public static class BookIdentityService
 {
-    public static string GenerateId(Stream stream)
+    public static BookId GenerateId(Stream stream)
     {
         if (stream == null) throw new ArgumentNullException(nameof(stream));
         if (!stream.CanSeek) throw new ArgumentException("Stream must support seeking to generate a smart hash.", nameof(stream));
@@ -54,7 +55,7 @@ public static class BookIdentityService
             stream.Position = originalPosition;
         }
 
-        return hash;
+        return BookId.Create(hash);
     }
 
     private static void ReadFullBuffer(Stream stream, byte[] buffer)

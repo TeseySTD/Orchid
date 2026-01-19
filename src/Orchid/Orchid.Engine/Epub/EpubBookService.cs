@@ -14,11 +14,7 @@ public class EpubBookService : IBookService
         BookId bookId;
         await using (var stream = File.OpenRead(bookFilePath))
         {
-            bookId = BookId.Create(
-                BookIdentityService.GenerateId(
-                    stream
-                )
-            );
+            bookId = BookIdentityService.GenerateId(stream);
         }
 
         BookTitle title = BookTitle.Create(epubBook.Title);
@@ -161,7 +157,8 @@ public class EpubBookService : IBookService
         return Navigation.Create(navItems);
     }
 
-    private NavItem ConvertEpubNavItemToNavItem(EpubNavigationItemRef epubNavItem, int chapterIndex, List<EpubLocalTextContentFileRef> readingOrder)
+    private NavItem ConvertEpubNavItemToNavItem(EpubNavigationItemRef epubNavItem, int chapterIndex,
+        List<EpubLocalTextContentFileRef> readingOrder)
     {
         List<NavItem> childNavItems = new List<NavItem>();
 
