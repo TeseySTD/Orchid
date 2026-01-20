@@ -31,14 +31,22 @@ public class EpubBookService : IBookService
             Path.GetFileName(bookFilePath)
         );
 
+        string? publicationDate;
+        if (epubBook.Schema.Package.Metadata.Dates.Count == 1)
+            publicationDate = epubBook.Schema.Package.Metadata.Dates[0].Date;
+        else
+            publicationDate = epubBook.Schema.Package.Metadata.Dates
+                .FirstOrDefault(d => d.Event?.ToLower() == "publication")?.Date;
+
+        string? isbn = epubBook.Schema.Package.Metadata.Identifiers
+            .FirstOrDefault(i => i.Scheme?.ToLower() == "isbn" || i.Identifier.ToLower().Contains("isbn"))?
+            .Identifier;
+
         PublishingInfo publishingInfo = PublishingInfo.Create(
-            publicationDate: epubBook.Schema.Package.Metadata.Dates.Count > 0
-                ? epubBook.Schema.Package.Metadata.Dates[0].Date
-                : null,
-            publisher: epubBook.Schema.Package.Metadata.Publishers.Count > 0
-                ? epubBook.Schema.Package.Metadata.Publishers[0].Publisher
-                : null,
-            null
+            publicationDate: publicationDate,
+            publisher: epubBook.Schema.Package.Metadata.Publishers
+                .Select(p => p.Publisher).ToList(),
+            isbn: isbn
         );
 
         Book book = Book.Create(
