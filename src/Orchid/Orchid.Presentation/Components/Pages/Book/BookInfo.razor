@@ -14,7 +14,7 @@
             @if (Book.Authors.Any())
             {
                 <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary">
-                    @string.Join(", ", Book.Authors.Select(a => a.ToString()))
+                    @string.Join(", ", Book.Authors.Select(a => a.Name))
                 </MudText>
             }
         </MudStack>
