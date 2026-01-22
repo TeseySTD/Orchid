@@ -2,6 +2,7 @@
 using Microsoft.JSInterop;
 using Orchid.Application.Common.Services;
 using Orchid.Application.Services;
+using Orchid.Core.Models;
 using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Presentation.Services;
@@ -28,24 +29,28 @@ public class BookPaginationService : IDisposable
 
         foreach (var chapter in chapters)
         {
-            if (string.IsNullOrEmpty(chapter.Html))
+            var memStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(chapter.Html));
+            Stream fileStream = memStream;
+            var streamRef = new DotNetStreamReference(memStream);
+
+            try
             {
-                await onPagesCalculated(i, 0);
-                result.Add(i, 0);
-                i++;
-                Console.WriteLine($"Pages calculated for chapter {i}");
-                continue;
+                var pages = await jsRuntime.InvokeAsync<int>(
+                    "orchidReader.measureHiddenChapter",
+                    cancellationToken,
+                    element,
+                    streamRef
+                );
+
+                await onPagesCalculated(i, pages);
+                result.Add(i, pages);
+            }
+            finally
+            {
+                streamRef.Dispose();
+                await fileStream.DisposeAsync();
             }
 
-            var pages = await jsRuntime.InvokeAsync<int>(
-                "orchidReader.measureHiddenChapter",
-                cancellationToken,
-                element,
-                chapter.Html
-            );
-
-            await onPagesCalculated(i, pages);
-            result.Add(i, pages);
             i++;
             Console.WriteLine($"Pages calculated for chapter {i}");
             await Task.Delay(20, cancellationToken); // Wait for not to overload the render
@@ -53,6 +58,7 @@ public class BookPaginationService : IDisposable
 
         return result;
     }
+
 
     private async Task BackgroundPageCalculation(
         BookId bookId,

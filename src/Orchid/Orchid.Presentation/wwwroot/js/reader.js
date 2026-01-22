@@ -186,7 +186,7 @@
         console.debug("Try to scroll to page:", pageIndex);
         console.debug("Current page:", currentPage);
         if (currentPage === pageIndex) return;
-        
+
         element.scrollTo({
             left: width * pageIndex,
             behavior: 'instant'
@@ -221,10 +221,10 @@
         }
         return current;
     },
-    
+
     _sandbox: null,
 
-    measureHiddenChapter: async (element, htmlContent) => {
+    measureHiddenChapter: async (element, contentStreamReference) => {
         if (!element) {
             console.log("Chapter content element not found.");
             return 0;
@@ -255,9 +255,18 @@
         const rect = element.getBoundingClientRect();
         sandbox.style.width = `${rect.width}px`;
         sandbox.style.height = `${rect.height}px`;
-        sandbox.innerHTML = htmlContent;
-        return await window.orchidReader.getPageCount(sandbox);
+        
+        try {
+            const stream = await contentStreamReference.stream();
+            sandbox.innerHTML = await new Response(stream).text();
+
+            return await window.orchidReader.getPageCount(sandbox);
+        } catch (error) {
+            console.error("Error reading chapter stream:", error);
+            return 0;
+        }
     },
+
 
     cleanupSandbox: () => {
         if (window.orchidReader._sandbox) {
