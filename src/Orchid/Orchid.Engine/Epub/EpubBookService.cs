@@ -44,7 +44,7 @@ public class EpubBookService : IBookService
 
         PublishingInfo publishingInfo = PublishingInfo.Create(
             publicationDate: publicationDate,
-            publisher: epubBook.Schema.Package.Metadata.Publishers
+            publishers: epubBook.Schema.Package.Metadata.Publishers
                 .Select(p => p.Publisher).ToList(),
             isbn: isbn
         );
