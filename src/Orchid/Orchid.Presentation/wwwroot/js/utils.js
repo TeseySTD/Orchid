@@ -100,5 +100,20 @@
             element._pageContextCleanup();
             delete element._pageContextCleanup;
         }
+    },
+    
+    cleanupElementContent: (element) => {
+        if (!element) return;
+
+        console.log("Cleaning element content:", element, "...");
+
+        const images = element.querySelectorAll('img');
+        images.forEach(img => {
+            img.src = ''; // Tear the connection with data in memory 
+            img.remove();
+        });
+
+        element.innerHTML = '';
+        console.log("Element content is cleaned");
     }
 };

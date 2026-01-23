@@ -9,7 +9,7 @@
 @inject BookPaginationService BookPaginationService
 @inject NavigationManager NavManager
 @inject IJSRuntime Js
-@implements IDisposable
+@implements IAsyncDisposable
 
 <MudDrawer @bind-Open="@_drawerOpen" Anchor="Anchor.End" Elevation="2" Variant="DrawerVariant.Temporary" Width="320px">
     <BookInfo
@@ -238,9 +238,25 @@
         return Cover.Create(imageName, $"images/{imageName}", bytes)!;
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         BookPaginationService.StopCalculation();
-    }
+        
+        try 
+        {
+            if (_chapterView.ChapterElement.Context != null)
+            {
+                await Js.InvokeVoidAsync("utils.cleanupElementContent", _chapterView.ChapterElement);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"JS Cleanup failed: {ex.Message}");
+        }
 
+        _chapters.Clear();
+        _currentBook = null;
+        
+        GC.Collect();
+    }
 }
