@@ -27,7 +27,8 @@
     {
         <LoadingOverlay Text="Loading book..."/>
     }
-    else if (_currentBook != null)
+    
+    @if (_currentBook != null)
     {
         <FloatingInfoButton
             OnClick="() => _drawerOpen = !_drawerOpen"
@@ -37,7 +38,7 @@
             <div class="reader-content" id="readerContainer"
                  style="width: 100%; height: 100%; padding-left: 15px; padding-right: 15px;">
                 <ChapterView @ref="_chapterView"
-                             Chapter="@_currentChapter"
+                             Pages="@CurrentChapterPages"
                              BookCss="@_css"
                              OnNewChapterProcessed="OnNewChapterProcessed"
                              OnPagesCountChanged="OnPagesCountChanged"
@@ -79,8 +80,12 @@
     private PageIdentifier _currentPageIdentifier = PageIdentifier.Empty;
     private int _currentChapterPageIndex;
     private int _currentChapterTotalPages = 1;
-    private readonly ConcurrentDictionary<int, int> _chaptersPages = new();
-    private int TotalBookPages => _chaptersPages.Sum(kv => kv.Value);
+    
+    // Store pages arrays directly
+    private readonly ConcurrentDictionary<int, string[]> _chaptersPages = new();
+    private int TotalBookPages => _chaptersPages.Sum(kv => kv.Value.Length);
+    private string[] CurrentChapterPages => _chaptersPages.TryGetValue(_currentChapterIndex, out var p) ? p : [];
+    
     private int _initialPageTarget;
 
     private bool IsFirstPage => _currentChapterIndex == 0 && _currentChapterPageIndex == 0;
@@ -113,7 +118,6 @@
             _currentChapterIndex = 0;
             _currentChapter = _chapters[0];
 
-            _isBookLoading = false;
             StateHasChanged();
 
             // Start logic (delay needed for render)
@@ -124,6 +128,7 @@
                 _chapters,
                 _chapterView.ChapterElement,
                 SetChapterPagesCount,
+                AllPagesCalculatedHandler,
                 jsRuntime: Js
             );
         }
@@ -135,9 +140,19 @@
         }
     }
 
-    private async Task SetChapterPagesCount(int chapterIndex, int pages)
+    private async Task SetChapterPagesCount(int chapterIndex, string[] pages)
     {
         _chaptersPages[chapterIndex] = pages;
+        if (chapterIndex == _currentChapterIndex)
+        {
+            _currentChapterTotalPages = pages.Length > 0 ? pages.Length : 1;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task AllPagesCalculatedHandler()
+    {
+        _isBookLoading = false;
         await InvokeAsync(StateHasChanged);
     }
 
@@ -185,7 +200,7 @@
         {
             _currentChapterPageIndex = _currentChapterTotalPages - 1;
             await _chapterView.GoToPageAsync(_currentChapterPageIndex);
-            _initialPageTarget = 0; // Reset
+            _initialPageTarget = 0; 
         }
         else
         {
@@ -200,13 +215,14 @@
     {
         _currentChapterTotalPages = totalPages;
 
-        if (_currentChapter != null)
-            await SetChapterPagesCount(_chapters.IndexOf(_currentChapter), _currentChapterTotalPages);
+        if (_currentChapter != null && _chaptersPages.TryGetValue(_currentChapterIndex, out var pages))
+        {
+            await SetChapterPagesCount(_currentChapterIndex, pages);
+        }
     }
 
     private async Task OnPageContextChange()
     {
-        // Prevent scroll on new chapter
         if (_currentChapter != null && _chapters.IndexOf(_currentChapter) == _currentPageIdentifier.ChapterIndex)
             _currentChapterPageIndex = await _chapterView.GoToPageLocatorAsync(_currentPageIdentifier.Locator);
     }
@@ -218,6 +234,7 @@
             _chapters,
             _chapterView.ChapterElement,
             SetChapterPagesCount,
+            AllPagesCalculatedHandler,
             jsRuntime: Js
         );
     }
@@ -244,7 +261,7 @@
         
         try 
         {
-            if (_chapterView.ChapterElement.Context != null)
+            if (_chapterView?.ChapterElement.Context != null)
             {
                 await Js.InvokeVoidAsync("utils.cleanupElementContent", _chapterView.ChapterElement);
             }
@@ -256,6 +273,7 @@
 
         _chapters.Clear();
         _chapters = null!;
+        _chaptersPages.Clear();
         _currentBook = null;
         
         GC.Collect(2, GCCollectionMode.Forced, true);

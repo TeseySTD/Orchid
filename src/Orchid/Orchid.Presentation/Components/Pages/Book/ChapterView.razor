@@ -11,15 +11,15 @@
          id="@_elementId"
          @ref="ChapterElement"
          style="@VisibilityStyle">
-        @if (!string.IsNullOrEmpty(_currentChapter?.Html))
+        @if (_currentPages.Length > _currentPage)
         {
-            @((MarkupString)_currentChapter.Html)
+            @((MarkupString)_currentPages[_currentPage])
         }
     </div>
 </div>
 
 @code {
-    [Parameter] [EditorRequired] public required Chapter Chapter { get; set; }
+    [Parameter] [EditorRequired] public required string[] Pages { get; set; }
     [Parameter] public IEnumerable<CssFile> BookCss { get; set; } = [];
     [Parameter] public EventCallback OnNewChapterProcessed { get; set; }
     [Parameter] public EventCallback<int> OnPagesCountChanged { get; set; }
@@ -28,22 +28,22 @@
 
     public ElementReference ChapterElement;
     private ElementReference _chapterViewportElement;
-    private Chapter? _currentChapter = null;
+    private string[] _currentPages = [];
     private string _bookCss = string.Empty;
     private string _elementId = $"chapter-{Guid.NewGuid()}";
     private int _totalPages = 1;
     private int _currentPage = 0;
     private bool _newChapterRecalculating = false;
     private bool _neededPageRecalculation = false;
-    private bool _isReady = false; // Controls visibility to prevent flickering before scroll is set
+    private bool _isReady = false; 
     private string VisibilityStyle => _isReady ? "opacity: 1;" : "opacity: 0;";
     private DotNetObjectReference<ChapterView>? _dotNetRef;
 
     protected override async Task OnParametersSetAsync()
     {
-        var isNewChapter = _currentChapter != Chapter;
+        var isNewChapter = _currentPages != Pages;
         _bookCss = string.Join("\n", BookCss.Select(d => d.Content));
-        _currentChapter = Chapter;
+        _currentPages = Pages;
 
         if (isNewChapter)
         {
@@ -54,9 +54,10 @@
         }
     }
 
-    private async Task CalculatePagesAsync()
+    private Task CalculatePagesAsync()
     {
-        _totalPages = await Js.InvokeAsync<int>("orchidReader.getPageCount", ChapterElement);
+        _totalPages = _currentPages.Length > 0 ? _currentPages.Length : 1;
+        return Task.CompletedTask;
     }
 
     private async Task CalculatePagesWithRenderAsync()
@@ -70,8 +71,8 @@
         if (pageIndex >= 0 && pageIndex < _totalPages)
         {
             _currentPage = pageIndex;
-            await Js.InvokeVoidAsync("orchidReader.scrollToPage", ChapterElement, _currentPage);
             _isReady = true;
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -117,7 +118,7 @@
     [JSInvokable]
     public async Task OnPageContextChange()
     {
-        if (!_newChapterRecalculating) // Lock for new chapter case
+        if (!_newChapterRecalculating) 
             await CalculatePagesWithRenderAsync();
         await OnPageContextChangeCallback.InvokeAsync();
     }
@@ -138,7 +139,7 @@
             }
             catch (JSDisconnectedException)
             {
-                // Ignored: The circuit/browser is already gone
+                // Ignored
             }
             finally
             {
@@ -146,8 +147,4 @@
             }
         }
     }
-
 }
-
-
-

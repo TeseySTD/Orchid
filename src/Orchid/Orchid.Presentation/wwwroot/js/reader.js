@@ -1,8 +1,8 @@
 ﻿window.orchidReader = {
     pageWidthTolerance: 20,
 
-    getPageCount: async (element) => {
-        if (!element) return 0;
+    getPages: async (element) => {
+        if (!element) return new Blob(["[]"], {type: "application/json"});
 
         // Wait until all fonts will be ready
         await document.fonts.ready;
@@ -13,47 +13,220 @@
             await Promise.all(images.map(img => {
                 if (img.complete) return Promise.resolve();
                 return new Promise(resolve => {
-                    img.onload = () => resolve();
-                    img.onerror = () => resolve();
+                    img.onload = img.onerror = () => resolve();
                 });
             }));
         }
 
         return new Promise((resolve) => {
-            // First rAF - wait until current frame will be completed
             requestAnimationFrame(() => {
-                // Second rAF - wait for next frame
                 requestAnimationFrame(() => {
-                    const width = element.getBoundingClientRect().width;
-                    if (width === 0) {
-                        resolve(0);
-                        return;
+                    const containerRect = element.getBoundingClientRect();
+                    const viewWidth = containerRect.width;
+                    const style = window.getComputedStyle(element);
+                    const columnGap = parseFloat(style.columnGap) || 0;
+                    const columnStep = viewWidth + columnGap;
+
+                    const pages = [];
+                    let lastEndNode = null;
+                    let lastEndOffset = 0;
+
+                    const walker = document.createTreeWalker(
+                        element,
+                        NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+                        {
+                            acceptNode: (node) => {
+                                if (node.nodeType === Node.TEXT_NODE) {
+                                    return node.textContent.trim().length > 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+                                }
+                                const tag = node.tagName?.toUpperCase();
+                                if (tag === 'IMG' || tag === 'SVG' || tag === 'IMAGE') return NodeFilter.FILTER_ACCEPT;
+                                return NodeFilter.FILTER_ACCEPT;
+                            }
+                        }
+                    );
+
+                    const count = Math.max(1, Math.ceil((element.scrollWidth + columnGap) / columnStep));
+
+                    for (let i = 0; i < count; i++) {
+                        const pageLeft = columnStep * i;
+                        const pageRight = pageLeft + viewWidth;
+
+                        let sNode = lastEndNode;
+                        let sOff = lastEndOffset;
+
+                        if (!sNode) {
+                            walker.currentNode = element;
+                            let firstNode = walker.nextNode();
+                            while (firstNode) {
+                                if (window.orchidReader._isNodeVisibleInRange(firstNode, pageLeft, pageRight, containerRect.left)) {
+                                    sNode = firstNode;
+                                    sOff = 0;
+                                    break;
+                                }
+                                firstNode = walker.nextNode();
+                            }
+                        }
+
+                        if (!sNode) break;
+
+                        let eNode = sNode;
+                        let eOff = sNode.nodeType === Node.TEXT_NODE ? sNode.textContent.length : 1;
+
+                        walker.currentNode = sNode;
+                        let node = sNode;
+                        while (node) {
+                            const rects = node.nodeType === Node.TEXT_NODE
+                                ? window.orchidReader._getTextRects(node)
+                                : node.getClientRects();
+
+                            let intersects = false;
+                            let strictlyAfter = true;
+
+                            for (const r of Array.from(rects)) {
+                                const absLeft = r.left - containerRect.left;
+                                const absRight = absLeft + r.width;
+
+                                if (absLeft < pageRight - 1) strictlyAfter = false;
+                                if (absRight > pageLeft + 1 && absLeft < pageRight - 1) {
+                                    intersects = true;
+                                }
+                            }
+
+                            if (intersects) {
+                                eNode = node;
+                                if (node.nodeType === Node.TEXT_NODE) {
+                                    const rawOff = window.orchidReader._findOffsetAtX(node, pageRight, containerRect.left);
+                                    eOff = window.orchidReader._snapToWordBoundary(node, rawOff);
+                                } else {
+                                    eOff = 1;
+                                }
+                            }
+
+                            if (strictlyAfter) break;
+                            node = walker.nextNode();
+                        }
+
+                        let pageHtml = "";
+                        try {
+                            const range = document.createRange();
+
+                            // For non text nodes set start before to catch it
+                            if (sNode.nodeType === Node.TEXT_NODE) {
+                                range.setStart(sNode, sOff);
+                            } else {
+                                range.setStartBefore(sNode);
+                            }
+
+                            if (eNode.nodeType === Node.TEXT_NODE) {
+                                range.setEnd(eNode, eOff);
+                            } else {
+                                range.setEndAfter(eNode);
+                            }
+
+                            const fragment = range.cloneContents();
+
+                            const wrappedFragment = window.orchidReader._wrapWithContext(fragment, range, element);
+
+                            const div = document.createElement('div');
+                            div.appendChild(wrappedFragment);
+                            pageHtml = div.innerHTML;
+                        } catch (e) {
+                            console.error(`Page ${i} error:`, e);
+                        }
+
+                        pages.push(pageHtml);
+
+                        lastEndNode = eNode;
+                        lastEndOffset = eOff;
+
+                        if (eNode.nodeType === Node.TEXT_NODE && eOff >= eNode.textContent.length) {
+                            walker.currentNode = eNode;
+                            if (!walker.nextNode()) break;
+                        } else if (eNode.nodeType !== Node.TEXT_NODE) {
+                            walker.currentNode = eNode;
+                            let next = walker.nextNode();
+                            if (!next) break;
+                            lastEndNode = next;
+                            lastEndOffset = 0;
+                        }
                     }
 
-                    const scrollWidth = element.scrollWidth;
-
-                    const count = Math.ceil((scrollWidth - window.orchidReader.pageWidthTolerance) / width);
-
-                    resolve(Math.max(1, count));
+                    resolve(new Blob([JSON.stringify(pages)], {type: "application/json"}));
                 });
             });
         });
     },
-    
+
+    _wrapWithContext: (fragment, range, root) => {
+        let ancestor = range.commonAncestorContainer;
+        if (ancestor.nodeType === Node.TEXT_NODE) ancestor = ancestor.parentNode;
+
+        let current = ancestor;
+        let lastWrapper = fragment;
+
+        while (current && current !== root) {
+            const wrapper = current.cloneNode(false);
+            wrapper.appendChild(lastWrapper);
+            lastWrapper = wrapper;
+            current = current.parentNode;
+        }
+        return lastWrapper;
+    },
+
+
+    _snapToWordBoundary: (node, offset) => {
+        const text = node.textContent;
+        if (offset <= 0 || offset >= text.length) return offset;
+        const isBoundary = (char) => /\s|[\u2000-\u200B\u202F\u205F\u00A0]/.test(char);
+        if (isBoundary(text[offset]) || isBoundary(text[offset - 1])) return offset;
+        const textBefore = text.substring(0, offset);
+        const lastSpace = Math.max(textBefore.lastIndexOf(' '), textBefore.lastIndexOf('\n'), textBefore.lastIndexOf('\t'));
+        return lastSpace !== -1 ? lastSpace + 1 : offset;
+    },
+
+    _isNodeVisibleInRange: (node, left, right, containerLeft) => {
+        const rects = node.nodeType === Node.TEXT_NODE ? window.orchidReader._getTextRects(node) : node.getClientRects();
+        for (const r of Array.from(rects)) {
+            const rLeft = r.left - containerLeft;
+            if (rLeft < right - 1 && (rLeft + r.width) > left + 1) return true;
+        }
+        return false;
+    },
+
+    _getTextRects: (node) => {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        return range.getClientRects();
+    },
+
+    _findOffsetAtX: (node, targetAbsX, containerLeft) => {
+        const text = node.textContent;
+        let low = 0, high = text.length;
+        const range = document.createRange();
+        while (low < high) {
+            let mid = Math.floor((low + high) / 2);
+            range.setStart(node, mid);
+            range.setEnd(node, mid + 1);
+            if (range.getBoundingClientRect().left - containerLeft < targetAbsX) low = mid + 1;
+            else high = mid;
+        }
+        return low;
+    },
+
     _getPointData: (x, y) => {
         if (typeof document.caretPositionFromPoint === 'function') {
             const pos = document.caretPositionFromPoint(x, y);
-            if (pos) {
-                return {node: pos.offsetNode, offset: pos.offset};
-            }
+            if (pos) return {node: pos.offsetNode, offset: pos.offset};
         }
 
         if (typeof document.caretRangeFromPoint === 'function') {
             const range = document.caretRangeFromPoint(x, y);
-            if (range) {
-                return {node: range.startContainer, offset: range.startOffset};
-            }
+            if (range) return {node: range.startContainer, offset: range.startOffset};
         }
+
+        const el = document.elementFromPoint(x, y);
+        if (el) return {node: el, offset: 0};
 
         return null;
     },
@@ -63,16 +236,16 @@
 
         const containerRect = element.getBoundingClientRect();
         const scrollLeft = element.scrollLeft;
-        const viewStart = scrollLeft; 
-        
+        const viewStart = scrollLeft;
+
         const walker = document.createTreeWalker(
             element,
             NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
             {
                 acceptNode: (node) => {
                     if (node.nodeType === Node.TEXT_NODE) {
-                        return node.textContent.trim().length > 0 
-                            ? NodeFilter.FILTER_ACCEPT 
+                        return node.textContent.trim().length > 0
+                            ? NodeFilter.FILTER_ACCEPT
                             : NodeFilter.FILTER_SKIP;
                     }
                     const tagName = node.tagName ? node.tagName.toUpperCase() : '';
@@ -90,7 +263,7 @@
 
         while (node) {
             let rect;
-            
+
             if (node.nodeType === Node.TEXT_NODE) {
                 const range = document.createRange();
                 range.selectNodeContents(node);
@@ -123,7 +296,7 @@
                 const ratio = hiddenWidth / rect.width;
                 const offset = Math.floor(text.length * ratio);
                 const safeOffset = Math.max(0, Math.min(offset, text.length - 1));
-                
+
                 return `${path}:${safeOffset}`;
             }
 
@@ -131,7 +304,7 @@
             if (nodeAbsLeft >= viewStart) {
                 return `${path}:0`;
             }
-            
+
             node = walker.nextNode();
         }
 
@@ -255,15 +428,15 @@
         const rect = element.getBoundingClientRect();
         sandbox.style.width = `${rect.width}px`;
         sandbox.style.height = `${rect.height}px`;
-        
+
         try {
             const stream = await contentStreamReference.stream();
             sandbox.innerHTML = await new Response(stream).text();
 
-            return await window.orchidReader.getPageCount(sandbox);
+            return await window.orchidReader.getPages(sandbox);
         } catch (error) {
             console.error("Error reading chapter stream:", error);
-            return 0;
+            return new Blob(["[]"], {type: "application/json"});
         }
     },
 
