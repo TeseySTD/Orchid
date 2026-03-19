@@ -17,16 +17,16 @@ public class BookPaginationService : IDisposable
         _paginationCacheService = paginationCacheService;
     }
 
-    private async Task<Dictionary<int, string[]>> CalculateAllChaptersPagesAsync(
+    private async Task<Dictionary<int, PageData[]>> CalculateAllChaptersPagesAsync(
         IEnumerable<Chapter> chapters,
         ElementReference element,
-        Func<int, string[], Task> onPagesCalculated,
+        Func<int, PageData[], Task> onPagesCalculated,
         Func<Task> onAllPagesCalculated,
         IJSRuntime jsRuntime,
         CancellationToken cancellationToken)
     {
         int i = 0;
-        Dictionary<int, string[]> result = new();
+        Dictionary<int, PageData[]> result = new();
 
         foreach (var chapter in chapters)
         {
@@ -45,9 +45,13 @@ public class BookPaginationService : IDisposable
                 );
 
                 // Assuming 100MB max size for the chapter HTML array
-                await using var pageStream = await jsStreamReference.OpenReadStreamAsync(maxAllowedSize: 100_000_000, cancellationToken);
-                var pages = await JsonSerializer.DeserializeAsync<string[]>(pageStream, cancellationToken: cancellationToken) 
-                            ?? Array.Empty<string>();
+                await using var pageStream =
+                    await jsStreamReference.OpenReadStreamAsync(maxAllowedSize: 100_000_000, cancellationToken);
+                var pages = await JsonSerializer.DeserializeAsync<PageData[]>(
+                                pageStream,
+                                new JsonSerializerOptions(JsonSerializerDefaults.Web),
+                                cancellationToken: cancellationToken)
+                            ?? [];
 
                 await onPagesCalculated(i, pages);
                 result.Add(i, pages);
@@ -70,7 +74,7 @@ public class BookPaginationService : IDisposable
         BookId bookId,
         IEnumerable<Chapter> chapters,
         ElementReference element,
-        Func<int, string[], Task> onChapterPagesCalculated,
+        Func<int, PageData[], Task> onChapterPagesCalculated,
         Func<Task> onAllPagesCalculated,
         IJSRuntime jsRuntime,
         CancellationToken cancellationToken)
@@ -81,7 +85,7 @@ public class BookPaginationService : IDisposable
             StopCalculation();
             return;
         }
-            
+
         // var cachedValue = await _paginationCacheService.GetMapAsync(bookId, paginationContext);
         // if (cachedValue is not null)
         // {
@@ -119,7 +123,7 @@ public class BookPaginationService : IDisposable
         BookId bookId,
         IEnumerable<Chapter> chapters,
         ElementReference element,
-        Func<int, string[], Task> onChapterPagesCalculated,
+        Func<int, PageData[], Task> onChapterPagesCalculated,
         Func<Task> onAllPagesCalculated,
         IJSRuntime jsRuntime)
     {
@@ -148,17 +152,6 @@ public class BookPaginationService : IDisposable
         }
     }
 
-    public async Task<string> GetCurrentPageLocator(ElementReference chapterElement, IJSRuntime jsRuntime)
-    {
-        try
-        {
-            return await jsRuntime.InvokeAsync<string>("orchidReader.getCurrentLocator", chapterElement);
-        }
-        catch (JSException)
-        {
-            return string.Empty;
-        }
-    }
 
     public async Task<PaginationContext?> GetPaginationContext(ElementReference chapterElement, IJSRuntime jsRuntime)
     {
@@ -170,6 +163,35 @@ public class BookPaginationService : IDisposable
         {
             return null;
         }
+    }
+
+    public int FindPageIndexByLocator(PageData[] pages, string targetLocator)
+    {
+        for (int i = 0; i < pages.Length; i++)
+        {
+            if (CompareLocators(pages[i].Locator, targetLocator) > 0)
+                return Math.Max(0, i - 1);
+        }
+
+        return pages.Length - 1;
+    }
+
+    private int CompareLocators(string loc1, string loc2)
+    {
+        var p1 = loc1.Split(':');
+        var p2 = loc2.Split(':');
+        var path1 = p1[0].Split('/').Select(int.Parse).ToArray();
+        var path2 = p2[0].Split('/').Select(int.Parse).ToArray();
+
+        for (int i = 0; i < Math.Min(path1.Length, path2.Length); i++)
+        {
+            if (path1[i] < path2[i]) return -1;
+            if (path1[i] > path2[i]) return 1;
+        }
+
+        if (path1.Length != path2.Length) return path1.Length.CompareTo(path2.Length);
+
+        return int.Parse(p1[1]).CompareTo(int.Parse(p2[1]));
     }
 
     public void Dispose()
