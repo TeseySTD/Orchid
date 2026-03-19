@@ -23,10 +23,7 @@
 </MudDrawer>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-0" Style="height: 100%; display: flex; flex-direction: column;">
-    @if (_isBookLoading)
-    {
-        <LoadingOverlay Text="Loading book..."/>
-    }
+    <LoadingOverlay IsVisible="_isBookLoading" Text="Loading book..."/>
     
     @if (_currentBook != null)
     {

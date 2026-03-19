@@ -1,9 +1,19 @@
-﻿<div class="d-flex justify-center align-center" style="height: 100vh;">
-    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large"/>
-    <MudText Class="ml-4">@Text</MudText>
-</div>
+﻿<MudOverlay Visible="@IsVisible" 
+            ZIndex="9999" 
+            AutoClose="false"
+            Style="background-color: var(--mud-palette-background); opacity: 1;"
+            class="d-flex justify-center align-center">
+    
+    <MudStack AlignItems="AlignItems.Center" Spacing="4">
+        <MudProgressCircular Color="Color.Secondary" 
+                             Indeterminate="true" 
+                             Size="Size.Large" />
+        
+        <MudText Typo="Typo.h6" Color="Color.Inherit">@Text</MudText>
+    </MudStack>
+</MudOverlay>
 
 @code {
-    [Parameter] 
-    public string Text { get; set; } = "Loading...";
+    [Parameter] public bool IsVisible { get; set; } = true;
+    [Parameter] public string Text { get; set; } = "Loading...";
 }
