@@ -5,7 +5,7 @@
     position: relative;
 }
 
-.chapter-content {
+.chapter-content, .page-buffer {
     height: 100%;
     width: 100%;
     
@@ -24,6 +24,21 @@
     container-name: chapterPage;
     
     font-size: clamp(8px, 3cqmin, 14px);
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.active-page {
+    position: relative;
+    visibility: visible;
+    z-index: 1;
+}
+
+.page-buffer {
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 0;
 }
 
 ::deep img {
