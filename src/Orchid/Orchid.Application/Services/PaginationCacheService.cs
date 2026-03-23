@@ -1,4 +1,5 @@
-﻿using Orchid.Application.Common.Services;
+﻿using System.Text.Json;
+using Orchid.Application.Common.Services;
 using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Application.Services;
@@ -7,26 +8,50 @@ public record PaginationContext(double Width, double Height, double FontSize, st
 
 public class PaginationCacheService : IPaginationCacheService
 {
-    private readonly IJsonStorageService _storage;
+    private readonly DiskCacheService _cache; 
     private const string FolderName = "pagination";
+    
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public PaginationCacheService(IJsonStorageService storage)
+    public PaginationCacheService(DiskCacheService cache)
     {
-        _storage = storage;
+        _cache = cache;
     }
 
-    public async Task SaveMapAsync(BookId bookId, PaginationContext context, Dictionary<int, int> pages)
+    public async Task SaveMapAsync(BookId bookId, PaginationContext context, Dictionary<int, PageData[]> pages)
     {
-        var hash = GenerateHash(context);
-        var key = Path.Combine(FolderName, $"{bookId.Value}_{hash}");
-        await _storage.SaveAsync(key, pages);
+        var key = GetCacheKey(bookId, context);
+        
+        var json = JsonSerializer.Serialize(pages, JsonOptions);
+        
+        await _cache.SaveStringAsync(key, json);
     }
 
-    public async Task<Dictionary<int, int>?> GetMapAsync(BookId bookId, PaginationContext context)
+    public async Task<Dictionary<int, PageData[]>?> GetMapAsync(BookId bookId, PaginationContext context)
+    {
+        var key = GetCacheKey(bookId, context);
+
+        if (!_cache.Exists(key))
+        {
+            return null;
+        }
+
+        try
+        {
+            await using var stream = _cache.GetStream(key);
+            
+            return await JsonSerializer.DeserializeAsync<Dictionary<int, PageData[]>>(stream, JsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string GetCacheKey(BookId bookId, PaginationContext context)
     {
         var hash = GenerateHash(context);
-        var key = Path.Combine(FolderName, $"{bookId.Value}_{hash}");
-        return await _storage.LoadAsync<Dictionary<int, int>>(key);
+        return Path.Combine(FolderName, $"{bookId.Value}_{hash}.json");
     }
 
     private string GenerateHash(PaginationContext ctx)

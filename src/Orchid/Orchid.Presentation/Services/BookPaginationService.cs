@@ -86,16 +86,17 @@ public class BookPaginationService : IDisposable
             return;
         }
 
-        // var cachedValue = await _paginationCacheService.GetMapAsync(bookId, paginationContext);
-        // if (cachedValue is not null)
-        // {
-        //     foreach (var (chapterIndex, pages) in cachedValue)
-        //     {
-        //         cancellationToken.ThrowIfCancellationRequested();
-        //         await onChapterPagesCalculated(chapterIndex, pages);
-        //     }
-        //     return;
-        // }
+        var cachedValue = await _paginationCacheService.GetMapAsync(bookId, paginationContext);
+        if (cachedValue is not null)
+        {
+            foreach (var (chapterIndex, pages) in cachedValue)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await onChapterPagesCalculated(chapterIndex, pages);
+            }
+            await onAllPagesCalculated();
+            return;
+        }
 
         try
         {
@@ -107,7 +108,7 @@ public class BookPaginationService : IDisposable
                 jsRuntime,
                 cancellationToken
             );
-            // await _paginationCacheService.SaveMapAsync(bookId, paginationContext, pages);
+            await _paginationCacheService.SaveMapAsync(bookId, paginationContext, pages);
         }
         catch (OperationCanceledException)
         {
