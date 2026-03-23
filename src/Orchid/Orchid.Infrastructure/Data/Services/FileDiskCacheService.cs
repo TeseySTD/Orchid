@@ -84,6 +84,6 @@ public class FileDiskCacheService : DiskCacheService
         }
     }
 
-    private string GetFullCachePath => Path.Combine(_options.BaseDirectory, CacheFolderName);
+    private string GetFullCachePath => _options.BaseDirectory;
     private string GetPath(string key) => Path.Combine(GetFullCachePath, key);
 }

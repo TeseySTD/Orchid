@@ -11,7 +11,7 @@ public class AppBlazorWebView : BlazorWebView
 {
     public override IFileProvider CreateFileProvider(string contentRootDir)
     {
-        var cachePath = Path.Combine(FileSystem.Current.CacheDirectory, DiskCacheService.CacheFolderName);
+        var cachePath = FileSystem.Current.CacheDirectory;
 
         if (!Directory.Exists(cachePath))
         {

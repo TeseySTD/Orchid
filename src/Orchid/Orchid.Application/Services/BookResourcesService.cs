@@ -19,23 +19,16 @@ public class BookResourcesService(
 
         if (book.Cover != null)
         {
-            book.Cover.Path = Path.Combine(book.Metadata.FileName, book.Cover.Name);
             await imagesRepository.SaveImageAsync(
-                Image.Create(
-                    book.Cover.Path, 
-                    book.Cover.Data
-                )
+                book.Id,
+                book.Cover
             );
+            book.Cover.Path = imagesRepository.GetRelativeImagePath(book.Id, book.Cover.Name);
         }
 
         await foreach (var img in bookService.GetBookImagesAsync(bookPath))
         {
-            await imagesRepository.SaveImageAsync(
-                Image.Create(
-                    Path.Combine(book.Metadata.FileName, img.Name),
-                    img.Data
-                )
-            );
+            await imagesRepository.SaveImageAsync(book.Id, img);
         }
 
         return book;
@@ -44,37 +37,39 @@ public class BookResourcesService(
     public async Task<Chapter> ReadChapterAsync(string bookPath, int chapterIndex)
     {
         var bookService = bookServiceProvider.GetService(bookPath);
-        var bookFileName = Path.GetFileName(bookPath);
-
+        var book = await bookService.ReadAsync(bookPath);
+        
         var bookChapter = await bookService.ReadChapterAsync(bookPath, chapterIndex);
-        bookChapter = Chapter.Create(bookChapter.Title, ProcessHtmlImages(bookChapter.Html, bookFileName));
+        bookChapter = Chapter.Create(bookChapter.Title, ProcessHtmlImagesLinks(bookChapter.Html, book.Id));
         return bookChapter;
     }
 
     public async Task<List<Chapter>> ReadChaptersAsync(string bookPath)
     {
         var bookService = bookServiceProvider.GetService(bookPath);
-        var bookFileName = Path.GetFileName(bookPath);
+        var book = await bookService.ReadAsync(bookPath);
 
         var chapters = await bookService.ReadChaptersAsync(bookPath);
 
         return chapters
-            .Select(c => Chapter.Create(c.Title, ProcessHtmlImages(c.Html, bookFileName)))
+            .Select(c => Chapter.Create(c.Title, ProcessHtmlImagesLinks(c.Html, book.Id)))
             .ToList();
     }
 
-    private string ProcessHtmlImages(string html, string bookFileName)
+    private string ProcessHtmlImagesLinks(string html, BookId bookId)
     {
         html = Regex.Replace(html, @"(xlink:href="")([^""]+)("")", match =>
         {
             var imageName = match.Groups[2].Value;
-            return match.Groups[1] + Path.Combine(bookFileName, imageName) + match.Groups[3].Value;
+            var imageLink = imagesRepository.GetRelativeImagePath(bookId, imageName);
+            return match.Groups[1] +  imageLink + match.Groups[3].Value;
         });
 
         html = Regex.Replace(html, @"(<img[^>]+src\s*=\s*"")([^""]+)(""[^>]*>)", match =>
         {
             var imageName = match.Groups[2].Value;
-            return match.Groups[1].Value + Path.Combine(bookFileName, imageName) + match.Groups[3].Value;
+            var imageLink = imagesRepository.GetRelativeImagePath(bookId, imageName);
+            return match.Groups[1].Value + imageLink + match.Groups[3].Value;
         });
 
         var matchBody = Regex.Match(html, @"<body.*?>(.*)</body>", RegexOptions.Singleline);

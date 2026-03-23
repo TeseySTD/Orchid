@@ -25,7 +25,10 @@
         <ApplicationTitle>Orchid</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.orchid.presentation</ApplicationId>
+        <ApplicationId>io.github.teseystd.orchid</ApplicationId>
+
+        <!-- Company -->
+        <Company>Orchid</Company>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

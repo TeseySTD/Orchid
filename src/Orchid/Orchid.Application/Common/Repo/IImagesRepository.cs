@@ -4,6 +4,7 @@ namespace Orchid.Application.Common.Repo;
 
 public interface IImagesRepository
 {
-    public Task SaveImageAsync(Image image);
-    public bool ImageExists(string imageName);
+    public Task SaveImageAsync(BookId id, Image image);
+    public bool ImageExists(BookId id, string imageName);
+    public string GetRelativeImagePath(BookId id, string imageName);
 }
