@@ -1,25 +1,50 @@
-﻿<MudPaper Elevation="4" Class="d-flex justify-space-between align-center pa-2"
-          Style="background-color: var(--md-sys-color-surface);">
-    <MudButton Variant="Variant.Text"
-               StartIcon="@Icons.Material.Filled.ArrowBack"
-               OnClick="PreviousPage"
-               Disabled="@IsFirstPage">
-        Prev
-    </MudButton>
+﻿<style>
+    .toolbar-wrapper {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding: 10px;
+        transition: transform 0.3s cubic-bezier(0.05, 0.7, 0.1, 1);
+    }
 
-    <MudText Typo="Typo.caption">
-        @(CurrentChapterPageIndex + 1) / @CurrentChapterTotalPages
-    </MudText>
+    .toolbar-wrapper.hidden {
+        transform: translateY(100%);
+        pointer-events: none;
+    }
 
-    <MudButton Variant="Variant.Text"
-               EndIcon="@Icons.Material.Filled.ArrowForward"
-               OnClick="NextPage"
-               Disabled="@IsLastPage">
-        Next
-    </MudButton>
-</MudPaper>
+    .toolbar-wrapper.visible {
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+</style>
+
+<div class="toolbar-wrapper @(IsVisible ? "visible" : "hidden")">
+    <MudPaper Elevation="12"
+              Class="d-flex justify-space-between align-center rounded-pill mx-4 pa-1"
+              Style="background-color: var(--mud-palette-appbar-background) !important;
+                    border: 1px solid var(--mud-palette-divider);
+                    box-shadow: 0px 8px 24px rgba(0,0,0,0.15);">
+
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="PreviousPage"
+                       Disabled="@IsFirstPage"
+                       Size="Size.Medium"/>
+
+        <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="font-weight: 600; letter-spacing: 0.5px;">
+            @(CurrentChapterPageIndex + 1) / @CurrentChapterTotalPages
+        </MudText>
+
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowForward"
+                       OnClick="NextPage"
+                       Disabled="@IsLastPage"
+                       Size="Size.Medium"/>
+    </MudPaper>
+</div>
 
 @code {
+    [Parameter] public bool IsVisible { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> NextPage { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> PreviousPage { get; set; }
     [Parameter] public bool IsFirstPage { get; set; }

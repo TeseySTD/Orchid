@@ -27,11 +27,12 @@
 
     @if (_currentBook != null)
     {
-        <FloatingInfoButton
-            OnClick="() => _drawerOpen = !_drawerOpen"
-        />
+        <FloatingInfoButton OnClick="() => _drawerOpen = !_drawerOpen"/>
 
-        <div style="flex-grow: 1; overflow: hidden; position: relative;" class="d-flex justify-center">
+        <div style="flex-grow: 1; overflow: hidden; position: relative;"
+             class="d-flex justify-center"
+             @onclick="HandleReaderClick">
+
             <div class="reader-content" id="readerContainer"
                  style="width: 100%; height: 100%; padding-left: 15px; padding-right: 15px;">
                 <ChapterView @ref="_chapterView"
@@ -45,6 +46,7 @@
         </div>
 
         <Toolbar
+            IsVisible="_showToolbar"
             NextPage="@NextPage"
             PreviousPage="@PreviousPage"
             IsFirstPage="@IsFirstPage"
@@ -56,6 +58,27 @@
 </MudContainer>
 
 @code {
+    private bool _showToolbar;
+
+    private async Task HandleReaderClick(MouseEventArgs e)
+    {
+        var screenWidth = await Js.InvokeAsync<double>("eval", "window.innerWidth");
+        var x = e.ClientX;
+
+        if (x < screenWidth * 0.2)
+        {
+            PreviousPage();
+        }
+        else if (x > screenWidth * 0.8)
+        {
+            NextPage();
+        }
+        else
+        {
+            _showToolbar = !_showToolbar;
+        }
+    }
+
     [CascadingParameter] private MainLayout Layout { get; set; } = null!;
 
     [SupplyParameterFromQuery(Name = "path")]
@@ -158,6 +181,7 @@
             _currentChapterPageIndex = BookPaginationService.FindPageIndexByLocator(pages, locator);
             SetCurrentPageIdentifier();
         }
+
         await InvokeAsync(StateHasChanged);
     }
 
@@ -251,7 +275,7 @@
         _isBookLoading = true;
         await InvokeAsync(StateHasChanged);
     }
-    
+
     private void OnPageContextChangeEnd()
     {
         BookPaginationService.StartBackgroundPageCalculation(
