@@ -3,7 +3,6 @@
 @using Orchid.Application.Common.Services
 @using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
-@using Orchid.Presentation.Components.Layout
 @using Orchid.Presentation.Services
 @inject IBookResourcesService BookResourcesService
 @inject BookPaginationService BookPaginationService
@@ -15,10 +14,11 @@
     <BookInfo
         Book="@_currentBook"
         Cover="@_currentBookCover"
-        CurrentChapterTitle="@_currentChapter?.Title"
-        TotalBookPages="@TotalBookPages"
-        CurrentChapterPageIndex="@_currentChapterPageIndex"
-        CurrentChapterTotalPages="@_currentChapterTotalPages"
+        CurrentChapterTitle="@_chapters.ElementAtOrDefault(_currentPageIdentifier.ChapterIndex)?.Title"
+        TotalBookPages="@_chaptersPages.Sum(kv => kv.Value.Length)"
+        CurrentChapterPageIndex="@_currentPageIdentifier.ChapterIndex"
+        CurrentChapterTotalPages="@(_chaptersPages.GetValueOrDefault(_currentPageIdentifier.ChapterIndex)?.Length ?? 0)"
+
     />
 </MudDrawer>
 
@@ -29,86 +29,32 @@
     {
         <FloatingInfoButton OnClick="() => _drawerOpen = !_drawerOpen"/>
 
-        <div style="flex-grow: 1; overflow: hidden; position: relative;"
-             class="d-flex justify-center"
-             @onclick="HandleReaderClick">
-
-            <div class="reader-content" id="readerContainer"
-                 style="width: 100%; height: 100%; padding-left: 15px; padding-right: 15px;">
-                <ChapterView @ref="_chapterView"
-                             CurrentPageHtml="@_currentPageHtml"
-                             NextPageHtml="@_nextPageHtml"
-                             PreviousPageHtml="@_prevPageHtml"
-                             BookCss="@_css"
-                             OnPageContextChangeCallback="OnPageContextChange"
-                             OnPageContextChangeEndCallback="OnPageContextChangeEnd"/>
-            </div>
-        </div>
-
-        <Toolbar
-            IsVisible="_showToolbar"
-            NextPage="@NextPage"
-            PreviousPage="@PreviousPage"
-            IsFirstPage="@IsFirstPage"
-            IsLastPage="@IsLastPage"
-            CurrentChapterPageIndex="@_currentChapterPageIndex"
-            CurrentChapterTotalPages="@_currentChapterTotalPages"
-        />
+        <Reader @ref="_reader"
+                BookId="@_currentBook.Id"
+                Chapters="@_chapters"
+                ChaptersPages="@_chaptersPages"
+                Css="@_css"
+                OnPageChanged="@(id => _currentPageIdentifier = id)"
+                OnPageContextChangeCallback="OnPageContextChange"
+                OnPageContextChangeEndCallback="OnPageContextChangeEnd"/>
     }
 </MudContainer>
 
 @code {
-    private bool _showToolbar;
-
-    private async Task HandleReaderClick(MouseEventArgs e)
-    {
-        var screenWidth = await Js.InvokeAsync<double>("eval", "window.innerWidth");
-        var x = e.ClientX;
-
-        if (x < screenWidth * 0.2)
-        {
-            PreviousPage();
-        }
-        else if (x > screenWidth * 0.8)
-        {
-            NextPage();
-        }
-        else
-        {
-            _showToolbar = !_showToolbar;
-        }
-    }
-
-    [CascadingParameter] private MainLayout Layout { get; set; } = null!;
 
     [SupplyParameterFromQuery(Name = "path")]
     public string? FilePath { get; set; }
 
+    private Reader _reader = null!;
     private Book? _currentBook;
     private Cover _currentBookCover = null!;
     private IEnumerable<CssFile> _css = [];
+    private List<Chapter> _chapters = [];
+    private readonly ConcurrentDictionary<int, PageData[]> _chaptersPages = new();
 
+    private PageIdentifier _currentPageIdentifier = PageIdentifier.Empty;
     private bool _isBookLoading;
     private bool _drawerOpen;
-
-    private int _currentChapterIndex;
-    private Chapter? _currentChapter;
-    private List<Chapter> _chapters = [];
-
-    private ChapterView _chapterView = null!;
-    private PageIdentifier _currentPageIdentifier = PageIdentifier.Empty;
-    private int _currentChapterPageIndex;
-    private int _currentChapterTotalPages = 1;
-
-    // Store pages arrays directly
-    private readonly ConcurrentDictionary<int, PageData[]> _chaptersPages = new();
-    private int TotalBookPages => _chaptersPages.Sum(kv => kv.Value.Length);
-    private string? _prevPageHtml;
-    private string? _currentPageHtml;
-    private string? _nextPageHtml;
-
-    private bool IsFirstPage => _currentChapterIndex == 0 && _currentChapterPageIndex == 0;
-    private bool IsLastPage => _currentChapterIndex >= _chapters.Count - 1 && _currentChapterPageIndex >= _currentChapterTotalPages - 1;
 
     protected override async Task OnInitializedAsync()
     {
@@ -134,140 +80,24 @@
             _chapters = await BookResourcesService.ReadChaptersAsync(path);
             _currentBookCover = _currentBook.Cover ?? await DefaultCover();
 
-            _currentChapterIndex = 0;
-            _currentChapter = _chapters[0];
-
             StateHasChanged();
-
-            // Start pagination logic (delay needed for render)
             await Task.Delay(50);
 
-            BookPaginationService.StartBackgroundPageCalculation(
-                _currentBook.Id,
-                _chapters,
-                _chapterView.PaginationSandbox,
-                SetChapterPagesCount,
-                AllPagesCalculatedHandler,
-                jsRuntime: Js
-            );
+            StartPagesCalculation();
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message + "\n" + ex.StackTrace);
+            Console.WriteLine(ex.Message);
             NavManager.NavigateTo("/");
         }
     }
 
-    private async Task SetChapterPagesCount(int chapterIndex, PageData[] pages)
+    private async Task<Cover> DefaultCover()
     {
-        _chaptersPages[chapterIndex] = pages;
-        if (chapterIndex == _currentChapterIndex)
-        {
-            _currentChapterTotalPages = pages.Length > 0 ? pages.Length : 1;
-
-            UpdatePageWindow();
-        }
-
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task AllPagesCalculatedHandler()
-    {
-        _isBookLoading = false;
-        if (_currentPageIdentifier != PageIdentifier.Empty)
-        {
-            var pages = _chaptersPages.TryGetValue(_currentPageIdentifier.ChapterIndex, out var p) ? p : [];
-            var locator = _currentPageIdentifier.Locator;
-            _currentChapterPageIndex = BookPaginationService.FindPageIndexByLocator(pages, locator);
-            SetCurrentPageIdentifier();
-        }
-
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private void UpdatePageWindow()
-    {
-        var pages = _chaptersPages.TryGetValue(_currentChapterIndex, out var p) ? p : [];
-
-        _currentPageHtml = GetPageHtml(_currentChapterIndex, _currentChapterPageIndex);
-
-        if (_currentChapterPageIndex > 0)
-        {
-            _prevPageHtml = GetPageHtml(_currentChapterIndex, _currentChapterPageIndex - 1);
-        }
-        else if (_currentChapterIndex > 0)
-        {
-            var prevPages = _chaptersPages.GetValueOrDefault(_currentChapterIndex - 1);
-            _prevPageHtml = prevPages?.LastOrDefault()?.Html;
-        }
-        else _prevPageHtml = null;
-
-        if (_currentChapterPageIndex < pages.Length - 1)
-        {
-            _nextPageHtml = GetPageHtml(_currentChapterIndex, _currentChapterPageIndex + 1);
-        }
-        else if (_currentChapterIndex < _chapters.Count - 1)
-        {
-            var nextPages = _chaptersPages.GetValueOrDefault(_currentChapterIndex + 1);
-            _nextPageHtml = nextPages?.FirstOrDefault()?.Html;
-        }
-        else _nextPageHtml = null;
-    }
-
-
-    private string? GetPageHtml(int chapterIdx, int pageIdx)
-    {
-        if (_chaptersPages.TryGetValue(chapterIdx, out var pages) && pageIdx >= 0 && pageIdx < pages.Length)
-        {
-            return pages[pageIdx].Html;
-        }
-
-        return null;
-    }
-
-    private void NextPage()
-    {
-        if (_currentChapterPageIndex < _currentChapterTotalPages - 1)
-        {
-            _currentChapterPageIndex++;
-            UpdatePageWindow();
-            StateHasChanged();
-            SetCurrentPageIdentifier();
-        }
-        else if (_currentChapterIndex < _chapters.Count - 1)
-        {
-            _currentChapterIndex += 1;
-            OpenChapter(startAtEnd: false);
-        }
-    }
-
-    private void PreviousPage()
-    {
-        if (_currentChapterPageIndex > 0)
-        {
-            _currentChapterPageIndex--;
-            UpdatePageWindow();
-            StateHasChanged();
-            SetCurrentPageIdentifier();
-        }
-        else if (_currentChapterIndex > 0)
-        {
-            _currentChapterIndex -= 1;
-            OpenChapter(startAtEnd: true);
-        }
-    }
-
-    private void OpenChapter(bool startAtEnd)
-    {
-        _currentChapter = _chapters[_currentChapterIndex];
-
-        var pages = _chaptersPages.TryGetValue(_currentChapterIndex, out var p) ? p : [];
-        _currentChapterTotalPages = pages.Length > 0 ? pages.Length : 1;
-
-        _currentChapterPageIndex = startAtEnd ? Math.Max(0, _currentChapterTotalPages - 1) : 0;
-
-        UpdatePageWindow();
-        StateHasChanged();
+        await using var stream = await FileSystem.OpenAppPackageFileAsync("wwwroot/images/no_cover_image.png");
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        return Cover.Create("no_cover_image.png", "images/no_cover_image.png", ms.ToArray())!;
     }
 
     private async Task OnPageContextChange()
@@ -278,45 +108,39 @@
 
     private void OnPageContextChangeEnd()
     {
+        StartPagesCalculation();
+    }
+
+    private void StartPagesCalculation()
+    {
         BookPaginationService.StartBackgroundPageCalculation(
-            _currentBook!.Id,
-            _chapters,
-            _chapterView.ChapterElement,
-            SetChapterPagesCount,
-            AllPagesCalculatedHandler,
+            _currentBook!.Id, _chapters, _reader.PaginationSandbox,
+            async (idx, pages) =>
+            {
+                _chaptersPages[idx] = pages;
+                await InvokeAsync(() => _reader.Update());
+            },
+            async () =>
+            {
+                _isBookLoading = false; // When all pages calculated - remove loader
+                await InvokeAsync(() =>
+                {
+                    _reader.RestorePosition(_currentPageIdentifier);
+                    StateHasChanged();
+                });
+            },
             jsRuntime: Js
         );
-    }
-
-    private void SetCurrentPageIdentifier()
-    {
-        var pages = _chaptersPages.TryGetValue(_currentChapterIndex, out var p) ? p : [];
-        if (_currentChapterPageIndex < pages.Length)
-        {
-            var location = pages[_currentChapterPageIndex].Locator;
-            _currentPageIdentifier = PageIdentifier.Create(_currentChapterIndex, location);
-        }
-    }
-
-    private async Task<Cover> DefaultCover()
-    {
-        var imageName = "no_cover_image.png";
-        await using Stream fileStream = await FileSystem.OpenAppPackageFileAsync($"wwwroot/images/{imageName}");
-        using MemoryStream memoryStream = new();
-        await fileStream.CopyToAsync(memoryStream);
-        var bytes = memoryStream.ToArray();
-        return Cover.Create(imageName, $"images/{imageName}", bytes)!;
     }
 
     public async ValueTask DisposeAsync()
     {
         BookPaginationService.StopCalculation();
-
         try
         {
-            if (_chapterView.PaginationSandbox.Context != null)
+            if (_reader.PaginationSandbox.Context != null)
             {
-                await Js.InvokeVoidAsync("utils.cleanupElementContent", _chapterView.PaginationSandbox);
+                await Js.InvokeVoidAsync("utils.cleanupElementContent", _reader.PaginationSandbox);
             }
         }
         catch (Exception ex)
