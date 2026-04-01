@@ -11,7 +11,7 @@
     
     /* Core pagination logic: forces content into horizontal columns */
     column-width: 100vw; 
-    column-gap: 0; 
+    column-gap: 40px; 
     column-fill: auto; 
     
     overflow-x: hidden;  
