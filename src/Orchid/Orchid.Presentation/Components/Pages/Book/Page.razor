@@ -3,9 +3,11 @@
 @using Orchid.Application.Common.Services
 @using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
+@using Orchid.Presentation.Models
 @using Orchid.Presentation.Services
 @inject IBookResourcesService BookResourcesService
 @inject BookPaginationService BookPaginationService
+@inject IPaginationCacheService PaginationCacheService
 @inject NavigationManager NavManager
 @inject IJSRuntime Js
 @implements IAsyncDisposable
@@ -14,11 +16,10 @@
     <BookInfo
         Book="@_currentBook"
         Cover="@_currentBookCover"
-        CurrentChapterTitle="@_chapters.ElementAtOrDefault(_currentPageIdentifier.ChapterIndex)?.Title"
-        TotalBookPages="@_chaptersPages.Sum(kv => kv.Value.Length)"
+        CurrentChapterTitle="@_chapterTitles.ElementAtOrDefault(_currentPageIdentifier.ChapterIndex)"
+        TotalBookPages="@_chapterPageCounts.Values.Sum()"
         CurrentChapterPageIndex="@_currentPageIdentifier.ChapterIndex"
-        CurrentChapterTotalPages="@(_chaptersPages.GetValueOrDefault(_currentPageIdentifier.ChapterIndex)?.Length ?? 0)"
-
+        CurrentChapterTotalPages="@(_chapterPageCounts.GetValueOrDefault(_currentPageIdentifier.ChapterIndex))"
     />
 </MudDrawer>
 
@@ -31,8 +32,8 @@
 
         <Reader @ref="_reader"
                 BookId="@_currentBook.Id"
-                Chapters="@_chapters"
-                ChaptersPages="@_chaptersPages"
+                ChaptersCount="@_chaptersCount"
+                PaginationStore="@_paginationStore"
                 Css="@_css"
                 OnPageChanged="@(id => _currentPageIdentifier = id)"
                 OnPageContextChangeCallback="OnPageContextChange"
@@ -49,8 +50,12 @@
     private Book? _currentBook;
     private Cover _currentBookCover = null!;
     private IEnumerable<CssFile> _css = [];
-    private List<Chapter> _chapters = [];
-    private readonly ConcurrentDictionary<int, PageData[]> _chaptersPages = new();
+
+    private int _chaptersCount;
+    private List<string> _chapterTitles = [];
+
+    private ChapterPaginationStore _paginationStore = null!;
+    private readonly ConcurrentDictionary<int, int> _chapterPageCounts = new();
 
     private PageIdentifier _currentPageIdentifier = PageIdentifier.Empty;
     private bool _isBookLoading;
@@ -58,14 +63,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _paginationStore = new ChapterPaginationStore(PaginationCacheService);
+
         if (!string.IsNullOrEmpty(FilePath))
-        {
             await ReadBook(System.Net.WebUtility.UrlDecode(FilePath));
-        }
         else
-        {
             NavManager.NavigateTo("/");
-        }
     }
 
     private async Task ReadBook(string path)
@@ -77,13 +80,16 @@
         {
             _currentBook = await BookResourcesService.ReadBookAsync(path);
             _css = await BookResourcesService.GetBookCssFilesAsync(path);
-            _chapters = await BookResourcesService.ReadChaptersAsync(path);
+            var chapters = await BookResourcesService.ReadChaptersAsync(path);
+
+            _chaptersCount = chapters.Count;
+            _chapterTitles = chapters.Select(c => c.Title).ToList();
             _currentBookCover = _currentBook.Cover ?? await DefaultCover();
 
             StateHasChanged();
             await Task.Delay(50);
 
-            StartPagesCalculation();
+            StartPagesCalculation(chapters);
         }
         catch (Exception ex)
         {
@@ -103,29 +109,36 @@
     private async Task OnPageContextChange()
     {
         _isBookLoading = true;
+        _chapterPageCounts.Clear();
         await InvokeAsync(StateHasChanged);
     }
 
-    private void OnPageContextChangeEnd()
+    private async Task OnPageContextChangeEnd()
     {
-        StartPagesCalculation();
+        var chapters = await BookResourcesService.ReadChaptersAsync(System.Net.WebUtility.UrlDecode(FilePath)!);
+        StartPagesCalculation(chapters);
     }
 
-    private void StartPagesCalculation()
+    private void StartPagesCalculation(List<Chapter> chapters)
     {
         BookPaginationService.StartBackgroundPageCalculation(
-            _currentBook!.Id, _chapters, _reader.PaginationSandbox,
-            async (idx, pages) =>
+            _currentBook!.Id, chapters, _reader.PaginationSandbox, _paginationStore,
+            async (idx, pagesCount) =>
             {
-                _chaptersPages[idx] = pages;
-                await InvokeAsync(() => _reader.Update());
+                _chapterPageCounts[idx] = pagesCount;
+                var currentIdx = _currentPageIdentifier.ChapterIndex;
+                // Update for prev, next and current chapter to ensure that all pages are in place
+                if (idx == currentIdx || idx == currentIdx + 1 || idx == currentIdx - 1)
+                {
+                    await InvokeAsync(() => _reader.UpdateAsync());
+                }
             },
             async () =>
             {
-                _isBookLoading = false; // When all pages calculated - remove loader
-                await InvokeAsync(() =>
+                _isBookLoading = false;
+                await InvokeAsync(async () =>
                 {
-                    _reader.RestorePosition(_currentPageIdentifier);
+                    await _reader.RestorePositionAsync(_currentPageIdentifier);
                     StateHasChanged();
                 });
             },
@@ -148,9 +161,7 @@
             Console.WriteLine($"JS Cleanup failed: {ex.Message}");
         }
 
-        _chapters.Clear();
-        _chapters = null!;
-        _chaptersPages.Clear();
+        _paginationStore.Clear();
         _currentBook = null;
 
         GC.Collect(2, GCCollectionMode.Forced, true);

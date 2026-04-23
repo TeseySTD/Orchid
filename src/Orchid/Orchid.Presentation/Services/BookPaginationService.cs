@@ -4,6 +4,7 @@ using Microsoft.JSInterop;
 using Orchid.Application.Common.Services;
 using Orchid.Application.Services;
 using Orchid.Core.Models.ValueObjects;
+using Orchid.Presentation.Models;
 
 namespace Orchid.Presentation.Services;
 
@@ -17,125 +18,23 @@ public class BookPaginationService : IDisposable
         _paginationCacheService = paginationCacheService;
     }
 
-    private async Task<Dictionary<int, PageData[]>> CalculateAllChaptersPagesAsync(
-        IEnumerable<Chapter> chapters,
-        ElementReference element,
-        Func<int, PageData[], Task> onPagesCalculated,
-        Func<Task> onAllPagesCalculated,
-        IJSRuntime jsRuntime,
-        CancellationToken cancellationToken)
-    {
-        int i = 0;
-        Dictionary<int, PageData[]> result = new();
-
-        foreach (var chapter in chapters)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var memStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(chapter.Html));
-            var streamRef = new DotNetStreamReference(memStream);
-
-            try
-            {
-                await using var jsStreamReference = await jsRuntime.InvokeAsync<IJSStreamReference>(
-                    "orchidReader.measureHiddenChapter",
-                    cancellationToken,
-                    element,
-                    streamRef
-                );
-
-                // Assuming 100MB max size for the chapter HTML array
-                await using var pageStream =
-                    await jsStreamReference.OpenReadStreamAsync(maxAllowedSize: 100_000_000, cancellationToken);
-                var pages = await JsonSerializer.DeserializeAsync<PageData[]>(
-                                pageStream,
-                                new JsonSerializerOptions(JsonSerializerDefaults.Web),
-                                cancellationToken: cancellationToken)
-                            ?? [];
-
-                await onPagesCalculated(i, pages);
-                result.Add(i, pages);
-            }
-            finally
-            {
-                streamRef.Dispose();
-                await memStream.DisposeAsync();
-            }
-
-            i++;
-            await Task.Delay(20, cancellationToken); // Yield to not block the UI thread
-        }
-
-        await onAllPagesCalculated();
-        return result;
-    }
-
-    private async Task BackgroundPageCalculation(
-        BookId bookId,
-        IEnumerable<Chapter> chapters,
-        ElementReference element,
-        Func<int, PageData[], Task> onChapterPagesCalculated,
-        Func<Task> onAllPagesCalculated,
-        IJSRuntime jsRuntime,
-        CancellationToken cancellationToken)
-    {
-        var paginationContext = await GetPaginationContext(element, jsRuntime);
-        if (paginationContext == null)
-        {
-            StopCalculation();
-            return;
-        }
-
-        var cachedValue = await _paginationCacheService.GetMapAsync(bookId, paginationContext);
-        if (cachedValue is not null)
-        {
-            foreach (var (chapterIndex, pages) in cachedValue)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                await onChapterPagesCalculated(chapterIndex, pages);
-            }
-            await onAllPagesCalculated();
-            return;
-        }
-
-        try
-        {
-            var pages = await CalculateAllChaptersPagesAsync(
-                chapters,
-                element,
-                onChapterPagesCalculated,
-                onAllPagesCalculated,
-                jsRuntime,
-                cancellationToken
-            );
-            await _paginationCacheService.SaveMapAsync(bookId, paginationContext, pages);
-        }
-        catch (OperationCanceledException)
-        {
-            // Ignore 
-        }
-        finally
-        {
-            await jsRuntime.InvokeVoidAsync("orchidReader.cleanupSandbox");
-        }
-    }
-
     public void StartBackgroundPageCalculation(
         BookId bookId,
         IEnumerable<Chapter> chapters,
         ElementReference element,
-        Func<int, PageData[], Task> onChapterPagesCalculated,
+        ChapterPaginationStore store,
+        Func<int, int, Task> onChapterPagesCalculated,
         Func<Task> onAllPagesCalculated,
         IJSRuntime jsRuntime)
     {
-        _calcPagesCts?.Cancel();
-        _calcPagesCts?.Dispose();
+        StopCalculation();
         _calcPagesCts = new CancellationTokenSource();
 
         _ = BackgroundPageCalculation(
             bookId,
             chapters,
             element,
+            store,
             onChapterPagesCalculated,
             onAllPagesCalculated,
             jsRuntime,
@@ -143,16 +42,76 @@ public class BookPaginationService : IDisposable
         );
     }
 
-    public void StopCalculation()
+    private async Task BackgroundPageCalculation(
+        BookId bookId,
+        IEnumerable<Chapter> chapters,
+        ElementReference element,
+        ChapterPaginationStore store,
+        Func<int, int, Task> onChapterCalculated,
+        Func<Task> onAllCalculated,
+        IJSRuntime jsRuntime,
+        CancellationToken ct)
     {
-        if (_calcPagesCts != null)
+        var context = await GetPaginationContext(element, jsRuntime);
+        if (context == null) return;
+
+        store.Init(bookId, context);
+        var chapterList = chapters.ToList();
+
+        try
         {
-            _calcPagesCts.Cancel();
-            _calcPagesCts.Dispose();
-            _calcPagesCts = null;
+            for (int i = 0; i < chapterList.Count; i++)
+            {
+                ct.ThrowIfCancellationRequested();
+                int pagesCount;
+
+                if (_paginationCacheService.ChapterExists(bookId, context, i))
+                {
+                    var cachedPages = await _paginationCacheService.GetChapterAsync(bookId, context, i);
+                    pagesCount = cachedPages?.Length ?? 0;
+                }
+                else
+                {
+                    var pages = await CalculateSingleChapterAsync(chapterList[i], element, jsRuntime, ct);
+                    await _paginationCacheService.SaveChapterAsync(bookId, context, i, pages);
+                    store.Invalidate(i);
+                    pagesCount = pages.Length;
+                }
+
+                await onChapterCalculated(i, pagesCount);
+                await Task.Delay(20, ct);
+            }
+
+            await onAllCalculated();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            await jsRuntime.InvokeVoidAsync("orchidReader.cleanupSandbox");
         }
     }
 
+    private async Task<PageData[]> CalculateSingleChapterAsync(
+        Chapter chapter,
+        ElementReference element,
+        IJSRuntime jsRuntime,
+        CancellationToken ct)
+    {
+        using var memStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(chapter.Html));
+        using var streamRef = new DotNetStreamReference(memStream);
+
+        await using var jsRef = await jsRuntime.InvokeAsync<IJSStreamReference>(
+            "orchidReader.measureHiddenChapter", ct, element, streamRef);
+
+        await using var pageStream = await jsRef.OpenReadStreamAsync(100_000_000, ct);
+
+        return await JsonSerializer.DeserializeAsync<PageData[]>(
+            pageStream,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web),
+            ct) ?? [];
+    }
 
     public async Task<PaginationContext?> GetPaginationContext(ElementReference chapterElement, IJSRuntime jsRuntime)
     {
@@ -166,8 +125,16 @@ public class BookPaginationService : IDisposable
         }
     }
 
+    public void StopCalculation()
+    {
+        _calcPagesCts?.Cancel();
+        _calcPagesCts?.Dispose();
+        _calcPagesCts = null;
+    }
+
     public int FindPageIndexByLocator(PageData[] pages, string targetLocator)
     {
+        if (pages.Length == 0) return 0;
         for (int i = 0; i < pages.Length; i++)
         {
             if (CompareLocators(pages[i].Locator, targetLocator) > 0)
