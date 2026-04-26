@@ -4,10 +4,10 @@ using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Infrastructure.Data.Repo;
 
-public class ImagesRepository(DiskCacheService diskCacheService) : IImagesRepository
+public class ImagesRepository(IDiskCacheService diskCacheService) : IImagesRepository
 {
     private const string ImagesCacheKey = "images";
-    private DiskCacheService DiskCacheService { get; } = diskCacheService;
+    private IDiskCacheService DiskCacheService { get; } = diskCacheService;
 
     public async Task SaveImageAsync(BookId id, Image image)
     {

@@ -8,11 +8,11 @@ public record PaginationContext(double Width, double Height, double FontSize, st
 
 public class PaginationCacheService : IPaginationCacheService
 {
-    private readonly DiskCacheService _cache;
+    private readonly IDiskCacheService _cache;
     private const string FolderName = "pagination";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public PaginationCacheService(DiskCacheService cache) => _cache = cache;
+    public PaginationCacheService(IDiskCacheService cache) => _cache = cache;
 
     public async Task SaveChapterAsync(BookId bookId, PaginationContext context, int index, PageData[] pages)
     {

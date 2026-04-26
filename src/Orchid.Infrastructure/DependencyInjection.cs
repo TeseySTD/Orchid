@@ -17,7 +17,7 @@ public static class DependencyInjection
         services.AddSingleton(Options.Create(builder.JsonStorageServiceOptions));
         
         services.AddTransient<IImagesRepository, ImagesRepository>();
-        services.AddSingleton<DiskCacheService, FileDiskCacheService>();
+        services.AddSingleton<IDiskCacheService, FileDiskCacheService>();
         services.AddSingleton<IJsonStorageService, JsonStorageService>();
         return services;
     }

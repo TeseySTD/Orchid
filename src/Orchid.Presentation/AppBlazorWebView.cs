@@ -5,7 +5,7 @@ using Orchid.Application.Common.Services;
 namespace Orchid.Presentation;
 
 /// <summary>
-/// Custom web view class, that provides access to FileSystem.Current.CacheDirectory and <see cref="DiskCacheService.CacheFolderName"/>.
+/// Custom web view class, that provides access to FileSystem.Current.CacheDirectory/>.
 /// </summary>
 public class AppBlazorWebView : BlazorWebView
 {

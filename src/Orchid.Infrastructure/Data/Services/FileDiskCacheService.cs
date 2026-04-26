@@ -5,7 +5,7 @@ using Orchid.Infrastructure.Data.Services.Options;
 
 namespace Orchid.Infrastructure.Data.Services;
 
-public class FileDiskCacheService : DiskCacheService
+public class FileDiskCacheService : IDiskCacheService
 {
     private readonly DiskCacheServiceOptions _options;
 
@@ -24,7 +24,7 @@ public class FileDiskCacheService : DiskCacheService
         }
     }
 
-    public override async Task SaveStringAsync(string key, string content)
+    public async Task SaveStringAsync(string key, string content)
     {
         var path = GetPath(key);
         EnsureDirectoryExists(path);
@@ -34,7 +34,7 @@ public class FileDiskCacheService : DiskCacheService
         }
     }
 
-    public override async Task SaveBytesAsync(string key, byte[] content)
+    public async Task SaveBytesAsync(string key, byte[] content)
     {
         var path = GetPath(key);
         EnsureDirectoryExists(path);
@@ -44,7 +44,7 @@ public class FileDiskCacheService : DiskCacheService
         }
     }
 
-    public override Stream GetStream(string key)
+    public Stream GetStream(string key)
     {
         var path = GetPath(key);
         if (File.Exists(path))
@@ -55,9 +55,9 @@ public class FileDiskCacheService : DiskCacheService
         return Stream.Null;
     }
 
-    public override bool Exists(string key) => File.Exists(GetPath(key));
+    public bool Exists(string key) => File.Exists(GetPath(key));
 
-    public override void Clear()
+    public void Clear()
     {
         if (Directory.Exists(GetFullCachePath))
         {
