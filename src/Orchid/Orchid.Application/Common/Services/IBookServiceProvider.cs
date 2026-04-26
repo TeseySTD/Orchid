@@ -1,4 +1,4 @@
-namespace Orchid.Engine.Common;
+namespace Orchid.Application.Common.Services;
 
 public interface IBookServiceProvider
 {

@@ -1,7 +1,7 @@
 using Orchid.Core.Models;
 using Orchid.Core.Models.ValueObjects;
 
-namespace Orchid.Engine.Common;
+namespace Orchid.Application.Common.Services;
 
 public interface IBookService
 {

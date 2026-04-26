@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Orchid.Application\Orchid.Application.csproj" />
       <ProjectReference Include="..\Orchid.Core\Orchid.Core.csproj" />
     </ItemGroup>
 
@@ -16,7 +17,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
       <PackageReference Include="VersOne.Epub" Version="3.3.3" />
     </ItemGroup>
