@@ -12,6 +12,4 @@ public record Image
     }
 
     public static Image Create(string imageName, byte[] data) => new(imageName, data);
-
-    public string ToBase64() => $"data:image/png;base64,{Convert.ToBase64String(Data)}";
 }

@@ -2,9 +2,9 @@
 
 public record BookMetadata
 {
-    public string FileName { get; set; } = null!;
-    public string? Language { get; set; }
-    public int ChaptersCount { get; set; }
+    public string FileName { get; init; } = null!;
+    public string? Language { get; init; }
+    public int ChaptersCount { get; init; }
 
     public static BookMetadata Create(string? language, int chaptersCount, string filename) => new()
     {

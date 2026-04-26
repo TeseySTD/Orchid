@@ -37,6 +37,13 @@ public class Book : IEquatable<Book>
         Navigation navigation
     ) => new(id, title, metadata, cover, publishingInfo, navigation);
 
+    public void UpdateCoverPath(string relativePath)
+    {
+        if (Cover is null) return;
+
+        Cover = Cover with { Path = relativePath };
+    }
+
     public bool Equals(Book? other)
     {
         if (other is null) return false;

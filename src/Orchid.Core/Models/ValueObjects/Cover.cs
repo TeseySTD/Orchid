@@ -9,7 +9,7 @@ public record Cover : Image
         Path = path;
     }
 
-    public string Path { get; set; } = string.Empty;
+    public string Path { get; init; } = string.Empty;
 
     public new static Cover? Create(string name, byte[]? data) =>
         data is not null && data.Length > 0

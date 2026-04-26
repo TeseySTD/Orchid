@@ -80,7 +80,7 @@
         {
             _currentBook = await BookResourcesService.ReadBookAsync(path);
             _css = await BookResourcesService.GetBookCssFilesAsync(path);
-            var chapters = await BookResourcesService.ReadChaptersAsync(path);
+            var chapters = await BookResourcesService.ReadChaptersAsync(path, _currentBook.Id);
 
             _chaptersCount = chapters.Count;
             _chapterTitles = chapters.Select(c => c.Title).ToList();
@@ -115,7 +115,7 @@
 
     private async Task OnPageContextChangeEnd()
     {
-        var chapters = await BookResourcesService.ReadChaptersAsync(System.Net.WebUtility.UrlDecode(FilePath)!);
+        var chapters = await BookResourcesService.ReadChaptersAsync(System.Net.WebUtility.UrlDecode(FilePath)!, _currentBook!.Id);
         StartPagesCalculation(chapters);
     }
 

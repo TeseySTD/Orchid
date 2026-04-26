@@ -1,4 +1,4 @@
-﻿namespace Orchid.Core.Models;
+﻿namespace Orchid.Core.Models.ValueObjects;
 
 public class Navigation
 {

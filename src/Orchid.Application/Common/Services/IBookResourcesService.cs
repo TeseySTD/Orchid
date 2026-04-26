@@ -9,5 +9,5 @@ public interface IBookResourcesService
 
     public Task<IEnumerable<CssFile>> GetBookCssFilesAsync(string bookPath);
 
-    public Task<List<Chapter>> ReadChaptersAsync(string bookPath);
+    public Task<List<Chapter>> ReadChaptersAsync(string bookPath, BookId bookId);
 }

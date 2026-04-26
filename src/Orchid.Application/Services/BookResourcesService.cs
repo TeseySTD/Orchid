@@ -22,7 +22,9 @@ public class BookResourcesService(
                 book.Id,
                 book.Cover
             );
-            book.Cover.Path = imagesRepository.GetRelativeImagePath(book.Id, book.Cover.Name);
+            var relativePath = imagesRepository.GetRelativeImagePath(book.Id, book.Cover.Name);
+
+            book.UpdateCoverPath(relativePath);
         }
 
         await foreach (var img in bookService.GetBookImagesAsync(bookPath))
@@ -33,25 +35,13 @@ public class BookResourcesService(
         return book;
     }
 
-    public async Task<Chapter> ReadChapterAsync(string bookPath, int chapterIndex)
+    public async Task<List<Chapter>> ReadChaptersAsync(string bookPath, BookId bookId)
     {
         var bookService = bookServiceProvider.GetService(bookPath);
-        var book = await bookService.ReadAsync(bookPath);
-        
-        var bookChapter = await bookService.ReadChapterAsync(bookPath, chapterIndex);
-        bookChapter = Chapter.Create(bookChapter.Title, ProcessHtmlImagesLinks(bookChapter.Html, book.Id));
-        return bookChapter;
-    }
-
-    public async Task<List<Chapter>> ReadChaptersAsync(string bookPath)
-    {
-        var bookService = bookServiceProvider.GetService(bookPath);
-        var book = await bookService.ReadAsync(bookPath);
-
         var chapters = await bookService.ReadChaptersAsync(bookPath);
 
         return chapters
-            .Select(c => Chapter.Create(c.Title, ProcessHtmlImagesLinks(c.Html, book.Id)))
+            .Select(c => Chapter.Create(c.Title, ProcessHtmlImagesLinks(c.Html, bookId)))
             .ToList();
     }
 
@@ -61,7 +51,7 @@ public class BookResourcesService(
         {
             var imageName = match.Groups[2].Value;
             var imageLink = imagesRepository.GetRelativeImagePath(bookId, imageName);
-            return match.Groups[1] +  imageLink + match.Groups[3].Value;
+            return match.Groups[1] + imageLink + match.Groups[3].Value;
         });
 
         html = Regex.Replace(html, @"(<img[^>]+src\s*=\s*"")([^""]+)(""[^>]*>)", match =>

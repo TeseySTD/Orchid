@@ -13,6 +13,4 @@ public record PageData
 
     public string Locator { get; init; }
     public string Html { get; init; }
-    
-    public static PageData Create(string html, string locator) => new (html, locator);
 }
