@@ -37,6 +37,9 @@
     [Parameter] public EventCallback<PageIdentifier> OnPageChanged { get; set; }
     [Parameter] public EventCallback OnPageContextChangeCallback { get; set; }
     [Parameter] public EventCallback OnPageContextChangeEndCallback { get; set; }
+    public int CurrentPageIndex => _currentChapterPageIndex;
+    public int CurrentTotalPages => _currentChapterTotalPages;
+    public ElementReference PaginationSandbox => _chapterView.PaginationSandbox;
 
     private ChapterView _chapterView = null!;
     private bool _showToolbar;
@@ -49,7 +52,6 @@
     private string? _currentPageHtml;
     private string? _nextPageHtml;
 
-    public ElementReference PaginationSandbox => _chapterView.PaginationSandbox;
 
     private bool IsFirstPage => _currentChapterIndex == 0 && _currentChapterPageIndex == 0;
     private bool IsLastPage => _currentChapterIndex >= ChaptersCount - 1 && _currentChapterPageIndex >= _currentChapterTotalPages - 1;
@@ -161,4 +163,5 @@
         var id = PageIdentifier.Create(_currentChapterIndex, pages[_currentChapterPageIndex].Locator);
         await OnPageChanged.InvokeAsync(id);
     }
+
 }

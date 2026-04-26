@@ -18,8 +18,8 @@
         Cover="@_currentBookCover"
         CurrentChapterTitle="@_chapterTitles.ElementAtOrDefault(_currentPageIdentifier.ChapterIndex)"
         TotalBookPages="@_chapterPageCounts.Values.Sum()"
-        CurrentChapterPageIndex="@_currentPageIdentifier.ChapterIndex"
-        CurrentChapterTotalPages="@(_chapterPageCounts.GetValueOrDefault(_currentPageIdentifier.ChapterIndex))"
+        CurrentChapterPageIndex="@(_reader?.CurrentPageIndex)"
+        CurrentChapterTotalPages="@(_reader?.CurrentTotalPages)"
     />
 </MudDrawer>
 
@@ -46,7 +46,7 @@
     [SupplyParameterFromQuery(Name = "path")]
     public string? FilePath { get; set; }
 
-    private Reader _reader = null!;
+    private Reader? _reader;
     private Book? _currentBook;
     private Cover _currentBookCover = null!;
     private IEnumerable<CssFile> _css = [];
@@ -151,7 +151,7 @@
         BookPaginationService.StopCalculation();
         try
         {
-            if (_reader.PaginationSandbox.Context != null)
+            if (_reader?.PaginationSandbox.Context != null)
             {
                 await Js.InvokeVoidAsync("utils.cleanupElementContent", _reader.PaginationSandbox);
             }

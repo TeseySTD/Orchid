@@ -29,7 +29,7 @@
                 @TotalBookPages
             </MudListItem>
             <MudListItem Icon="@Icons.Material.Filled.Percent" Title="Current Progress">
-                @(CurrentChapterPageIndex + 1) / @CurrentChapterTotalPages
+                @(CurrentChapterPageIndex != null ? CurrentChapterPageIndex + 1 : "N/A") / @(CurrentChapterTotalPages?.ToString() ?? "N/A")
             </MudListItem>
         </MudList>
     }
@@ -40,6 +40,6 @@
     [Parameter] public Cover Cover { get; set; } = null!;
     [Parameter] public string CurrentChapterTitle { get; set; } = string.Empty;
     [Parameter] public int TotalBookPages { get; set; }
-    [Parameter] public int CurrentChapterPageIndex { get; set; }
-    [Parameter] public int CurrentChapterTotalPages { get; set; }
+    [Parameter] public int? CurrentChapterPageIndex { get; set; }
+    [Parameter] public int? CurrentChapterTotalPages { get; set; }
 }
