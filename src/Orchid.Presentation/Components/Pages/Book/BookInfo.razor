@@ -8,8 +8,26 @@
     @if (Book != null)
     {
         <MudStack AlignItems="AlignItems.Center" Class="pa-4">
-            <MudImage Src="@Cover.Path" Alt=@($"Book Cover: {Cover.Name}") Title=@($"Book Cover: {Cover.Name}") Width="140" Elevation="25"
-                      Class="rounded-lg mb-4"/>
+            <div style="position: relative; width: 140px; height: 210px;" class="mb-4">
+                @if (!_isImageLoaded)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle"
+                                 Width="140px" Height="210px"
+                                 Animation="Animation.Wave"
+                                 Class="rounded-lg"
+                                 Style="position: absolute; top: 0; left: 0; z-index: 1;"/>
+                }
+
+                <MudImage Src="@Cover?.Path"
+                          @key="@Cover?.Path"
+                          Alt=@($"Book Cover: {Cover?.Name}")
+                          Title=@($"Book Cover: {Cover?.Name}")
+                          Width="140" Height="210" Elevation="25"
+                          decoding="async"
+                          loading="eager"
+                          Class="rounded-lg"
+                          @onload="OnImageLoaded"/>
+            </div>
             <MudText Typo="Typo.subtitle1" Align="Align.Center"><b>@Book.Title.Value</b></MudText>
             @if (Book.Authors.Any())
             {
@@ -37,9 +55,25 @@
 
 @code {
     [Parameter] public Book? Book { get; set; }
-    [Parameter] public Cover Cover { get; set; } = null!;
+    [Parameter] public required Cover? Cover { get; set; }
     [Parameter] public string CurrentChapterTitle { get; set; } = string.Empty;
     [Parameter] public int TotalBookPages { get; set; }
     [Parameter] public int? CurrentChapterPageIndex { get; set; }
     [Parameter] public int? CurrentChapterTotalPages { get; set; }
+    private bool _isImageLoaded;
+    private string? _currentCoverPath;
+
+    protected override void OnParametersSet()
+    {
+        if (_currentCoverPath != Cover?.Path)
+        {
+            _currentCoverPath = Cover?.Path;
+            _isImageLoaded = false;
+        }
+    }
+
+    private void OnImageLoaded()
+    {
+        _isImageLoaded = true;
+    }
 }
