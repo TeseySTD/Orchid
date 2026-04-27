@@ -1,0 +1,178 @@
+﻿@using MudBlazor.Services
+@using Orchid.Core.Models
+@using Orchid.Core.Models.ValueObjects
+@inject IBrowserViewportService BrowserViewportService
+@implements IAsyncDisposable
+
+@if (Book != null)
+{
+    <MudDrawer @bind-Open="DrawerOpen" Anchor="Anchor.Top" Elevation="3"
+               Variant="DrawerVariant.Temporary" Height="@_dynamicDrawerHeight">
+        <div class="d-flex align-center w-100 h-100 @_dynamicPadding"
+             style="background-color: var(--mud-palette-background-grey); overflow: hidden;">
+
+            @if (_isMobile)
+            {
+                <div class="d-flex flex-column flex-grow-1 justify-center overflow-hidden pr-2 h-100">
+                    <div class="d-flex align-center text-truncate">
+                        <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Small"
+                                 Class="mr-2 flex-shrink-0 mud-text-secondary"/>
+                        <MudText Class="text-truncate mud-text-primary" Style="@_dynamicTitleStyle">
+                            @Book.Title.Value
+                        </MudText>
+                    </div>
+
+                    @if (Book.Authors.Any())
+                    {
+                        <MudText Class="text-truncate mud-text-secondary ml-8" Style="@_dynamicSubtitleStyle">
+                            @string.Join(", ", Book.Authors.Select(a => a.Name))
+                        </MudText>
+                    }
+
+                    <div class="d-flex align-center text-truncate mt-1">
+                        <MudIcon Icon="@Icons.Material.Filled.BookmarkBorder" Size="Size.Small"
+                                 Class="mr-2 flex-shrink-0 mud-text-secondary"/>
+                        <MudText Class="text-truncate mud-text-secondary" Style="@_dynamicSubtitleStyle">
+                            Chapter: @CurrentChapterTitle <span class="mx-1">-</span>
+                            Page: @(CurrentChapterPageIndex.HasValue ? CurrentChapterPageIndex.Value + 1 : "N/A") / @(CurrentChapterTotalPages?.ToString() ?? "N/A") <span
+                                class="mx-1">|</span> Total: @TotalBookPages
+                        </MudText>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex align-center flex-grow-1 overflow-hidden pr-4 h-100 gap-x-2">
+
+                    <div class="d-flex align-center text-truncate flex-shrink-1">
+                        <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Small"
+                                 Class="mr-2 flex-shrink-0 mud-text-secondary"/>
+                        <MudText Class="text-truncate mud-text-primary" Style="@_dynamicTitleStyle">
+                            @Book.Title.Value
+                        </MudText>
+                        @if (Book.Authors.Any())
+                        {
+                            <MudText Class="text-truncate mud-text-secondary ml-2" Style="@_dynamicSubtitleStyle">
+                                — @string.Join(", ", Book.Authors.Select(a => a.Name))
+                            </MudText>
+                        }
+                    </div>
+
+                    <MudDivider Vertical="true" FlexItem="true" Class="mx-2"/>
+
+                    <div class="d-flex align-center text-truncate flex-shrink-0">
+                        <MudIcon Icon="@Icons.Material.Filled.BookmarkBorder" Size="Size.Small"
+                                 Class="mr-2 flex-shrink-0 mud-text-secondary"/>
+                        <MudText Class="text-truncate mud-text-secondary" Style="@_dynamicSubtitleStyle">
+                            Chapter: @CurrentChapterTitle <span class="mx-2">|</span>
+                            Page: @(CurrentChapterPageIndex.HasValue ? CurrentChapterPageIndex.Value + 1 : "N/A") / @(CurrentChapterTotalPages?.ToString() ?? "N/A") <span
+                                class="mx-2">|</span> Total: @TotalBookPages
+                        </MudText>
+                    </div>
+                </div>
+            }
+
+            <div class="flex-shrink-0">
+                <MudButton StartIcon="@Icons.Material.Filled.FormatListBulleted"
+                           OnClick="OnNavigationClick"
+                           Color="Color.Default"
+                           Size="Size.Small"
+                           Class="mud-text-secondary"
+                           Style="@($"text-transform: none; font-size: {_dynamicButtonFontSize};")">
+                    <span class="d-none d-sm-inline">Navigation</span>
+                </MudButton>
+            </div>
+
+        </div>
+    </MudDrawer>
+}
+
+@code {
+    [Parameter] public Book? Book { get; set; }
+    [Parameter] public Cover? Cover { get; set; }
+
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    [Parameter] public string CurrentChapterTitle { get; set; } = string.Empty;
+    [Parameter] public int TotalBookPages { get; set; }
+    [Parameter] public int? CurrentChapterPageIndex { get; set; }
+    [Parameter] public int? CurrentChapterTotalPages { get; set; }
+    [Parameter] public EventCallback OnNavigationClick { get; set; }
+
+    private bool DrawerOpen
+    {
+        get => Open;
+        set
+        {
+            if (Open != value)
+            {
+                OpenChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    private bool _isMobile = true;
+    private string _dynamicDrawerHeight = "72px";
+    private string _dynamicPadding = "px-2 py-1";
+    private string _dynamicTitleStyle = "font-size: 0.8rem; font-weight: 600; line-height: 1.2; margin-bottom: 2px;";
+    private string _dynamicSubtitleStyle = "font-size: 0.65rem; line-height: 1.2; margin-bottom: 2px;";
+    private string _dynamicButtonFontSize = "0.7rem";
+
+    private readonly Guid _breakpointSubscriptionId = Guid.NewGuid();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var breakpoint = await BrowserViewportService.GetCurrentBreakpointAsync();
+            UpdateDynamicStyles(breakpoint);
+
+            var subscriptionOptions = new ResizeOptions { ReportRate = 100 };
+
+            await BrowserViewportService.SubscribeAsync(
+                _breakpointSubscriptionId,
+                e => InvokeAsync(() => UpdateDynamicStyles(e.Breakpoint)),
+                subscriptionOptions
+            );
+        }
+    }
+
+    private void UpdateDynamicStyles(Breakpoint breakpoint)
+    {
+        var isMobile = breakpoint < Breakpoint.Md;
+
+        var newHeight = isMobile ? "72px" : "56px";
+        var newPadding = isMobile ? "px-2 py-1" : "px-4 py-1";
+
+        var newTitleStyle = isMobile
+            ? "font-size: 0.8rem; font-weight: 600; line-height: 1.2; margin-bottom: 2px;"
+            : "font-size: 0.95rem; font-weight: 600; line-height: 1.2;";
+
+        var newSubtitleStyle = isMobile
+            ? "font-size: 0.65rem; line-height: 1.2; margin-bottom: 2px;"
+            : "font-size: 0.85rem; line-height: 1.2;";
+
+        var newButtonFontSize = isMobile ? "0.7rem" : "0.85rem";
+
+        if (_isMobile != isMobile || _dynamicDrawerHeight != newHeight)
+        {
+            _isMobile = isMobile;
+            _dynamicDrawerHeight = newHeight;
+            _dynamicPadding = newPadding;
+            _dynamicTitleStyle = newTitleStyle;
+            _dynamicSubtitleStyle = newSubtitleStyle;
+            _dynamicButtonFontSize = newButtonFontSize;
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_breakpointSubscriptionId != Guid.Empty)
+        {
+            await BrowserViewportService.UnsubscribeAsync(_breakpointSubscriptionId);
+        }
+    }
+
+}

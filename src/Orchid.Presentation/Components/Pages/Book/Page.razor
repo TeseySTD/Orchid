@@ -12,30 +12,30 @@
 @inject IJSRuntime Js
 @implements IAsyncDisposable
 
-<MudDrawer @bind-Open="@_drawerOpen" Anchor="Anchor.End" Elevation="2" Variant="DrawerVariant.Temporary" Width="320px">
-    <BookInfo
-        Book="@_currentBook"
-        Cover="@_currentBookCover"
-        CurrentChapterTitle="@_chapterTitles.ElementAtOrDefault(_currentPageIdentifier.ChapterIndex)"
-        TotalBookPages="@_chapterPageCounts.Values.Sum()"
-        CurrentChapterPageIndex="@(_reader?.CurrentPageIndex)"
-        CurrentChapterTotalPages="@(_reader?.CurrentTotalPages)"
-    />
-</MudDrawer>
+<BookMenu
+    @bind-Open="_drawerOpen"
+    Book="@_currentBook"
+    Cover="@_currentBookCover"
+    CurrentChapterTitle="@_chapterTitles.ElementAtOrDefault(_currentPageIdentifier.ChapterIndex)"
+    TotalBookPages="@_chapterPageCounts.Values.Sum()"
+    CurrentChapterPageIndex="@(_reader?.CurrentPageIndex)"
+    CurrentChapterTotalPages="@(_reader?.CurrentTotalPages)"
+    OnNavigationClick="OpenNavigation"
+/>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-0" Style="height: 100%; display: flex; flex-direction: column;">
     <LoadingOverlay IsVisible="_isBookLoading" Text="Loading book..."/>
 
     @if (_currentBook != null)
     {
-        <FloatingInfoButton OnClick="() => _drawerOpen = !_drawerOpen"/>
+        <FloatingInfoButton OnClick="ToggleDrawer"/>
 
         <Reader @ref="_reader"
                 BookId="@_currentBook.Id"
                 ChaptersCount="@_chaptersCount"
                 PaginationStore="@_paginationStore"
                 Css="@_css"
-                OnPageChanged="@(id => _currentPageIdentifier = id)"
+                OnPageChanged="UpdateCurrentPageIdentifier"
                 OnPageContextChangeCallback="OnPageContextChange"
                 OnPageContextChangeEndCallback="OnPageContextChangeEnd"/>
     }
@@ -122,7 +122,7 @@
     private void StartPagesCalculation(List<Chapter> chapters)
     {
         BookPaginationService.StartBackgroundPageCalculation(
-            _currentBook!.Id, chapters, _reader.PaginationSandbox, _paginationStore,
+            _currentBook!.Id, chapters, _reader!.PaginationSandbox, _paginationStore,
             async (idx, pagesCount) =>
             {
                 _chapterPageCounts[idx] = pagesCount;
@@ -144,6 +144,20 @@
             },
             jsRuntime: Js
         );
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void OpenNavigation()
+    {
+    }
+
+    private void UpdateCurrentPageIdentifier(PageIdentifier identifier)
+    {
+        _currentPageIdentifier = identifier;
     }
 
     public async ValueTask DisposeAsync()
