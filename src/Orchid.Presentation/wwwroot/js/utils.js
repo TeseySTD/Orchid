@@ -1,4 +1,8 @@
 ﻿window.utils = {
+    scrollToElementWithId: (id) => {
+        document.getElementById(id)?.scrollIntoView({behavior: 'instant', block: 'center'});
+    },
+    
     getPaginationContext: (element) => {
         if (!element) return null;
 
@@ -64,7 +68,7 @@
 
             if (isDifferent) {
                 lastContext = newContext;
-                lastClass = newClass; 
+                lastClass = newClass;
                 return true;
             }
             return false;
@@ -101,7 +105,7 @@
             delete element._pageContextCleanup;
         }
     },
-    
+
     cleanupElementContent: (element) => {
         if (!element) return;
 

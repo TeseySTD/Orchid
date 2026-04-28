@@ -134,7 +134,7 @@ public class BookPaginationService : IDisposable
 
     public int FindPageIndexByLocator(PageData[] pages, string targetLocator)
     {
-        if (pages.Length == 0) return 0;
+        if (pages.Length == 0 || string.IsNullOrEmpty(targetLocator)) return 0;
         for (int i = 0; i < pages.Length; i++)
         {
             if (CompareLocators(pages[i].Locator, targetLocator) > 0)

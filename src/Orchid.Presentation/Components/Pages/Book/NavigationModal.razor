@@ -1,0 +1,94 @@
+﻿@using Orchid.Core.Models.ValueObjects
+@inject IJSRuntime Js
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="fw-bold">Navigation menu</MudText>
+    </TitleContent>
+    <DialogContent>
+        <div style="max-height: 70vh; overflow-y: auto;" class="pr-2">
+            <MudList T="NavItem" Clickable="true" Dense="true">
+                @RenderNavigationItems(Navigation?.NavItems ?? [])
+            </MudList>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public Navigation? Navigation { get; set; }
+    [Parameter] public IReadOnlyDictionary<int, int> ChapterPageCounts { get; set; } = new Dictionary<int, int>();
+    [Parameter] public int CurrentChapterIndex { get; set; }
+    private const string ActiveChapterId = "active-chapter-node"; 
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Js.InvokeVoidAsync("utils.scrollToElementWithId", ActiveChapterId);
+        }
+    }
+
+    private RenderFragment<IEnumerable<NavItem>> RenderNavigationItems => items => __builder =>
+    {
+        foreach (var item in items)
+        {
+            var isCurrent = item.ChapterIndex == CurrentChapterIndex;
+            var elementId = isCurrent ? ActiveChapterId : null;
+            var textClass = isCurrent ? "mud-primary-text fw-bold" : "";
+
+            ChapterPageCounts.TryGetValue(item.ChapterIndex, out var pagesCount);
+
+            if (item.NestedItems.Any())
+            {
+                var isExpanded = IsOrContainsCurrentChapter(item);
+
+                <MudListItem T="NavItem" InitiallyExpanded="@isExpanded" NestedListStyle="padding-left: 16px;">
+                    <ChildContent>
+                        <div id="@elementId" class="d-flex w-100 justify-space-between align-center"
+                             @onclick="@(() => SelectChapter(item.ChapterIndex))">
+                            <MudText Typo="Typo.body1" Class="@textClass">@item.ChapterTitle</MudText>
+                            @if (pagesCount > 0)
+                            {
+                                <MudText Typo="Typo.caption"
+                                         Class="mud-text-secondary ml-4 flex-shrink-0">@pagesCount p.
+                                </MudText>
+                            }
+                        </div>
+                    </ChildContent>
+                    <NestedList>
+                        @RenderNavigationItems(item.NestedItems)
+                    </NestedList>
+                </MudListItem>
+            }
+            else
+            {
+                <MudListItem T="NavItem" OnClick="@(() => SelectChapter(item.ChapterIndex))">
+                    <div id="@elementId" class="d-flex w-100 justify-space-between align-center">
+                        <MudText Typo="Typo.body1" Class="@textClass">@item.ChapterTitle</MudText>
+                        @if (pagesCount > 0)
+                        {
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary ml-4 flex-shrink-0">@pagesCount p.
+                            </MudText>
+                        }
+                    </div>
+                </MudListItem>
+            }
+        }
+    };
+
+    private bool IsOrContainsCurrentChapter(NavItem item)
+    {
+        if (item.ChapterIndex == CurrentChapterIndex)
+            return true;
+
+        return item.NestedItems.Any(IsOrContainsCurrentChapter);
+    }
+
+    private void SelectChapter(int chapterIndex)
+    {
+        MudDialog.Close(DialogResult.Ok(chapterIndex));
+    }
+
+}

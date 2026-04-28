@@ -10,8 +10,6 @@ public record PageIdentifier
 
     public static PageIdentifier Create(int chapterIndex, string locator)
     {
-        if (string.IsNullOrEmpty(locator) || chapterIndex < 0)
-            return Empty;
         return new PageIdentifier(chapterIndex, locator);
     }
 }

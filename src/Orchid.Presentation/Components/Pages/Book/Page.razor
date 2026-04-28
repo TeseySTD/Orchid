@@ -10,6 +10,7 @@
 @inject IPaginationCacheService PaginationCacheService
 @inject NavigationManager NavManager
 @inject IJSRuntime Js
+@inject IDialogService DialogService
 @implements IAsyncDisposable
 
 <BookMenu
@@ -151,8 +152,48 @@
         _drawerOpen = !_drawerOpen;
     }
 
-    private void OpenNavigation()
+    private async Task OpenNavigation()
     {
+        if (_currentBook?.Navigation == null) return;
+
+        var parameters = new DialogParameters<NavigationModal>
+        {
+            { x => x.Navigation, _currentBook.Navigation },
+            { x => x.ChapterPageCounts, _chapterPageCounts },
+            { x => x.CurrentChapterIndex, _currentPageIdentifier.ChapterIndex }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseButton = true,
+            Position = DialogPosition.Center
+        };
+
+        var dialog = await DialogService.ShowAsync<NavigationModal>("", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is int chapterIndex)
+        {
+            _drawerOpen = false;
+
+            // Empty locator opens the first page of the chapter
+            var newPosition = PageIdentifier.Create(chapterIndex, string.Empty);
+            _currentPageIdentifier = newPosition;
+
+            if (_reader != null)
+            {
+                _isBookLoading = true;
+                StateHasChanged();
+
+                await _reader.RestorePositionAsync(newPosition);
+
+                _isBookLoading = false;
+                StateHasChanged();
+            }
+        }
     }
 
     private void UpdateCurrentPageIdentifier(PageIdentifier identifier)
