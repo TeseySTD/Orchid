@@ -84,4 +84,9 @@
       <Folder Include="Resources\Images\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Remove="appsettings.json" />
+      <EmbeddedResource Include="appsettings.secrets.json" />
+    </ItemGroup>
+
 </Project>

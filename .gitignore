@@ -401,5 +401,8 @@ FodyWeavers.xsd
 .idea/
 /src/Orchid/.idea/
 
+# Application secrets
+appsettings.secrets.json
+
 #Custom
 /src/test-data/

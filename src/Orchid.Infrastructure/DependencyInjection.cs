@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Options;
 using Orchid.Application.Common.Repo;
 using Orchid.Application.Common.Services;
+using Orchid.Infrastructure.Cloud;
+using Orchid.Infrastructure.Cloud.Options;
 using Orchid.Infrastructure.Data.Repo;
 using Orchid.Infrastructure.Data.Services;
 
@@ -9,16 +11,25 @@ namespace Orchid.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, Action<InfrastructureOptions> configureOptions)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
+        Action<InfrastructureOptions> configureOptions)
     {
         var builder = new InfrastructureOptions();
         configureOptions(builder);
         services.AddSingleton(Options.Create(builder.DiskCacheServiceOptions));
         services.AddSingleton(Options.Create(builder.JsonStorageServiceOptions));
-        
+
         services.AddTransient<IImagesRepository, ImagesRepository>();
         services.AddSingleton<IDiskCacheService, FileDiskCacheService>();
         services.AddSingleton<IJsonStorageService, JsonStorageService>();
+
+        services.AddSingleton<ICloudStorageProvider>(sp =>
+        {
+            var options = builder.GoogleAuthOptions;
+            var secureStorage = sp.GetRequiredService<ILocalSecureStorage>();
+
+            return new GoogleDriveProvider(options.ClientId, options.ClientSecret, secureStorage);
+        });
         return services;
     }
 }
