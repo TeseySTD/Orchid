@@ -1,6 +1,7 @@
 ﻿@page "/book"
 @using System.Collections.Concurrent
 @using Orchid.Application.Common.Services
+@using Orchid.Application.Models
 @using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
 @using Orchid.Presentation.Models
@@ -11,6 +12,9 @@
 @inject NavigationManager NavManager
 @inject IJSRuntime Js
 @inject IDialogService DialogService
+@inject ICloudSyncService CloudSyncService
+@inject IEnumerable<ICloudStorageProvider> CloudProviders
+@inject ISnackbar Snackbar
 @implements IAsyncDisposable
 
 <BookMenu
@@ -61,6 +65,8 @@
     private PageIdentifier _currentPageIdentifier = PageIdentifier.Empty;
     private bool _isBookLoading;
     private bool _drawerOpen;
+
+    private CancellationTokenSource? _syncCts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -136,6 +142,8 @@
             },
             async () =>
             {
+                _currentPageIdentifier = await ResolveInitialPositionAsync(_currentPageIdentifier);
+
                 _isBookLoading = false;
                 await InvokeAsync(async () =>
                 {
@@ -145,6 +153,34 @@
             },
             jsRuntime: Js
         );
+    }
+
+    private async Task<PageIdentifier> ResolveInitialPositionAsync(PageIdentifier localPosition)
+    {
+        var provider = CloudProviders.FirstOrDefault(p => p.IsAuthenticated);
+        if (provider == null || _currentBook == null)
+            return localPosition;
+
+        // Force fallback to local position if network is slow/unreachable to prevent UI hanging
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        try
+        {
+            var initialProgress = new ReadingProgress(_currentBook.Id, localPosition, DateTimeOffset.MinValue);
+            var result = await CloudSyncService.TrySyncProgressAsync(provider.ProviderId, initialProgress, timeoutCts.Token);
+
+            if (result is { State: SyncState.Downloaded, ResolvedProgress: not null })
+            {
+                Snackbar.Add("Progress is restored from cloud", Severity.Success);
+                return result.ResolvedProgress.Position;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Snackbar.Add("Cloud is not responding. Retrieve data from local.", Severity.Warning);
+        }
+
+        return localPosition;
     }
 
     private void ToggleDrawer()
@@ -192,6 +228,8 @@
 
                 _isBookLoading = false;
                 StateHasChanged();
+
+                TriggerCloudSyncDebounced(newPosition);
             }
         }
     }
@@ -199,10 +237,66 @@
     private void UpdateCurrentPageIdentifier(PageIdentifier identifier)
     {
         _currentPageIdentifier = identifier;
+        TriggerCloudSyncDebounced(identifier);
+    }
+
+    private void TriggerCloudSyncDebounced(PageIdentifier position)
+    {
+        _syncCts?.Cancel();
+        _syncCts = new CancellationTokenSource();
+        var token = _syncCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(3000, token);
+
+                if (!token.IsCancellationRequested && _currentBook != null)
+                {
+                    var progress = new ReadingProgress(_currentBook.Id, position, DateTimeOffset.UtcNow);
+                    await PerformCloudSyncAsync(progress, token);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        }, token);
+    }
+
+    private async Task PerformCloudSyncAsync(ReadingProgress localProgress, CancellationToken token)
+    {
+        var provider = CloudProviders.FirstOrDefault(p => p.IsAuthenticated);
+        if (provider == null) return;
+
+        var result = await CloudSyncService.TrySyncProgressAsync(provider.ProviderId, localProgress, token);
+
+        if (result is { State: SyncState.Downloaded, ResolvedProgress: not null })
+        {
+            await InvokeAsync(async () =>
+            {
+                _currentPageIdentifier = result.ResolvedProgress.Position;
+                if (_reader != null)
+                {
+                    await _reader.RestorePositionAsync(_currentPageIdentifier);
+                }
+
+                Snackbar.Add("Progress updated.", Severity.Info);
+                StateHasChanged();
+            });
+        }
+        else if (result is { State: SyncState.Uploaded, ResolvedProgress: not null })
+        {
+            Snackbar.Add("Progress uploaded to the cloud.", Severity.Info);
+            StateHasChanged();
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
+        _syncCts?.Cancel();
+        _syncCts?.Dispose();
+
         BookPaginationService.StopCalculation();
         try
         {
