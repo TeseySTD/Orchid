@@ -1,4 +1,6 @@
-﻿using Orchid.Application.Common.Services;
+﻿using MudBlazor;
+using MudBlazor.Services;
+using Orchid.Application.Common.Services;
 using Orchid.Presentation.Services;
 
 namespace Orchid.Presentation;
@@ -9,6 +11,10 @@ public static class DependencyInjection
     {
         services.AddSingleton<BookPaginationService>();
         services.AddSingleton<ILocalSecureStorage, MauiSecureStorage>();
+        services.AddMudServices(config =>
+        {
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
+        });
         return services;
     }
 }
