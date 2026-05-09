@@ -17,26 +17,6 @@
 @inject ISnackbar Snackbar
 @implements IAsyncDisposable
 
-<style>
-    .sync-snackbar {
-        min-width: max-content !important;
-        min-height: 36px !important;
-        padding: 4px 16px !important;
-        border-radius: 24px !important;
-        background-color: var(--mud-palette-surface) !important;
-        color: var(--mud-palette-text-primary) !important;
-        border: 1px solid var(--mud-palette-lines-default) !important;
-        box-shadow: var(--mud-elevation-3) !important;
-    }
-    .sync-snackbar .mud-snackbar-content-message {
-        font-size: 0.85rem !important;
-        margin-left: 8px !important;
-    }
-    .sync-snackbar .mud-icon-root {
-        color: var(--mud-palette-primary) !important;
-    }
-</style>
-
 <BookMenu
     @bind-Open="_drawerOpen"
     Book="@_currentBook"
@@ -319,7 +299,7 @@
             options.Icon = icon;
             options.IconSize = Size.Small;
             options.ShowCloseIcon = false;
-            options.SnackbarTypeClass = "sync-snackbar";
+            options.SnackbarTypeClass = "orchid-snackbar";
             options.VisibleStateDuration = 2500;
         });
     }

@@ -7,6 +7,26 @@
     transition: background-color 0.3s, color 0.3s;
 }
 
+.orchid-snackbar {
+    min-width: max-content !important;
+    min-height: 36px !important;
+    padding: 4px 16px !important;
+    border-radius: 24px !important;
+    background-color: var(--mud-palette-surface) !important;
+    color: var(--mud-palette-text-primary) !important;
+    border: 1px solid var(--mud-palette-lines-default) !important;
+    box-shadow: var(--mud-elevation-3) !important;
+}
+
+.orchid-snackbar .mud-snackbar-content-message {
+    font-size: 0.85rem !important;
+    margin-left: 8px !important;
+}
+
+.orchid-snackbar .mud-icon-root {
+    color: var(--mud-palette-primary) !important;
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;
