@@ -11,6 +11,7 @@ public static class DependencyInjection
         services.AddTransient<IBookResourcesService, BookResourcesService>();
         services.AddTransient<IPaginationCacheService, PaginationCacheService>();
         services.AddTransient<ICloudSyncService, CloudSyncService>();
+        services.AddSingleton<ILibraryService, LibraryService>();
 
         return services;
     }

@@ -28,7 +28,7 @@ public class EpubBookService : IBookService
         BookMetadata bookMetadata = BookMetadata.Create(
             language: language,
             chaptersCount: chaptersCount,
-            Path.GetFileName(bookFilePath)
+            Path.GetFullPath(bookFilePath)
         );
 
         string? publicationDate;

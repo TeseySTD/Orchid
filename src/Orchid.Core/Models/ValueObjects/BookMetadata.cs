@@ -2,16 +2,16 @@
 
 public record BookMetadata
 {
-    public string FileName { get; init; } = null!;
+    public string FilePath { get; init; } = null!;
     public string? Language { get; init; }
     public int ChaptersCount { get; init; }
 
-    public static BookMetadata Create(string? language, int chaptersCount, string filename) => new()
+    public static BookMetadata Create(string? language, int chaptersCount, string filepath) => new()
     {
         Language = language,
         ChaptersCount = chaptersCount,
-        FileName = filename
+        FilePath = filepath
     };
 
-    public static BookMetadata Create(int chaptersCount, string filename) => Create(null, chaptersCount, filename);
+    public static BookMetadata Create(int chaptersCount, string filepath) => Create(null, chaptersCount, filepath);
 }

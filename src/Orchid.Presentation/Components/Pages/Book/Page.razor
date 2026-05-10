@@ -8,6 +8,7 @@
 @using Orchid.Presentation.Services
 @inject IBookResourcesService BookResourcesService
 @inject BookPaginationService BookPaginationService
+@inject ILibraryService LibraryService
 @inject IPaginationCacheService PaginationCacheService
 @inject NavigationManager NavManager
 @inject IJSRuntime Js
@@ -92,6 +93,7 @@
             _chaptersCount = chapters.Count;
             _chapterTitles = chapters.Select(c => c.Title).ToList();
             _currentBookCover = _currentBook.Cover ?? await DefaultCover();
+            await LibraryService.TrackBookAsync(_currentBook);
 
             StateHasChanged();
             await Task.Delay(50);

@@ -27,6 +27,15 @@
     color: var(--mud-palette-primary) !important;
 }
 
+.hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera, iOS */
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;
