@@ -157,24 +157,33 @@
         );
     }
 
-    private async Task<PageIdentifier> ResolveInitialPositionAsync(PageIdentifier localPosition)
+    private async Task<PageIdentifier> ResolveInitialPositionAsync(PageIdentifier defaultPosition)
     {
+        if (_currentBook == null) return defaultPosition;
+
+        var localProgress = await LibraryService.GetProgressAsync(_currentBook.Id.Value);
+        var currentPosition = localProgress?.Position ?? defaultPosition;
+
         var provider = CloudProviders.FirstOrDefault(p => p.IsAuthenticated);
-        if (provider == null || _currentBook == null)
-            return localPosition;
+        if (provider == null) return currentPosition;
 
         // Force fallback to local position if network is slow/unreachable to prevent UI hanging
         using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         try
         {
-            var initialProgress = new ReadingProgress(_currentBook.Id, localPosition, DateTimeOffset.MinValue);
+            var initialProgress = localProgress ?? new ReadingProgress(_currentBook.Id, currentPosition, DateTimeOffset.MinValue);
             var result = await CloudSyncService.TrySyncProgressAsync(provider.ProviderId, initialProgress, timeoutCts.Token);
 
-            if (result is { State: SyncState.Downloaded, ResolvedProgress: not null })
+            switch (result)
             {
-                ShowSyncSnackbar("Progress is restored from cloud", Icons.Material.Filled.CloudDownload);
-                return result.ResolvedProgress.Position;
+                case { State: SyncState.Downloaded, ResolvedProgress: not null }:
+                    await LibraryService.SaveProgressAsync(result.ResolvedProgress);
+                    ShowSyncSnackbar("Progress is restored from cloud", Icons.Material.Filled.CloudDownload);
+                    return result.ResolvedProgress.Position;
+                case { State: SyncState.Uploaded, ResolvedProgress: not null }:
+                    ShowSyncSnackbar("Local progress uploaded to the cloud.", Icons.Material.Filled.CloudUpload);
+                    return result.ResolvedProgress.Position;
             }
         }
         catch (OperationCanceledException)
@@ -182,7 +191,7 @@
             ShowSyncSnackbar("Cloud is not responding. Retrieve data from local.", Icons.Material.Filled.CloudOff);
         }
 
-        return localPosition;
+        return currentPosition;
     }
 
     private void ToggleDrawer()
@@ -257,6 +266,8 @@
                 if (!token.IsCancellationRequested && _currentBook != null)
                 {
                     var progress = new ReadingProgress(_currentBook.Id, position, DateTimeOffset.UtcNow);
+
+                    await LibraryService.SaveProgressAsync(progress);
                     await PerformCloudSyncAsync(progress, token);
                 }
             }
@@ -275,6 +286,8 @@
 
         if (result is { State: SyncState.Downloaded, ResolvedProgress: not null })
         {
+            await LibraryService.SaveProgressAsync(result.ResolvedProgress);
+
             await InvokeAsync(async () =>
             {
                 _currentPageIdentifier = result.ResolvedProgress.Position;
