@@ -1,3 +1,5 @@
-<img src="social-media-preview.png" max-height="150px" alt="Orchid logo with title">
+<div align="center">
+    <img src="./assets/logo-and-title.svg" alt="Orchid logo with title">
+</div>
 
 **Sync book reader on .NET MAUI Blazor Hybrid.**
