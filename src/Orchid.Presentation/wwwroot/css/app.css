@@ -9,6 +9,7 @@
 
 .orchid-snackbar {
     min-width: max-content !important;
+    max-width: 90vw !important;
     min-height: 36px !important;
     padding: 4px 16px !important;
     border-radius: 24px !important;
@@ -21,11 +22,30 @@
 .orchid-snackbar .mud-snackbar-content-message {
     font-size: 0.85rem !important;
     margin-left: 8px !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
 }
 
 .orchid-snackbar .mud-icon-root {
     color: var(--mud-palette-primary) !important;
 }
+
+@media (max-width: 600px) {
+    .orchid-snackbar {
+        min-width: 0 !important;
+        padding: 4px 12px !important;
+    }
+
+    .orchid-snackbar .mud-snackbar-content-message {
+        font-size: 0.75rem !important;
+        margin-left: 6px !important;
+    }
+    
+    .orchid-snackbar .mud-icon-root {
+        font-size: 1.15rem !important;
+    }
+}
+
 
 .hide-scrollbar {
     -ms-overflow-style: none; /* IE and Edge */
