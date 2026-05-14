@@ -4,32 +4,29 @@
 @inject ISnackbar Snackbar
 
 <div class="d-flex flex-column h-100 w-100" style="max-width: 100%; overflow-x: hidden;">
-    <MudStack Row="true" AlignItems="AlignItems.Center" Class="pa-3 pa-sm-4">
-        <a href="https://github.com/TeseySTD/Orchid" target="_blank" style="line-height: 0;">
-            <Logo Color="Color.Secondary" Width="40" Height="40" alt="Orchid logo"/>
+    
+    <div class="d-flex justify-center align-center py-6">
+        <a href="https://github.com/TeseySTD/Orchid" target="_blank" style="line-height: 0; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <Logo Color="Color.Primary" Width="56" Height="56" alt="Orchid logo"/>
         </a>
-        <MudText Typo="Typo.h6" Class="ml-2 fw-bold" Color="Color.Primary">Orchid</MudText>
-    </MudStack>
+    </div>
 
-    <MudDivider Class="mb-2"/>
-
-    <MudNavMenu Class="flex-grow-1 w-100">
-        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-        <MudNavLink Href="https://github.com/TeseySTD/Orchid" Target="_blank" Icon="@Icons.Custom.Brands.GitHub">
-            GitHub
-        </MudNavLink>
+    <MudNavMenu Class="flex-grow-1 w-100 px-2">
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.LibraryBooks">Library</MudNavLink>
+        <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
+        <MudNavLink Href="https://github.com/TeseySTD/Orchid" Target="_blank" Icon="@Icons.Custom.Brands.GitHub">GitHub</MudNavLink>
     </MudNavMenu>
 
-    <MudDivider Class="mt-auto mb-2"/>
+    <MudDivider Class="mb-4 mx-4"/>
 
-    <div class="pa-3 pa-sm-4 w-100" style="box-sizing: border-box;">
+    <div class="px-4 pb-6 w-100" style="box-sizing: border-box;">
         @if (_provider == null)
         {
-            <MudText Typo="Typo.caption" Color="Color.Error">No providers configured</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Error" Class="px-2">No providers configured</MudText>
         }
         else if (_isAuthenticating || _isLoadingProfile)
         {
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="px-2">
                 <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px"/>
                 <MudStack Spacing="1" Class="flex-grow-1">
                     <MudSkeleton Width="70%" Height="14px"/>
@@ -39,52 +36,50 @@
         }
         else if (_provider.IsAuthenticated && _userProfile != null)
         {
-            <MudStack Spacing="2" Class="w-100">
-                <div class="pa-2 rounded w-100"
-                     style="display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; box-sizing: border-box;">
+            <MudPaper Elevation="0" Class="pa-3 rounded-lg" Style="background-color: var(--mud-palette-background-grey);">
+                <MudStack Spacing="2" Class="w-100">
+                    <div class="d-grid w-100" style="grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center;">
+                        <MudAvatar Size="Size.Medium" Color="Color.Primary" Variant="Variant.Outlined">
+                            @if (!string.IsNullOrEmpty(_userProfile.AvatarUrl))
+                            {
+                                <MudImage Src="@_userProfile.AvatarUrl"/>
+                            }
+                            else
+                            {
+                                @_userProfile.Name.FirstOrDefault()
+                            }
+                        </MudAvatar>
 
-                    <MudAvatar Size="Size.Medium" Color="Color.Primary">
-                        @if (!string.IsNullOrEmpty(_userProfile.AvatarUrl))
-                        {
-                            <MudImage Src="@_userProfile.AvatarUrl"/>
-                        }
-                        else
-                        {
-                            @_userProfile.Name.FirstOrDefault()
-                        }
-                    </MudAvatar>
-
-                    <div style="display: flex; flex-direction: column; overflow: hidden;">
-                        <MudText Typo="Typo.body2" Class="fw-bold"
-                                 Style="display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                 Title="@_userProfile.Name">
-                            @_userProfile.Name
-                        </MudText>
-                        @if (!string.IsNullOrEmpty(_userProfile.Email))
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Secondary"
-                                     Style="display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                                     Title="@_userProfile.Email">
-                                @_userProfile.Email
+                        <div class="d-flex flex-column overflow-hidden">
+                            <MudText Typo="Typo.body2" Class="fw-bold text-truncate" Title="@_userProfile.Name">
+                                @_userProfile.Name
                             </MudText>
-                        }
+                            @if (!string.IsNullOrEmpty(_userProfile.Email))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate" Title="@_userProfile.Email">
+                                    @_userProfile.Email
+                                </MudText>
+                            }
+                        </div>
                     </div>
-                </div>
 
-                <MudButton Variant="Variant.Text"
-                           Color="Color.Error"
-                           FullWidth="true"
-                           StartIcon="@Icons.Material.Filled.Logout"
-                           OnClick="HandleLogoutAsync">
-                    Logout
-                </MudButton>
-            </MudStack>
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Error"
+                               FullWidth="true"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Logout"
+                               OnClick="HandleLogoutAsync">
+                        Logout
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
         }
         else
         {
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        FullWidth="true"
+                       Class="rounded-lg py-2 fw-bold"
                        StartIcon="@Icons.Material.Filled.CloudSync"
                        OnClick="HandleLoginAsync">
                 Connect Cloud
@@ -92,7 +87,6 @@
         }
     </div>
 </div>
-
 
 @code {
     private ICloudStorageProvider? _provider;

@@ -57,6 +57,82 @@ public class FileDiskCacheService : IDiskCacheService
 
     public bool Exists(string key) => File.Exists(GetPath(key));
 
+    public async Task<(long RemovableBytes, long ExcludedBytes)> GetFolderSizeAsync(string folderName,
+        IEnumerable<string>? excludeFileNames = null)
+    {
+        var path = Path.Combine(GetFullCachePath, folderName);
+        if (!Directory.Exists(path)) return (0, 0);
+
+        return await Task.Run(() =>
+        {
+            var dirInfo = new DirectoryInfo(path);
+            var excludedSet = excludeFileNames != null
+                ? new HashSet<string>(excludeFileNames, StringComparer.OrdinalIgnoreCase)
+                : [];
+
+            long removable = 0;
+            long excluded = 0;
+
+            foreach (var file in dirInfo.EnumerateFiles("*", SearchOption.AllDirectories))
+            {
+                if (excludedSet.Contains(file.Name))
+                {
+                    excluded += file.Length;
+                }
+                else
+                {
+                    removable += file.Length;
+                }
+            }
+
+            return (removable, excluded);
+        });
+    }
+
+    public void ClearFolder(string folderName, IEnumerable<string>? excludeFileNames = null)
+    {
+        var path = Path.Combine(GetFullCachePath, folderName);
+        if (!Directory.Exists(path)) return;
+
+        try
+        {
+            var excludedSet = excludeFileNames != null
+                ? new HashSet<string>(excludeFileNames, StringComparer.OrdinalIgnoreCase)
+                : [];
+
+            if (excludedSet.Count == 0)
+            {
+                Directory.Delete(path, true);
+                Directory.CreateDirectory(path);
+                return;
+            }
+
+            var dirInfo = new DirectoryInfo(path);
+            foreach (var file in dirInfo.EnumerateFiles("*", SearchOption.AllDirectories))
+            {
+                if (!excludedSet.Contains(file.Name))
+                {
+                    file.Delete();
+                }
+            }
+
+            foreach (var dir in dirInfo.EnumerateDirectories("*", SearchOption.AllDirectories).Reverse())
+            {
+                if (dir.GetFiles().Length == 0 && dir.GetDirectories().Length == 0)
+                {
+                    dir.Delete();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+#if DEBUG
+            Console.WriteLine($"Error clearing selective folder cache: {ex.Message}");
+#endif
+        }
+    }
+
+
     public void Clear()
     {
         if (Directory.Exists(GetFullCachePath))

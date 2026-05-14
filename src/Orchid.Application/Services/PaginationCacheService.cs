@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Orchid.Application.Common.Services;
+using Orchid.Application.Models;
 using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Application.Services;
@@ -17,9 +18,9 @@ public class PaginationCacheService : IPaginationCacheService
     public async Task SaveChapterAsync(BookId bookId, PaginationContext context, int index, PageData[] pages)
     {
         var key = GetChapterKey(bookId, context, index);
-        
+
         var json = JsonSerializer.Serialize(pages, JsonOptions);
-        
+
         await _cache.SaveStringAsync(key, json);
     }
 
@@ -33,11 +34,22 @@ public class PaginationCacheService : IPaginationCacheService
             await using var stream = _cache.GetStream(key);
             return await JsonSerializer.DeserializeAsync<PageData[]>(stream, JsonOptions);
         }
-        catch { return null; }
+        catch
+        {
+            return null;
+        }
     }
 
-    public bool ChapterExists(BookId bookId, PaginationContext context, int index) 
+    public bool ChapterExists(BookId bookId, PaginationContext context, int index)
         => _cache.Exists(GetChapterKey(bookId, context, index));
+
+    public async Task<CacheSizeInfo> GetCacheSizeAsync()
+    {
+        var sizes = await _cache.GetFolderSizeAsync(FolderName);
+        return new CacheSizeInfo(sizes.RemovableBytes, sizes.ExcludedBytes);
+    }
+
+    public void ClearCache() => _cache.ClearFolder(FolderName);
 
     private string GetChapterKey(BookId bookId, PaginationContext context, int index)
     {

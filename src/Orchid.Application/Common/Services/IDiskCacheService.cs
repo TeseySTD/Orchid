@@ -11,4 +11,9 @@ public interface IDiskCacheService
     public bool Exists(string key);
 
     public void Clear();
+
+    Task<(long RemovableBytes, long ExcludedBytes)> GetFolderSizeAsync(string folderName,
+        IEnumerable<string>? excludeFileNames = null);
+
+    void ClearFolder(string folderName, IEnumerable<string>? excludeFileNames = null);
 }

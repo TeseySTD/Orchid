@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Orchid.Application.Common;
 using Orchid.Application.Common.Repo;
 using Orchid.Application.Common.Services;
 using Orchid.Core.Models;
@@ -22,7 +23,7 @@ public class BookResourcesService(
                 book.Id,
                 book.Cover
             );
-            var relativePath = imagesRepository.GetRelativeImagePath(book.Id, book.Cover.Name);
+            var relativePath = imagesRepository.GetRelativeImagePath(book.Id, Constants.BookCoverFileName);
 
             book.UpdateCoverPath(relativePath);
         }

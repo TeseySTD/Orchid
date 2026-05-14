@@ -1,6 +1,7 @@
 ﻿@using Orchid.Application.Common.Services
 @using Orchid.Application.Models
 @inject IAppSettingsService AppSettings
+@implements IDisposable
 
 <MudAppBar Elevation="0" Color="Color.Transparent" Fixed="true" Dense="true">
     <MudIconButton Icon="@Icons.Material.Filled.Menu" 
@@ -36,6 +37,11 @@
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 
+    protected override void OnInitialized()
+    {
+        AppSettings.OnSettingsChanged += StateHasChanged;
+    }
+
     private void SetTheme(AppThemeMode mode)
     {
         AppSettings.Theme = mode;
@@ -47,4 +53,10 @@
         AppThemeMode.Dark => Icons.Material.Filled.DarkMode,
         _ => Icons.Material.Filled.BrightnessAuto
     };
+
+    public void Dispose()
+    {
+        AppSettings.OnSettingsChanged -= StateHasChanged;
+    }
+
 }
