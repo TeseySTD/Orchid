@@ -85,10 +85,10 @@
 
                             for (const r of Array.from(rects)) {
                                 const absLeft = r.left - containerRect.left;
-                                const absRight = absLeft + r.width;
+                                const center = absLeft + (r.width / 2);
 
-                                if (absLeft < pageRight - 1) strictlyAfter = false;
-                                if (absRight > pageLeft + 1 && absLeft < pageRight - 1) {
+                                if (center < pageRight) strictlyAfter = false;
+                                if (center >= pageLeft && center < pageRight) {
                                     intersects = true;
                                 }
                             }
@@ -96,8 +96,8 @@
                             if (intersects) {
                                 eNode = node;
                                 if (node.nodeType === Node.TEXT_NODE) {
-                                    const rawOff = window.orchidReader._findOffsetAtX(node, pageRight, containerRect.left);
-                                    eOff = window.orchidReader._snapToWordBoundary(node, rawOff);
+                                    const startSearchOff = (node === sNode) ? sOff : 0;
+                                    eOff = window.orchidReader._findOffsetAtX(node, pageRight, containerRect.left, startSearchOff);
                                 } else {
                                     eOff = 1;
                                 }
@@ -109,6 +109,7 @@
                         
                         const startLocator = window.orchidReader._generateNodePath(element, sNode) + ":" + sOff;
                         let pageHtml = "";
+                        
                         try {
                             const range = document.createRange();
 
@@ -117,6 +118,14 @@
                                 range.setStart(sNode, sOff);
                             } else {
                                 range.setStartBefore(sNode);
+                            }
+
+                            const nodePosition = sNode.compareDocumentPosition(eNode);
+                            if (nodePosition & Node.DOCUMENT_POSITION_PRECEDING) {
+                                eNode = sNode;
+                                eOff = sNode.nodeType === Node.TEXT_NODE ? sNode.textContent.length : 1;
+                            } else if (sNode === eNode && eOff < sOff) {
+                                eOff = sOff;
                             }
 
                             if (eNode.nodeType === Node.TEXT_NODE) {
@@ -128,6 +137,27 @@
                             const fragment = range.cloneContents();
 
                             const wrappedFragment = window.orchidReader._wrapWithContext(fragment, range, element);
+
+                            // Strip top margins to prevent text push-down on fractured elements
+                            if (i > 0) {
+                                let curr = wrappedFragment.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? wrappedFragment.firstElementChild : wrappedFragment;
+                                while (curr && curr.nodeType === Node.ELEMENT_NODE) {
+                                    curr.style.setProperty('margin-top', '0px', 'important');
+                                    curr.style.setProperty('padding-top', '0px', 'important');
+                                    curr.style.setProperty('text-indent', '0px', 'important');
+                                    curr = curr.firstElementChild;
+                                }
+                            }
+
+                            // Strip bottom margins to prevent premature overflow 
+                            if (i < count - 1) {
+                                let curr = wrappedFragment.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? wrappedFragment.lastElementChild : wrappedFragment;
+                                while (curr && curr.nodeType === Node.ELEMENT_NODE) {
+                                    curr.style.setProperty('margin-bottom', '0px', 'important');
+                                    curr.style.setProperty('padding-bottom', '0px', 'important');
+                                    curr = curr.lastElementChild;
+                                }
+                            }
 
                             const div = document.createElement('div');
                             div.appendChild(wrappedFragment);
@@ -141,18 +171,21 @@
                             locator: startLocator,
                         });
 
-                        lastEndNode = eNode;
-                        lastEndOffset = eOff;
-
                         if (eNode.nodeType === Node.TEXT_NODE && eOff >= eNode.textContent.length) {
                             walker.currentNode = eNode;
-                            if (!walker.nextNode()) break;
+                            let next = walker.nextNode();
+                            if (!next) break;
+                            lastEndNode = next;
+                            lastEndOffset = 0;
                         } else if (eNode.nodeType !== Node.TEXT_NODE) {
                             walker.currentNode = eNode;
                             let next = walker.nextNode();
                             if (!next) break;
                             lastEndNode = next;
                             lastEndOffset = 0;
+                        } else {
+                            lastEndNode = eNode;
+                            lastEndOffset = eOff;
                         }
                     }
 
@@ -178,22 +211,11 @@
         return lastWrapper;
     },
 
-
-    _snapToWordBoundary: (node, offset) => {
-        const text = node.textContent;
-        if (offset <= 0 || offset >= text.length) return offset;
-        const isBoundary = (char) => /\s|[\u2000-\u200B\u202F\u205F\u00A0]/.test(char);
-        if (isBoundary(text[offset]) || isBoundary(text[offset - 1])) return offset;
-        const textBefore = text.substring(0, offset);
-        const lastSpace = Math.max(textBefore.lastIndexOf(' '), textBefore.lastIndexOf('\n'), textBefore.lastIndexOf('\t'));
-        return lastSpace !== -1 ? lastSpace + 1 : offset;
-    },
-
     _isNodeVisibleInRange: (node, left, right, containerLeft) => {
         const rects = node.nodeType === Node.TEXT_NODE ? window.orchidReader._getTextRects(node) : node.getClientRects();
         for (const r of Array.from(rects)) {
-            const rLeft = r.left - containerLeft;
-            if (rLeft < right - 1 && (rLeft + r.width) > left + 1) return true;
+            const center = r.left - containerLeft + (r.width / 2);
+            if (center >= left && center < right) return true;
         }
         return false;
     },
@@ -204,18 +226,25 @@
         return range.getClientRects();
     },
 
-    _findOffsetAtX: (node, targetAbsX, containerLeft) => {
+    _findOffsetAtX: (node, pageRight, containerLeft, startOffset = 0) => {
         const text = node.textContent;
-        let low = 0, high = text.length;
         const range = document.createRange();
-        while (low < high) {
-            let mid = Math.floor((low + high) / 2);
-            range.setStart(node, mid);
-            range.setEnd(node, mid + 1);
-            if (range.getBoundingClientRect().left - containerLeft < targetAbsX) low = mid + 1;
-            else high = mid;
+        
+        for (let i = startOffset; i < text.length; i++) {
+            range.setStart(node, i);
+            range.setEnd(node, i + 1);
+            const rects = range.getClientRects();
+            
+            if (rects.length === 0) continue; 
+            
+            const rect = rects[0];
+            const center = rect.left - containerLeft + (rect.width / 2);
+            
+            if (center >= pageRight) {
+                return i;
+            }
         }
-        return low;
+        return text.length;
     },
 
     _getPointData: (x, y) => {
@@ -307,7 +336,6 @@
             return new Blob(["[]"], {type: "application/json"});
         }
     },
-
 
     cleanupSandbox: () => {
         if (window.orchidReader._sandbox) {

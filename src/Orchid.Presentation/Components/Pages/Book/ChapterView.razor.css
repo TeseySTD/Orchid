@@ -3,27 +3,30 @@
     height: 100%;
     overflow: hidden; 
     position: relative;
+    container-type: size;      
+    container-name: chapterViewport;
 }
 
 .chapter-content, .page-buffer {
     height: 100%;
     width: 100%;
     
-    /* Core pagination logic: forces content into horizontal columns */
-    column-width: 100vw; 
-    column-gap: 40px; 
+    column-width: 100cqw; 
+    column-gap: 10000px; 
     column-fill: auto; 
     
     overflow-x: hidden;  
     overflow-y: hidden;
     
-    word-wrap: break-word;
+    /* Force left alignment to prevent huge gaps */
+    text-align: left !important; 
     
-    /* Enables Container Query units for children */
-    container-type: size;      
-    container-name: chapterPage;
+    /* Allow breaking anywhere if a word is too long */
+    word-break: normal;
+    overflow-wrap: anywhere;
+    -webkit-hyphens: auto;
+    hyphens: auto;
     
-    font-size: clamp(8px, 3cqmin, 14px);
     position: absolute;
     top: 0;
     left: 0;
@@ -39,6 +42,14 @@
     visibility: hidden;
     pointer-events: none;
     z-index: 0;
+}
+
+/* Force override inline book styles that might cause justification */
+::deep p, 
+::deep div, 
+::deep span,
+::deep h1, ::deep h2, ::deep h3, ::deep h4, ::deep h5, ::deep h6 {
+    text-align: left !important;
 }
 
 ::deep img {
