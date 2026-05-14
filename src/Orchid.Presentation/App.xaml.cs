@@ -2,13 +2,17 @@
 
 public partial class App : Microsoft.Maui.Controls.Application
 {
-    public App()
+    private readonly MainPage _mainPage;
+
+    public App(MainPage mainPage)
     {
         InitializeComponent();
+        _mainPage = mainPage;
     }
+
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new MainPage()) { Title = "Orchid" };
+        return new Window(_mainPage) { Title = "Orchid" };
     }
 }

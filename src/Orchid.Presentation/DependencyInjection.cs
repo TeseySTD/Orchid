@@ -16,6 +16,7 @@ public static class DependencyInjection
         {
             config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
         });
+        services.AddTransient<MainPage>();
         return services;
     }
 }

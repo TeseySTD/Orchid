@@ -1,13 +1,21 @@
-﻿
+﻿using Orchid.Application.Common.Services;
 using Orchid.Application.Models;
 
 namespace Orchid.Presentation;
 
 public partial class MainPage : ContentPage
 {
-    public MainPage()
+    public MainPage(IAppSettingsService appSettings)
     {
         InitializeComponent();
+        string startPath = "/";
+
+        if (appSettings.OpenLastBookOnStartup && !string.IsNullOrEmpty(appSettings.LastOpenedBookPath))
+        {
+            startPath = $"/book?path={System.Net.WebUtility.UrlEncode(appSettings.LastOpenedBookPath)}";
+        }
+
+        blazorWebView.StartPath = startPath;
         ApplyNativeBackgroundColor();
 
         if (Microsoft.Maui.Controls.Application.Current != null)

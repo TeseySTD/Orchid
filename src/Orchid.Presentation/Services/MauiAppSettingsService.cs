@@ -51,13 +51,13 @@ public class MauiAppSettingsService : IAppSettingsService
         }
     }
 
-    public string LastOpenedBookId
+    public string? LastOpenedBookPath
     {
-        get => Preferences.Get(nameof(LastOpenedBookId), string.Empty);
+        get => Preferences.Get(nameof(LastOpenedBookPath), null);
         set
         {
-            if (LastOpenedBookId == value) return;
-            Preferences.Set(nameof(LastOpenedBookId), value);
+            if (LastOpenedBookPath == value) return;
+            Preferences.Set(nameof(LastOpenedBookPath), value);
             OnSettingsChanged?.Invoke();
         }
     }

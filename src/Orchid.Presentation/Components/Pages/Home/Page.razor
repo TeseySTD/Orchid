@@ -3,6 +3,7 @@
 @using Orchid.Application.Models
 @inject ILibraryService LibraryService
 @inject NavigationManager NavManager
+@inject IAppSettingsService AppSettings
 
 <style>
     .featured-card {
@@ -74,15 +75,17 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8 pb-20 hide-scrollbar" Style="height: 100%; overflow-y: auto;">
     @if (_books == null)
     {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7 rounded" />
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7 rounded"/>
     }
     else if (!_books.Any())
     {
         <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="mt-16 pa-8">
-            <MudIcon Icon="@Icons.Material.Filled.LibraryAdd" Style="font-size: 5rem;" Color="Color.Primary" Class="mb-2 opacity-50" />
+            <MudIcon Icon="@Icons.Material.Filled.LibraryAdd" Style="font-size: 5rem;" Color="Color.Primary"
+                     Class="mb-2 opacity-50"/>
             <MudText Typo="Typo.h5" Style="font-weight: 600;" Class="mb-1">Your library is empty</MudText>
             <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6">Open a file to start reading</MudText>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="PickFile" Class="rounded-lg px-6 py-2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="PickFile" Class="rounded-lg px-6 py-2">
                 Add your first book
             </MudButton>
         </MudStack>
@@ -92,18 +95,25 @@
         @if (_featuredBook != null)
         {
             <MudText Typo="Typo.h6" Class="mb-3 fw-bold">Continue Reading</MudText>
-            <MudPaper Elevation="0" Class="pa-4 mb-8 rounded-xl mud-elevation-2 featured-card" Style="cursor: pointer;" @onclick="() => OpenBook(_featuredBook.FilePath)">
+            <MudPaper Elevation="0" Class="pa-4 mb-8 rounded-xl mud-elevation-2 featured-card" Style="cursor: pointer;"
+                      @onclick="() => OpenBook(_featuredBook.FilePath)">
                 <MudStack Row Spacing="4" AlignItems="AlignItems.Center">
-                    <MudImage Src="@(string.IsNullOrEmpty(_featuredBook.CoverPath) ? "images/no_cover_image.png" : _featuredBook.CoverPath)" 
-                              Width="90" Height="135" ObjectFit="ObjectFit.Cover" Elevation="3" Class="rounded-lg flex-shrink-0" />
-                    
+                    <MudImage
+                        Src="@(string.IsNullOrEmpty(_featuredBook.CoverPath) ? "images/no_cover_image.png" : _featuredBook.CoverPath)"
+                        Width="90" Height="135" ObjectFit="ObjectFit.Cover" Elevation="3"
+                        Class="rounded-lg flex-shrink-0"/>
+
                     <MudStack Justify="Justify.Center" Spacing="1" Class="flex-grow-1 overflow-hidden">
-                        <MudText Typo="Typo.h5" Style="font-weight: 700;" Class="text-truncate">@_featuredBook.Title</MudText>
-                        <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="text-truncate">@_featuredBook.Authors</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="mt-2 fw-bold">Last opened: @_featuredBook.LastOpenedAt.ToString("g")</MudText>
+                        <MudText Typo="Typo.h5" Style="font-weight: 700;"
+                                 Class="text-truncate">@_featuredBook.Title</MudText>
+                        <MudText Typo="Typo.subtitle1" Color="Color.Secondary"
+                                 Class="text-truncate">@_featuredBook.Authors</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="mt-2 fw-bold">Last
+                            opened: @_featuredBook.LastOpenedAt.ToString("g")</MudText>
                     </MudStack>
 
-                    <MudIcon Icon="@Icons.Material.Filled.PlayCircleFilled" Color="Color.Primary" Size="Size.Large" Class="mr-2 d-none d-sm-inline opacity-75" />
+                    <MudIcon Icon="@Icons.Material.Filled.PlayCircleFilled" Color="Color.Primary" Size="Size.Large"
+                             Class="mr-2 d-none d-sm-inline opacity-75"/>
                 </MudStack>
             </MudPaper>
         }
@@ -118,16 +128,18 @@
                     var coverUrl = string.IsNullOrEmpty(book.CoverPath)
                         ? "images/no_cover_image.png"
                         : book.CoverPath.Replace("\\", "/");
-                    
+
                     <MudItem md="3" lg="2">
                         <div class="book-cover-card" @onclick="() => OpenBook(book.FilePath)">
-                            <img src="@coverUrl" class="book-cover-image" alt="@book.Title" />
-                            
+                            <img src="@coverUrl" class="book-cover-image" alt="@book.Title"/>
+
                             <div class="book-cover-overlay">
-                                <MudText Typo="Typo.subtitle2" Style="font-weight: 700; color: white; line-height: 1.2;" Class="text-truncate d-block mb-1">
+                                <MudText Typo="Typo.subtitle2" Style="font-weight: 700; color: white; line-height: 1.2;"
+                                         Class="text-truncate d-block mb-1">
                                     @book.Title
                                 </MudText>
-                                <MudText Typo="Typo.caption" Style="color: rgba(255,255,255,0.7);" Class="text-truncate d-block">
+                                <MudText Typo="Typo.caption" Style="color: rgba(255,255,255,0.7);"
+                                         Class="text-truncate d-block">
                                     @book.Authors
                                 </MudText>
                             </div>
@@ -142,17 +154,23 @@
             <MudStack Spacing="3">
                 @foreach (var book in _otherBooks)
                 {
-                    <MudPaper Elevation="0" Class="pa-3 rounded-lg mud-elevation-1 mobile-list-item" Style="cursor: pointer;" @onclick="() => OpenBook(book.FilePath)">
+                    <MudPaper Elevation="0" Class="pa-3 rounded-lg mud-elevation-1 mobile-list-item"
+                              Style="cursor: pointer;" @onclick="() => OpenBook(book.FilePath)">
                         <div class="d-flex align-center gap-4">
-                            <MudImage Src="@(string.IsNullOrEmpty(book.CoverPath) ? "images/no_cover_image.png" : book.CoverPath)" 
-                                      Width="60" Height="90" ObjectFit="ObjectFit.Cover" Elevation="1" Class="rounded flex-shrink-0" />
-                            
+                            <MudImage
+                                Src="@(string.IsNullOrEmpty(book.CoverPath) ? "images/no_cover_image.png" : book.CoverPath)"
+                                Width="60" Height="90" ObjectFit="ObjectFit.Cover" Elevation="1"
+                                Class="rounded flex-shrink-0"/>
+
                             <div class="d-flex flex-column overflow-hidden flex-grow-1">
-                                <MudText Typo="Typo.subtitle1" Class="text-truncate" Style="font-weight: 600;">@book.Title</MudText>
-                                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="text-truncate mt-1">@book.Authors</MudText>
+                                <MudText Typo="Typo.subtitle1" Class="text-truncate"
+                                         Style="font-weight: 600;">@book.Title</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary"
+                                         Class="text-truncate mt-1">@book.Authors</MudText>
                             </div>
-                            
-                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Default" Class="flex-shrink-0 opacity-50"/>
+
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Default"
+                                     Class="flex-shrink-0 opacity-50"/>
                         </div>
                     </MudPaper>
                 }
@@ -163,12 +181,14 @@
         <div class="add-book-fab">
             @* Desktop *@
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Label="Add Book" OnClick="PickFile" Class="shadow-lg" />
+                <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Label="Add Book" OnClick="PickFile"
+                        Class="shadow-lg"/>
             </MudHidden>
-            
+
             @* Mobile *@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="PickFile" Class="shadow-lg" />
+                <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="PickFile"
+                        Class="shadow-lg"/>
             </MudHidden>
         </div>
     }
@@ -202,7 +222,10 @@
 
     private void OpenBook(string filePath)
     {
+        AppSettings.LastOpenedBookPath = filePath;
+
         var encodedPath = System.Net.WebUtility.UrlEncode(filePath);
         NavManager.NavigateTo($"/book?path={encodedPath}");
     }
+
 }

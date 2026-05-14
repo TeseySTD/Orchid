@@ -8,7 +8,7 @@ public interface IAppSettingsService
     int ReaderFontSize { get; set; }
     double ReaderLineHeight { get; set; }
     AppThemeMode Theme { get; set; }
-    string LastOpenedBookId { get; set; }
+    string? LastOpenedBookPath { get; set; }
     
     event Action? OnSettingsChanged;
 }
