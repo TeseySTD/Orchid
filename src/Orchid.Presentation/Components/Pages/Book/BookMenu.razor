@@ -45,12 +45,21 @@
                     </div>
                 </div>
 
-                <MudIconButton Icon="@Icons.Material.Filled.FormatListBulleted"
-                               OnClick="OnNavigationClick"
-                               Color="Color.Default"
-                               Size="Size.Small"
-                               Class="flex-shrink-0 mud-text-secondary"
-                               Style="padding: 6px; margin-left: 4px;"/>
+                <div class="d-flex align-center flex-shrink-0">
+                    <MudIconButton Icon="@Icons.Material.Filled.Settings"
+                                   OnClick="OnSettingsClick"
+                                   Color="Color.Default"
+                                   Size="Size.Small"
+                                   Class="mud-text-secondary"
+                                   Style="padding: 6px; margin-left: 4px;"/>
+                    
+                    <MudIconButton Icon="@Icons.Material.Filled.FormatListBulleted"
+                                   OnClick="OnNavigationClick"
+                                   Color="Color.Default"
+                                   Size="Size.Small"
+                                   Class="mud-text-secondary"
+                                   Style="padding: 6px; margin-left: 4px;"/>
+                </div>
             }
             else
             {
@@ -86,14 +95,22 @@
                     </div>
                 </div>
 
-                <MudButton StartIcon="@Icons.Material.Filled.FormatListBulleted"
-                           OnClick="OnNavigationClick"
-                           Color="Color.Default"
-                           Size="Size.Small"
-                           Class="flex-shrink-0 mud-text-secondary"
-                           Style="@($"text-transform: none; font-size: {_dynamicButtonFontSize}; border-radius: 8px; padding: 4px 12px;")">
-                    Navigation
-                </MudButton>
+                <div class="d-flex align-center flex-shrink-0" style="gap: 8px;">
+                    <MudIconButton Icon="@Icons.Material.Filled.Settings"
+                                   OnClick="OnSettingsClick"
+                                   Color="Color.Default"
+                                   Size="Size.Small"
+                                   Class="mud-text-secondary" />
+
+                    <MudButton StartIcon="@Icons.Material.Filled.FormatListBulleted"
+                               OnClick="OnNavigationClick"
+                               Color="Color.Default"
+                               Size="Size.Small"
+                               Class="flex-shrink-0 mud-text-secondary"
+                               Style="@($"text-transform: none; font-size: {_dynamicButtonFontSize}; border-radius: 8px; padding: 4px 12px;")">
+                        Navigation
+                    </MudButton>
+                </div>
             }
 
         </div>
@@ -111,7 +128,9 @@
     [Parameter] public int TotalBookPages { get; set; }
     [Parameter] public int? CurrentChapterPageIndex { get; set; }
     [Parameter] public int? CurrentChapterTotalPages { get; set; }
+    
     [Parameter] public EventCallback OnNavigationClick { get; set; }
+    [Parameter] public EventCallback OnSettingsClick { get; set; }
 
     private bool DrawerOpen
     {

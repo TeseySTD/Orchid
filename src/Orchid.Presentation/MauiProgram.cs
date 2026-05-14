@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Microsoft.AspNetCore.Components.WebView.Maui;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
@@ -18,6 +19,18 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .ConfigureFonts(fonts => { fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"); });
 
+        // Make webview transparent
+        BlazorWebViewHandler.BlazorWebViewMapper.AppendToMapping("TransparentBackground", (handler, _) =>
+        {
+#if WINDOWS
+        handler.PlatformView.DefaultBackgroundColor = Microsoft.UI.Colors.Transparent;
+#elif ANDROID
+        handler.PlatformView.SetBackgroundColor(Android.Graphics.Color.Transparent);
+#elif IOS || MACCATALYST
+            handler.PlatformView.BackgroundColor = UIKit.UIColor.Clear;
+            handler.PlatformView.Opaque = false;
+#endif
+        });
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
@@ -41,10 +54,10 @@ public static class MauiProgram
                 builder.Configuration
                     .GetSection(GoogleAuthOptions.SectionName)
                     .Bind(options.GoogleAuthOptions);
-#if ANDROID 
+#if ANDROID
         options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.AndroidClientId;
 #elif IOS
-        options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.IosClientId;
+                options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.IosClientId;
 #elif MACCATALYST || WINDOWS
         options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.DesktopClientId;
         options.GoogleAuthOptions.ClientSecret = options.GoogleAuthOptions.DesktopClientSecret;

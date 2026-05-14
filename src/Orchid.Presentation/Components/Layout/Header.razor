@@ -1,4 +1,8 @@
-﻿<MudAppBar Elevation="0" Color="Color.Transparent" Fixed="true" Dense="true">
+﻿@using Orchid.Application.Common.Services
+@using Orchid.Application.Models
+@inject IAppSettingsService AppSettings
+
+<MudAppBar Elevation="0" Color="Color.Transparent" Fixed="true" Dense="true">
     <MudIconButton Icon="@Icons.Material.Filled.Menu" 
                    Color="Color.Inherit" 
                    Edge="Edge.Start" 
@@ -6,11 +10,17 @@
 
     <MudSpacer />
 
-    <MudTooltip Text="Toggle Theme">
-        <MudIconButton Icon="@Icons.Material.Filled.Brightness4" 
-                       Color="Color.Inherit" 
-                       OnClick="@Layout.ToggleTheme" />
-    </MudTooltip>
+    <MudMenu Icon="@GetCurrentThemeIcon()" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+        <MudMenuItem OnClick="@(() => SetTheme(AppThemeMode.Light))" 
+                     Icon="@Icons.Material.Filled.LightMode"
+                     Class="@(AppSettings.Theme == AppThemeMode.Light ? "mud-primary-text" : "")">Light</MudMenuItem>
+        <MudMenuItem OnClick="@(() => SetTheme(AppThemeMode.Dark))" 
+                     Icon="@Icons.Material.Filled.DarkMode"
+                     Class="@(AppSettings.Theme == AppThemeMode.Dark ? "mud-primary-text" : "")">Dark</MudMenuItem>
+        <MudMenuItem OnClick="@(() => SetTheme(AppThemeMode.System))" 
+                     Icon="@Icons.Material.Filled.BrightnessAuto"
+                     Class="@(AppSettings.Theme == AppThemeMode.System ? "mud-primary-text" : "")">System</MudMenuItem>
+    </MudMenu>
 </MudAppBar>
 
 <MudDrawer @bind-Open="@_drawerOpen" Anchor="Anchor.Start" Elevation="1" Variant="@DrawerVariant.Temporary">
@@ -23,11 +33,18 @@
 
 @code {
     private bool _drawerOpen;
-    [CascadingParameter]
-    private MainLayout Layout { get; set; } = null!;
 
-    private void ToggleDrawer()
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    private void SetTheme(AppThemeMode mode)
     {
-        _drawerOpen = !_drawerOpen;
+        AppSettings.Theme = mode;
     }
+
+    private string GetCurrentThemeIcon() => AppSettings.Theme switch
+    {
+        AppThemeMode.Light => Icons.Material.Filled.LightMode,
+        AppThemeMode.Dark => Icons.Material.Filled.DarkMode,
+        _ => Icons.Material.Filled.BrightnessAuto
+    };
 }

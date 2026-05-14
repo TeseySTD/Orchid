@@ -1,0 +1,95 @@
+﻿@using Orchid.Application.Common.Services
+@inject IAppSettingsService AppSettingsService
+
+<MudDialog Class="orchid-settings-modal">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" Size="Size.Medium" />
+            <MudText Typo="Typo.h6" Class="fw-bold">Reader settings</MudText>
+        </div>
+    </TitleContent>
+    
+    <DialogContent>
+        <div class="d-flex flex-column gap-6 pa-1 pb-4">
+            
+            <div class="d-flex flex-column gap-1">
+                <div class="d-flex justify-space-between align-center mb-1">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.FormatSize" Size="Size.Small" Class="mud-text-secondary" />
+                        <MudText Typo="Typo.body1" Class="fw-bold">Font Size</MudText>
+                    </div>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Class="fw-bold">
+                        @_draftFontSize px
+                    </MudChip>
+                </div>
+                <MudSlider T="int" 
+                           @bind-Value="_draftFontSize" 
+                           Min="12" 
+                           Max="48" 
+                           Step="1" 
+                           Color="Color.Primary" 
+                           Size="Size.Medium" />
+            </div>
+
+            <div class="d-flex flex-column gap-1">
+                <div class="d-flex justify-space-between align-center mb-1">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.FormatLineSpacing" Size="Size.Small" Class="mud-text-secondary" />
+                        <MudText Typo="Typo.body1" Class="fw-bold">Line Height</MudText>
+                    </div>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Class="fw-bold">
+                        @_draftLineHeight.ToString("0.0")
+                    </MudChip>
+                </div>
+                <MudSlider T="double" 
+                           @bind-Value="_draftLineHeight" 
+                           Min="0.8" 
+                           Max="3.0" 
+                           Step="0.1" 
+                           Color="Color.Primary" 
+                           Size="Size.Medium" />
+            </div>
+
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Text" 
+                   Color="Color.Primary" 
+                   OnClick="SaveSettings" 
+                   FullWidth="true"
+                   Class="py-2 fw-bold"
+                   StartIcon="@Icons.Material.Filled.Done">
+            Save settings
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .orchid-settings-modal {
+        border-radius: 16px;
+        max-width: 400px;
+    }
+</style>
+
+@code {
+    [CascadingParameter] 
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private int _draftFontSize;
+    private double _draftLineHeight;
+
+    protected override void OnInitialized()
+    {
+        _draftFontSize = AppSettingsService.ReaderFontSize;
+        _draftLineHeight = AppSettingsService.ReaderLineHeight;
+    }
+
+    private void SaveSettings()
+    {
+        AppSettingsService.ReaderFontSize = _draftFontSize;
+        AppSettingsService.ReaderLineHeight = Math.Round(_draftLineHeight, 1);
+        
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

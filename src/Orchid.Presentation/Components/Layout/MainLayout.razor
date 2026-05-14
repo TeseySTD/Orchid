@@ -1,11 +1,16 @@
 ﻿@inherits LayoutComponentBase
+@using Orchid.Application.Common.Services
+@inject IAppSettingsService AppSettings
+@using Microsoft.Maui.Controls
+@using Orchid.Application.Models
+@implements IDisposable
 
 <MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="_isDarkMode" Theme="_theme"/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 <MudPopoverProvider/>
 
-<MudLayout>
+<MudLayout Class="@(_isReady ? "app-ready" : "")">
     <CascadingValue Value="this">
         <CustomErrorBoundary>
             <Orchid.Presentation.Components.Layout.Header/>
@@ -18,7 +23,10 @@
 
 @code {
     private bool _isDarkMode;
+    private bool _isReady = false;
     private MudThemeProvider _mudThemeProvider = null!;
+
+    public bool IsDarkMode => _isDarkMode;
 
     private readonly MudTheme _theme = new()
     {
@@ -35,38 +43,69 @@
         },
         PaletteDark = new PaletteDark()
         {
-            Primary = "#FFB2BE", // --md-sys-color-primary (Dark)
-            Secondary = "#FFB2BE", // --md-sys-color-secondary (Dark)
+            Primary = "#FFB2BE",
+            Secondary = "#FFB2BE",
             AppbarBackground = "#1C1012",
-            Background = "#1C1012", // --md-sys-color-background (Dark)
-            Surface = "#1C1012", // --md-sys-color-surface (Dark)
-            TextPrimary = "#F4DDDF", // --md-sys-color-on-background (Dark)
+            Background = "#1C1012",
+            Surface = "#1C1012",
+            TextPrimary = "#F4DDDF",
             TextSecondary = "#DED1D3",
             Error = "#FFB4AB"
         }
     };
 
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnInitialized()
     {
-        if (firstRender)
+        ApplyTheme(AppSettings.Theme);
+
+        AppSettings.OnSettingsChanged += HandleSettingsChanged;
+
+        if (Application.Current != null)
         {
-            _isDarkMode = await _mudThemeProvider.GetSystemDarkModeAsync();
-            await _mudThemeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
-            await InvokeAsync(StateHasChanged);
+            Application.Current.RequestedThemeChanged += OnNativeSystemThemeChanged;
         }
     }
 
-    private async Task OnSystemPreferenceChanged(bool newValue)
+    protected override void OnAfterRender(bool firstRender)
     {
-        _isDarkMode = newValue;
-        await InvokeAsync(StateHasChanged);
+        if (firstRender)
+        {
+            _isReady = true;
+        }
     }
 
-    public void ToggleTheme()
+    private void HandleSettingsChanged()
     {
-        _isDarkMode = !_isDarkMode;
-        StateHasChanged();
+        ApplyTheme(AppSettings.Theme);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ApplyTheme(AppThemeMode themeMode)
+    {
+        _isDarkMode = themeMode switch
+        {
+            AppThemeMode.Dark => true,
+            AppThemeMode.Light => false,
+            AppThemeMode.System => Application.Current?.RequestedTheme == AppTheme.Dark,
+            _ => throw new ArgumentOutOfRangeException(nameof(themeMode), themeMode, null)
+        };
+    }
+
+    private void OnNativeSystemThemeChanged(object? sender, AppThemeChangedEventArgs e)
+    {
+        if (AppSettings.Theme != AppThemeMode.System) return;
+        _isDarkMode = e.RequestedTheme == AppTheme.Dark;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AppSettings.OnSettingsChanged -= HandleSettingsChanged;
+
+        if (Application.Current != null)
+        {
+            Application.Current.RequestedThemeChanged -= OnNativeSystemThemeChanged;
+        }
     }
 
 }

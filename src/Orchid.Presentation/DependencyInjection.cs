@@ -11,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<BookPaginationService>();
         services.AddSingleton<ILocalSecureStorage, MauiSecureStorage>();
+        services.AddSingleton<IAppSettingsService, MauiAppSettingsService>();
         services.AddMudServices(config =>
         {
             config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
