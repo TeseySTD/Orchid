@@ -7,20 +7,121 @@
 
 <style>
     .featured-card {
-        transition: box-shadow 0.2s ease-in-out;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         border: 1px solid var(--mud-palette-lines-default);
+        border-radius: clamp(12px, 3vw, 20px);
+        background: linear-gradient(
+            135deg,
+            var(--mud-palette-surface) 0%,
+            color-mix(in srgb, var(--mud-palette-primary) 4%, var(--mud-palette-surface)) 100%
+        );
+        position: relative;
+        overflow: hidden;
     }
 
     .featured-card:hover {
-        box-shadow: var(--mud-elevation-6) !important;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 28px color-mix(in srgb, var(--mud-palette-primary) 18%, transparent) !important;
+        border-color: var(--mud-palette-primary-lighten);
+    }
+
+    .featured-card:hover::before {
+        opacity: 1;
+    }
+
+    .section-label {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        letter-spacing: 0.06em;
+        font-size: 1rem !important;
+        font-weight: 700 !important;
+        color: var(--mud-palette-text-secondary) !important;
+    }
+
+    .section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--mud-palette-lines-default);
+        opacity: 0.6;
+    }
+
+    .book-cover-card {
+        aspect-ratio: 2 / 3;
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow:
+            0 2px 4px rgba(0,0,0,0.10),
+            0 6px 18px rgba(0,0,0,0.08);
+        cursor: pointer;
+        background-color: var(--mud-palette-background-grey);
+    }
+
+    .book-cover-card:hover {
+        box-shadow: var(--mud-elevation-6);
+        outline-color: var(--mud-palette-primary-lighten);
+        outline-offset: 2px;
+    }
+
+    .book-cover-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.42s ease;
+    }
+
+    .book-cover-card {
+        aspect-ratio: 2 / 3;
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.10), 0 6px 18px rgba(0,0,0,0.08);
+        cursor: pointer;
+        background-color: var(--mud-palette-background-grey);
+        border: 2px solid transparent; 
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .book-cover-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px color-mix(in srgb, var(--mud-palette-primary) 25%, transparent);
+        border-color: var(--mud-palette-primary);
+    }
+
+    .book-cover-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    
+    .book-info-panel {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: color-mix(in srgb, var(--mud-palette-surface) 92%, var(--mud-palette-primary) 8%);
+        padding: 0.75rem 0.8rem;
+        border-top: 1px solid var(--mud-palette-lines-default);
+        z-index: 2;
     }
 
     .mobile-list-item {
-        transition: background-color 0.2s ease;
+        transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
+        border-radius: 12px;
         border: 1px solid var(--mud-palette-lines-default);
+        background-color: var(--mud-palette-surface);
+    }
+
+    .mobile-list-item:hover {
+        background-color: var(--mud-palette-background-grey);
+        border-color: var(--mud-palette-primary-lighten);
     }
 
     .mobile-list-item:active {
+        transform: scale(0.98);
         background-color: var(--mud-palette-action-default-hover);
     }
 
@@ -30,49 +131,10 @@
         right: 2rem;
         z-index: 100;
     }
-
-    .book-cover-card {
-        aspect-ratio: 2 / 3;
-        position: relative;
-        overflow: hidden;
-        border-radius: 12px;
-        box-shadow: var(--mud-elevation-2);
-        cursor: pointer;
-        background-color: var(--mud-palette-background-grey);
-    }
-
-    .book-cover-card:hover {
-        box-shadow: var(--mud-elevation-6);
-    }
-
-    .book-cover-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-    }
-
-    .book-cover-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 100%;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        opacity: 0;
-        transition: opacity 0.2s ease-in-out;
-    }
-
-    .book-cover-card:hover .book-cover-overlay {
-        opacity: 1;
-    }
 </style>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8 pb-20 hide-scrollbar" Style="height: 100%; overflow-y: auto;">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8 hide-scrollbar"
+              Style="height: 100%; overflow-y: auto; padding-bottom: 100px;">
     @if (_books == null)
     {
         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7 rounded"/>
@@ -82,10 +144,10 @@
         <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="mt-16 pa-8">
             <MudIcon Icon="@Icons.Material.Filled.LibraryAdd" Style="font-size: 5rem;" Color="Color.Primary"
                      Class="mb-2 opacity-50"/>
-            <MudText Typo="Typo.h5" Style="font-weight: 600;" Class="mb-1">Your library is empty</MudText>
+            <MudText Typo="Typo.h5" Style="font-weight: 700;" Class="mb-1">Your library is empty</MudText>
             <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6">Open a file to start reading</MudText>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="PickFile" Class="rounded-lg px-6 py-2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="PickFile" Class="rounded-pill px-8 py-3">
                 Add your first book
             </MudButton>
         </MudStack>
@@ -94,31 +156,35 @@
     {
         @if (_featuredBook != null)
         {
-            <MudText Typo="Typo.h6" Class="mb-3 fw-bold">Continue Reading</MudText>
-            <MudPaper Elevation="0" Class="pa-4 mb-8 rounded-xl mud-elevation-2 featured-card" Style="cursor: pointer;"
+            <MudText Typo="Typo.body2" Class="mb-3 section-label">Continue Reading</MudText>
+            <MudPaper Elevation="0" Class="pa-4 mb-8 featured-card"
+                      Style="max-width: 480px; cursor: pointer;"
                       @onclick="() => OpenBook(_featuredBook.FilePath)">
                 <MudStack Row Spacing="4" AlignItems="AlignItems.Center">
                     <MudImage
                         Src="@(string.IsNullOrEmpty(_featuredBook.CoverPath) ? "images/no_cover_image.png" : _featuredBook.CoverPath)"
-                        Width="90" Height="135" ObjectFit="ObjectFit.Cover" Elevation="3"
+                        Width="70" Height="105" ObjectFit="ObjectFit.Cover" Elevation="3"
                         Class="rounded-lg flex-shrink-0"/>
 
-                    <MudStack Justify="Justify.Center" Spacing="1" Class="flex-grow-1 overflow-hidden">
-                        <MudText Typo="Typo.h5" Style="font-weight: 700;"
+                    <MudStack Justify="Justify.Center" Spacing="0" Class="flex-grow-1 overflow-hidden">
+                        <MudText Typo="Typo.subtitle1" Style="font-weight: 700; letter-spacing: -0.01em;"
                                  Class="text-truncate">@_featuredBook.Title</MudText>
-                        <MudText Typo="Typo.subtitle1" Color="Color.Secondary"
-                                 Class="text-truncate">@_featuredBook.Authors</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="mt-2 fw-bold">Last
-                            opened: @_featuredBook.LastOpenedAt.ToString("g")</MudText>
-                    </MudStack>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary"
+                                 Class="text-truncate mb-2">@_featuredBook.Authors</MudText>
 
-                    <MudIcon Icon="@Icons.Material.Filled.PlayCircleFilled" Color="Color.Primary" Size="Size.Large"
-                             Class="mr-2 d-none d-sm-inline opacity-75"/>
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                            <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Color="Color.Tertiary"
+                                     Style="font-size: 0.9rem;"/>
+                            <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="fw-bold">
+                                @_featuredBook.LastOpenedAt.ToString("g")
+                            </MudText>
+                        </MudStack>
+                    </MudStack>
                 </MudStack>
             </MudPaper>
         }
 
-        <MudText Typo="Typo.h6" Class="mb-4 fw-bold">All Books</MudText>
+        <MudText Typo="Typo.body2" Class="mb-5 section-label">All Books</MudText>
 
         @* Desktop Grid View *@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -133,13 +199,14 @@
                         <div class="book-cover-card" @onclick="() => OpenBook(book.FilePath)">
                             <img src="@coverUrl" class="book-cover-image" alt="@book.Title"/>
 
-                            <div class="book-cover-overlay">
-                                <MudText Typo="Typo.subtitle2" Style="font-weight: 700; color: white; line-height: 1.2;"
-                                         Class="text-truncate d-block mb-1">
+                            <div class="book-info-panel">
+                                <MudText Typo="Typo.subtitle2" 
+                                         Style="font-weight: 700; line-height: 1.25; letter-spacing: -0.01em;"
+                                         Class="text-truncate d-block mb-1" title="@book.Title">
                                     @book.Title
                                 </MudText>
-                                <MudText Typo="Typo.caption" Style="color: rgba(255,255,255,0.7);"
-                                         Class="text-truncate d-block">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary"
+                                         Class="text-truncate d-block" title="@book.Authors">
                                     @book.Authors
                                 </MudText>
                             </div>
@@ -151,15 +218,15 @@
 
         @* Mobile List View *@
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            <MudStack Spacing="3">
+            <MudStack Spacing="2">
                 @foreach (var book in _otherBooks)
                 {
-                    <MudPaper Elevation="0" Class="pa-3 rounded-lg mud-elevation-1 mobile-list-item"
-                              Style="cursor: pointer;" @onclick="() => OpenBook(book.FilePath)">
+                    <div class="pa-3 mobile-list-item" style="cursor: pointer;"
+                         @onclick="() => OpenBook(book.FilePath)">
                         <div class="d-flex align-center gap-4">
                             <MudImage
                                 Src="@(string.IsNullOrEmpty(book.CoverPath) ? "images/no_cover_image.png" : book.CoverPath)"
-                                Width="60" Height="90" ObjectFit="ObjectFit.Cover" Elevation="1"
+                                Width="55" Height="80" ObjectFit="ObjectFit.Cover" Elevation="1"
                                 Class="rounded flex-shrink-0"/>
 
                             <div class="d-flex flex-column overflow-hidden flex-grow-1">
@@ -168,11 +235,8 @@
                                 <MudText Typo="Typo.body2" Color="Color.Secondary"
                                          Class="text-truncate mt-1">@book.Authors</MudText>
                             </div>
-
-                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Default"
-                                     Class="flex-shrink-0 opacity-50"/>
                         </div>
-                    </MudPaper>
+                    </div>
                 }
             </MudStack>
         </MudHidden>
@@ -182,13 +246,13 @@
             @* Desktop *@
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
                 <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Label="Add Book" OnClick="PickFile"
-                        Class="shadow-lg"/>
+                        Class="shadow-lg px-6" Style="border-radius: 16px; text-transform: none;"/>
             </MudHidden>
 
             @* Mobile *@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
                 <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="PickFile"
-                        Class="shadow-lg"/>
+                        Class="shadow-lg" Style="border-radius: 50%;"/>
             </MudHidden>
         </div>
     }
