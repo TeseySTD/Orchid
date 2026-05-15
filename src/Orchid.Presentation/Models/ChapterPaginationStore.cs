@@ -1,19 +1,19 @@
 ﻿using System.Collections.Concurrent;
-using Orchid.Application.Common.Services;
-using Orchid.Application.Services;
+using Orchid.Application.Common.Providers;
+using Orchid.Application.Dto;
 using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Presentation.Models;
 
 public class ChapterPaginationStore
 {
-    private readonly IPaginationCacheService _cacheService;
+    private readonly IPaginationCacheProvider _cacheProvider;
     private readonly ConcurrentDictionary<int, PageData[]> _memoryCache = new();
 
     public BookId? CurrentBookId { get; private set; }
     public PaginationContext? CurrentContext { get; private set; }
 
-    public ChapterPaginationStore(IPaginationCacheService cacheService) => _cacheService = cacheService;
+    public ChapterPaginationStore(IPaginationCacheProvider cacheProvider) => _cacheProvider = cacheProvider;
 
     public void Init(BookId bookId, PaginationContext context)
     {
@@ -32,7 +32,7 @@ public class ChapterPaginationStore
             return pages;
         }
 
-        var diskPages = await _cacheService.GetChapterAsync(CurrentBookId, CurrentContext, index) ?? [];
+        var diskPages = await _cacheProvider.GetChapterAsync(CurrentBookId, CurrentContext, index) ?? [];
         AddToMemory(index, diskPages);
 
         ManageWindow(index);
@@ -54,7 +54,7 @@ public class ChapterPaginationStore
         {
             if (i < 0 || _memoryCache.ContainsKey(i)) continue;
 
-            var pages = await _cacheService.GetChapterAsync(CurrentBookId, CurrentContext, i);
+            var pages = await _cacheProvider.GetChapterAsync(CurrentBookId, CurrentContext, i);
             if (pages != null)
             {
                 _memoryCache[i] = pages;

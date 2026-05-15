@@ -1,10 +1,12 @@
 ﻿@page "/settings"
+@using Orchid.Application
 @using Orchid.Application.Common
+@using Orchid.Application.Common.Providers
 @using Orchid.Application.Common.Repo
 @using Orchid.Application.Common.Services
-@using Orchid.Application.Models
-@inject IAppSettingsService AppSettings
-@inject IPaginationCacheService PaginationCache
+@using Orchid.Application.Dto
+@inject IAppSettingsProvider AppSettings
+@inject IPaginationCacheProvider PaginationCache
 @inject IImagesRepository ImagesRepo
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService

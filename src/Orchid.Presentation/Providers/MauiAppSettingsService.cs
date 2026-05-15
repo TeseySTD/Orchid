@@ -1,9 +1,9 @@
-﻿using Orchid.Application.Common.Services;
-using Orchid.Application.Models;
+﻿using Orchid.Application.Common.Providers;
+using Orchid.Application.Dto;
 
-namespace Orchid.Presentation.Services;
+namespace Orchid.Presentation.Providers;
 
-public class MauiAppSettingsService : IAppSettingsService
+public class MauiAppSettingsProvider : IAppSettingsProvider
 {
     public event Action? OnSettingsChanged;
 

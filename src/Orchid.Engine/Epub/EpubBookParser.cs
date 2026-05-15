@@ -1,12 +1,12 @@
+using Orchid.Application.Common.Engine;
 using Orchid.Core.Models;
 using Orchid.Core.Models.ValueObjects;
 using Orchid.Core.Services;
-using Orchid.Application.Common.Services;
 using VersOne.Epub;
 
 namespace Orchid.Engine.Epub;
 
-public class EpubBookService : IBookService
+public class EpubBookParser : IBookParser
 {
     public async Task<Book> ReadAsync(string bookFilePath)
     {

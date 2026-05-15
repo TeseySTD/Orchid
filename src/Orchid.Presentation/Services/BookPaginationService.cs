@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using Orchid.Application.Common.Services;
-using Orchid.Application.Services;
+using Orchid.Application.Common.Providers;
+using Orchid.Application.Dto;
 using Orchid.Core.Models.ValueObjects;
 using Orchid.Presentation.Models;
 
@@ -11,11 +11,11 @@ namespace Orchid.Presentation.Services;
 public class BookPaginationService : IDisposable
 {
     private CancellationTokenSource? _calcPagesCts;
-    private readonly IPaginationCacheService _paginationCacheService;
+    private readonly IPaginationCacheProvider _paginationCacheProvider;
 
-    public BookPaginationService(IPaginationCacheService paginationCacheService)
+    public BookPaginationService(IPaginationCacheProvider paginationCacheProvider)
     {
-        _paginationCacheService = paginationCacheService;
+        _paginationCacheProvider = paginationCacheProvider;
     }
 
     public void StartBackgroundPageCalculation(
@@ -65,15 +65,15 @@ public class BookPaginationService : IDisposable
                 ct.ThrowIfCancellationRequested();
                 int pagesCount;
 
-                if (_paginationCacheService.ChapterExists(bookId, context, i))
+                if (_paginationCacheProvider.ChapterExists(bookId, context, i))
                 {
-                    var cachedPages = await _paginationCacheService.GetChapterAsync(bookId, context, i);
+                    var cachedPages = await _paginationCacheProvider.GetChapterAsync(bookId, context, i);
                     pagesCount = cachedPages?.Length ?? 0;
                 }
                 else
                 {
                     var pages = await CalculateSingleChapterAsync(chapterList[i], element, jsRuntime, ct);
-                    await _paginationCacheService.SaveChapterAsync(bookId, context, i, pages);
+                    await _paginationCacheProvider.SaveChapterAsync(bookId, context, i, pages);
                     store.Invalidate(i);
                     pagesCount = pages.Length;
                 }

@@ -1,9 +1,10 @@
 ﻿@page "/"
+@using Orchid.Application.Common.Providers
 @using Orchid.Application.Common.Services
-@using Orchid.Application.Models
+@using Orchid.Application.Dto
 @inject ILibraryService LibraryService
 @inject NavigationManager NavManager
-@inject IAppSettingsService AppSettings
+@inject IAppSettingsProvider AppSettings
 
 <style>
     .featured-card {

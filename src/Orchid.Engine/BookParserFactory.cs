@@ -1,28 +1,28 @@
-﻿using Orchid.Application.Common.Services;
+﻿using Orchid.Application.Common.Engine;
 using Orchid.Engine.Epub;
 
 namespace Orchid.Engine;
 
-public class BookServiceProvider : IBookServiceProvider
+public class BookParserFactory : IBookParserFactory
 {
-    public IBookService GetService(string bookPath)
+    public IBookParser GetService(string bookPath)
     {
         var extension = Path.GetExtension(bookPath);
 
         switch (extension)
         {
             case ".epub":
-                return new EpubBookService();
+                return new EpubBookParser();
             default:
                 throw new ArgumentException($"Invalid book extension: {extension}");
         }
     }
 
-    public IBookService GetService<TBookService>() where TBookService : IBookService
+    public IBookParser GetService<TBookService>() where TBookService : IBookParser
     {
-        if (typeof(TBookService) == typeof(EpubBookService))
+        if (typeof(TBookService) == typeof(EpubBookParser))
         {
-            return new EpubBookService();
+            return new EpubBookParser();
         }
 
         throw new ArgumentException($"Invalid type of book service: {typeof(TBookService)}");

@@ -1,8 +1,9 @@
 ﻿@inherits LayoutComponentBase
 @using Orchid.Application.Common.Services
-@inject IAppSettingsService AppSettings
+@inject IAppSettingsProvider AppSettings
 @using Microsoft.Maui.Controls
-@using Orchid.Application.Models
+@using Orchid.Application.Common.Providers
+@using Orchid.Application.Dto
 @implements IDisposable
 
 <MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="_isDarkMode" Theme="_theme"/>

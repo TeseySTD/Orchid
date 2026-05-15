@@ -1,6 +1,6 @@
-﻿namespace Orchid.Application.Common.Services;
+﻿namespace Orchid.Application.Common.Providers;
 
-public interface IJsonStorageService
+public interface IJsonStorageProvider
 {
     Task SaveAsync<T>(string key, T value);
 

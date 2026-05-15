@@ -1,6 +1,6 @@
-﻿namespace Orchid.Application.Common.Services;
+﻿namespace Orchid.Application.Common.Providers;
 
-public interface IDiskCacheService
+public interface IDiskCacheProvider
 {
     public Task SaveStringAsync(string key, string content);
 

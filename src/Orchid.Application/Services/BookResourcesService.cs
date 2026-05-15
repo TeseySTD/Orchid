@@ -1,5 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Orchid.Application.Common;
+using Orchid.Application.Common.Engine;
+using Orchid.Application.Common.Providers;
 using Orchid.Application.Common.Repo;
 using Orchid.Application.Common.Services;
 using Orchid.Core.Models;
@@ -8,13 +10,13 @@ using Orchid.Core.Models.ValueObjects;
 namespace Orchid.Application.Services;
 
 public class BookResourcesService(
-    IBookServiceProvider bookServiceProvider,
+    IBookParserFactory bookParserFactory,
     IImagesRepository imagesRepository)
     : IBookResourcesService
 {
     public async Task<Book> ReadBookAsync(string bookPath)
     {
-        var bookService = bookServiceProvider.GetService(bookPath);
+        var bookService = bookParserFactory.GetService(bookPath);
         var book = await bookService.ReadAsync(bookPath);
 
         if (book.Cover != null)
@@ -38,7 +40,7 @@ public class BookResourcesService(
 
     public async Task<List<Chapter>> ReadChaptersAsync(string bookPath, BookId bookId)
     {
-        var bookService = bookServiceProvider.GetService(bookPath);
+        var bookService = bookParserFactory.GetService(bookPath);
         var chapters = await bookService.ReadChaptersAsync(bookPath);
 
         return chapters
@@ -68,7 +70,7 @@ public class BookResourcesService(
 
     public async Task<IEnumerable<CssFile>> GetBookCssFilesAsync(string bookPath)
     {
-        var bookService = bookServiceProvider.GetService(bookPath);
+        var bookService = bookParserFactory.GetService(bookPath);
         return await bookService.GetBookCssAsync(bookPath);
     }
 }

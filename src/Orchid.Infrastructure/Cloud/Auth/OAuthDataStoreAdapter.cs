@@ -1,33 +1,34 @@
 ﻿using System.Text.Json;
 using Google.Apis.Util.Store;
+using Orchid.Application.Common.Providers;
 using Orchid.Application.Common.Services;
 
 namespace Orchid.Infrastructure.Cloud.Auth;
 
 public class OAuthDataStoreAdapter : IDataStore
 {
-    private readonly ILocalSecureStorage _secureStorage;
+    private readonly ISecureStorageProvider _secureStorageProvider;
 
-    public OAuthDataStoreAdapter(ILocalSecureStorage secureStorage)
+    public OAuthDataStoreAdapter(ISecureStorageProvider secureStorageProvider)
     {
-        _secureStorage = secureStorage;
+        _secureStorageProvider = secureStorageProvider;
     }
 
     public async Task StoreAsync<T>(string key, T value)
     {
         var json = JsonSerializer.Serialize(value);
-        await _secureStorage.SetAsync(key, json);
+        await _secureStorageProvider.SetAsync(key, json);
     }
 
     public async Task DeleteAsync<T>(string key)
     {
-        _secureStorage.Remove(key);
+        _secureStorageProvider.Remove(key);
         await Task.CompletedTask;
     }
 
     public async Task<T?> GetAsync<T>(string key)
     {
-        var json = await _secureStorage.GetAsync(key);
+        var json = await _secureStorageProvider.GetAsync(key);
 
         if (string.IsNullOrEmpty(json))
         {
@@ -39,7 +40,7 @@ public class OAuthDataStoreAdapter : IDataStore
 
     public async Task ClearAsync()
     {
-        _secureStorage.RemoveAll();
+        _secureStorageProvider.RemoveAll();
         await Task.CompletedTask;
     }
 }

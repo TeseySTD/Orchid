@@ -1,4 +1,4 @@
-﻿using Orchid.Application.Models;
+﻿using Orchid.Application.Dto;
 using Orchid.Core.Models;
 using Orchid.Core.Models.ValueObjects;
 

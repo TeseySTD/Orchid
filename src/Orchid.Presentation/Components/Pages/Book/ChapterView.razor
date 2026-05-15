@@ -1,7 +1,7 @@
-﻿@using Orchid.Core.Models.ValueObjects
-@using Orchid.Application.Common.Services
+﻿@using Orchid.Application.Common.Providers
+@using Orchid.Core.Models.ValueObjects
 @inject IJSRuntime Js
-@inject IAppSettingsService AppSettingsService
+@inject IAppSettingsProvider AppSettingsProvider
 @implements IAsyncDisposable
 @implements IDisposable
 
@@ -52,11 +52,11 @@
     private DotNetObjectReference<ChapterView>? _dotNetRef;
 
     private string ReaderStyles => 
-        $"font-size: {AppSettingsService.ReaderFontSize}px; line-height: {AppSettingsService.ReaderLineHeight.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)};";
+        $"font-size: {AppSettingsProvider.ReaderFontSize}px; line-height: {AppSettingsProvider.ReaderLineHeight.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)};";
 
     protected override void OnInitialized()
     {
-        AppSettingsService.OnSettingsChanged += HandleSettingsChanged;
+        AppSettingsProvider.OnSettingsChanged += HandleSettingsChanged;
     }
 
     protected override void OnParametersSet()
@@ -138,7 +138,7 @@
 
     public void Dispose()
     {
-        AppSettingsService.OnSettingsChanged -= HandleSettingsChanged;
+        AppSettingsProvider.OnSettingsChanged -= HandleSettingsChanged;
     }
 
     public async ValueTask DisposeAsync()

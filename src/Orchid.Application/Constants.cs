@@ -1,4 +1,4 @@
-﻿namespace Orchid.Application.Common;
+﻿namespace Orchid.Application;
 
 public static class Constants
 {

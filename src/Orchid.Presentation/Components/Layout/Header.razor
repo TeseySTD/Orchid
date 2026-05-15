@@ -1,6 +1,7 @@
-﻿@using Orchid.Application.Common.Services
-@using Orchid.Application.Models
-@inject IAppSettingsService AppSettings
+﻿@using Orchid.Application.Common.Providers
+@using Orchid.Application.Common.Services
+@using Orchid.Application.Dto
+@inject IAppSettingsProvider AppSettings
 @implements IDisposable
 
 <MudAppBar Elevation="0" Color="Color.Transparent" Fixed="true" Dense="true">

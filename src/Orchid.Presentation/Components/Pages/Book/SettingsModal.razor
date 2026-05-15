@@ -1,5 +1,6 @@
-﻿@using Orchid.Application.Common.Services
-@inject IAppSettingsService AppSettingsService
+﻿@using Orchid.Application.Common.Providers
+@using Orchid.Application.Common.Services
+@inject IAppSettingsProvider AppSettingsProvider
 
 <MudDialog Class="orchid-settings-modal">
     <TitleContent>
@@ -81,14 +82,14 @@
 
     protected override void OnInitialized()
     {
-        _draftFontSize = AppSettingsService.ReaderFontSize;
-        _draftLineHeight = AppSettingsService.ReaderLineHeight;
+        _draftFontSize = AppSettingsProvider.ReaderFontSize;
+        _draftLineHeight = AppSettingsProvider.ReaderLineHeight;
     }
 
     private void SaveSettings()
     {
-        AppSettingsService.ReaderFontSize = _draftFontSize;
-        AppSettingsService.ReaderLineHeight = Math.Round(_draftLineHeight, 1);
+        AppSettingsProvider.ReaderFontSize = _draftFontSize;
+        AppSettingsProvider.ReaderLineHeight = Math.Round(_draftLineHeight, 1);
         
         MudDialog.Close(DialogResult.Ok(true));
     }

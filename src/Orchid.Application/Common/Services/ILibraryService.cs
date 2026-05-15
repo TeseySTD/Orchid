@@ -1,6 +1,7 @@
-﻿namespace Orchid.Application.Common.Services;
+﻿using Orchid.Application.Dto;
 
-using Models;
+namespace Orchid.Application.Common.Services;
+
 using Orchid.Core.Models;
 
 public interface ILibraryService

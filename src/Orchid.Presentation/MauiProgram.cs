@@ -49,8 +49,8 @@ public static class MauiProgram
             .AddEngineServices()
             .AddInfrastructureServices(options =>
             {
-                options.DiskCacheServiceOptions.BaseDirectory = FileSystem.Current.CacheDirectory;
-                options.JsonStorageServiceOptions.StoragePath = FileSystem.Current.AppDataDirectory;
+                options.DiskCacheProviderOptions.BaseDirectory = FileSystem.Current.CacheDirectory;
+                options.JsonStorageProviderOptions.StoragePath = FileSystem.Current.AppDataDirectory;
                 builder.Configuration
                     .GetSection(GoogleAuthOptions.SectionName)
                     .Bind(options.GoogleAuthOptions);

@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Orchid.Application.Common.Engine;
+using Orchid.Application.Common.Providers;
 using Orchid.Application.Common.Services;
 using Orchid.Engine.Epub;
 
@@ -8,8 +10,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddEngineServices(this IServiceCollection services)
     {
-        services.AddSingleton<IBookServiceProvider, BookServiceProvider>();
-        services.AddScoped<IBookService, EpubBookService>();
+        services.AddSingleton<IBookParserFactory, BookParserFactory>();
+        services.AddScoped<IBookParser, EpubBookParser>();
 
         return services;
     }

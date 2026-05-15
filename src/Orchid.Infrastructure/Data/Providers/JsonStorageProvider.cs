@@ -1,16 +1,16 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Options;
-using Orchid.Application.Common.Services;
-using Orchid.Infrastructure.Data.Services.Options;
+using Orchid.Application.Common.Providers;
+using Orchid.Infrastructure.Data.Providers.Options;
 
-namespace Orchid.Infrastructure.Data.Services;
+namespace Orchid.Infrastructure.Data.Providers;
 
-public class JsonStorageService : IJsonStorageService
+public class JsonStorageProvider : IJsonStorageProvider
 {
     private readonly string _basePath;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public JsonStorageService(IOptions<JsonStorageServiceOptions> options)
+    public JsonStorageProvider(IOptions<JsonStorageProviderOptions> options)
     {
         if (string.IsNullOrEmpty(options.Value.StoragePath))
             throw new ArgumentException($"{nameof(options.Value.StoragePath)} is missing.", nameof(options));

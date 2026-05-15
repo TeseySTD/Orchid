@@ -1,10 +1,10 @@
-﻿using Orchid.Application.Models;
+﻿using Orchid.Application.Dto;
 using Orchid.Application.Services;
 using Orchid.Core.Models.ValueObjects;
 
-namespace Orchid.Application.Common.Services;
+namespace Orchid.Application.Common.Providers;
 
-public interface IPaginationCacheService
+public interface IPaginationCacheProvider
 {
     Task SaveChapterAsync(BookId bookId, PaginationContext context, int index, PageData[] pages);
     Task<PageData[]?> GetChapterAsync(BookId bookId, PaginationContext context, int index);

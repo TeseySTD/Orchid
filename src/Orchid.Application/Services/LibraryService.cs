@@ -1,12 +1,13 @@
-﻿using Orchid.Core.Models.ValueObjects;
+﻿using Orchid.Application.Common.Providers;
+using Orchid.Application.Dto;
+using Orchid.Core.Models.ValueObjects;
 
 namespace Orchid.Application.Services;
 
 using Orchid.Application.Common.Services;
-using Models;
 using Orchid.Core.Models;
 
-public class LibraryService(IJsonStorageService jsonStorage) : ILibraryService
+public class LibraryService(IJsonStorageProvider jsonStorage) : ILibraryService
 {
     private const string SummariesFolder = "library_summaries";
     private const string ProgressFolder = "reading_progress";

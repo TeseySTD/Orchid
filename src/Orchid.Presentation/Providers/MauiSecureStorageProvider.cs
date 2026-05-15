@@ -1,8 +1,8 @@
-﻿using Orchid.Application.Common.Services;
+﻿using Orchid.Application.Common.Providers;
 
-namespace Orchid.Presentation.Services;
+namespace Orchid.Presentation.Providers;
 
-public class MauiSecureStorage : ILocalSecureStorage
+public class MauiSecureStorageProvider : ISecureStorageProvider
 {
     public Task SetAsync(string key, string value) => SecureStorage.Default.SetAsync(key, value);
 

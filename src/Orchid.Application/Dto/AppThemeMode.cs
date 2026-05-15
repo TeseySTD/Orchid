@@ -1,4 +1,4 @@
-﻿namespace Orchid.Application.Models;
+﻿namespace Orchid.Application.Dto;
 
 public enum AppThemeMode
 {

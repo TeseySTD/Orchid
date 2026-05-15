@@ -1,6 +1,7 @@
 ﻿using MudBlazor;
 using MudBlazor.Services;
-using Orchid.Application.Common.Services;
+using Orchid.Application.Common.Providers;
+using Orchid.Presentation.Providers;
 using Orchid.Presentation.Services;
 
 namespace Orchid.Presentation;
@@ -10,8 +11,8 @@ public static class DependencyInjection
     public static IServiceCollection AddPresentationServices(this IServiceCollection services)
     {
         services.AddSingleton<BookPaginationService>();
-        services.AddSingleton<ILocalSecureStorage, MauiSecureStorage>();
-        services.AddSingleton<IAppSettingsService, MauiAppSettingsService>();
+        services.AddSingleton<ISecureStorageProvider, MauiSecureStorageProvider>();
+        services.AddSingleton<IAppSettingsProvider, MauiAppSettingsProvider>();
         services.AddMudServices(config =>
         {
             config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;

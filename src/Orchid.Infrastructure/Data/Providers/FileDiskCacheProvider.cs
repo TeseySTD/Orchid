@@ -1,15 +1,15 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Options;
-using Orchid.Application.Common.Services;
-using Orchid.Infrastructure.Data.Services.Options;
+using Orchid.Application.Common.Providers;
+using Orchid.Infrastructure.Data.Providers.Options;
 
-namespace Orchid.Infrastructure.Data.Services;
+namespace Orchid.Infrastructure.Data.Providers;
 
-public class FileDiskCacheService : IDiskCacheService
+public class FileDiskCacheProvider : IDiskCacheProvider
 {
-    private readonly DiskCacheServiceOptions _options;
+    private readonly DiskCacheProviderOptions _options;
 
-    public FileDiskCacheService(IOptions<DiskCacheServiceOptions> options)
+    public FileDiskCacheProvider(IOptions<DiskCacheProviderOptions> options)
     {
         _options = options.Value;
         if (string.IsNullOrEmpty(_options.BaseDirectory))

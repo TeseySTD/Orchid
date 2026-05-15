@@ -1,11 +1,12 @@
-﻿using Orchid.Application.Common.Services;
-using Orchid.Application.Models;
+﻿using Orchid.Application.Common.Providers;
+using Orchid.Application.Common.Services;
+using Orchid.Application.Dto;
 
 namespace Orchid.Presentation;
 
 public partial class MainPage : ContentPage
 {
-    public MainPage(IAppSettingsService appSettings)
+    public MainPage(IAppSettingsProvider appSettings)
     {
         InitializeComponent();
         string startPath = "/";

@@ -1,6 +1,6 @@
-﻿namespace Orchid.Application.Common.Services;
+﻿namespace Orchid.Application.Common.Providers;
 
-public interface ILocalSecureStorage
+public interface ISecureStorageProvider
 {
     Task SetAsync(string key, string value);
     Task<string?> GetAsync(string key);

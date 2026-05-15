@@ -1,9 +1,9 @@
 using Orchid.Core.Models;
 using Orchid.Core.Models.ValueObjects;
 
-namespace Orchid.Application.Common.Services;
+namespace Orchid.Application.Common.Engine;
 
-public interface IBookService
+public interface IBookParser
 {
     Task<Book> ReadAsync(string bookFilePath);
     Task<Chapter> ReadChapterAsync(string bookFilePath, int chapterIndex);

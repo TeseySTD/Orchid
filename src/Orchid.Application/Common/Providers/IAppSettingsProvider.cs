@@ -1,8 +1,8 @@
-﻿using Orchid.Application.Models;
+﻿using Orchid.Application.Dto;
 
-namespace Orchid.Application.Common.Services;
+namespace Orchid.Application.Common.Providers;
 
-public interface IAppSettingsService
+public interface IAppSettingsProvider
 {
     bool OpenLastBookOnStartup { get; set; }
     int ReaderFontSize { get; set; }

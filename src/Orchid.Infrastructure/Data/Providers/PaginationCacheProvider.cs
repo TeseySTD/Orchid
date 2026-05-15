@@ -1,19 +1,17 @@
 ﻿using System.Text.Json;
-using Orchid.Application.Common.Services;
-using Orchid.Application.Models;
+using Orchid.Application.Common.Providers;
+using Orchid.Application.Dto;
 using Orchid.Core.Models.ValueObjects;
 
-namespace Orchid.Application.Services;
+namespace Orchid.Infrastructure.Data.Providers;
 
-public record PaginationContext(double Width, double Height, double FontSize, string FontFamily, double LineHeight);
-
-public class PaginationCacheService : IPaginationCacheService
+public class PaginationCacheProvider : IPaginationCacheProvider
 {
-    private readonly IDiskCacheService _cache;
+    private readonly IDiskCacheProvider _cache;
     private const string FolderName = "pagination";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public PaginationCacheService(IDiskCacheService cache) => _cache = cache;
+    public PaginationCacheProvider(IDiskCacheProvider cache) => _cache = cache;
 
     public async Task SaveChapterAsync(BookId bookId, PaginationContext context, int index, PageData[] pages)
     {

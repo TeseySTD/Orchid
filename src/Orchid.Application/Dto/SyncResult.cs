@@ -1,6 +1,6 @@
-﻿namespace Orchid.Application.Models;
+﻿using Orchid.Core.Models;
 
-using Orchid.Core.Models;
+namespace Orchid.Application.Dto;
 
 public enum SyncState
 {

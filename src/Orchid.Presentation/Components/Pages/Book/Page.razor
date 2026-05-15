@@ -1,7 +1,8 @@
 ﻿@page "/book"
 @using System.Collections.Concurrent
+@using Orchid.Application.Common.Providers
 @using Orchid.Application.Common.Services
-@using Orchid.Application.Models
+@using Orchid.Application.Dto
 @using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
 @using Orchid.Presentation.Models
@@ -9,8 +10,8 @@
 @inject IBookResourcesService BookResourcesService
 @inject BookPaginationService BookPaginationService
 @inject ILibraryService LibraryService
-@inject IPaginationCacheService PaginationCacheService
-@inject IAppSettingsService AppSettingsService
+@inject IPaginationCacheProvider PaginationCacheProvider
+@inject IAppSettingsProvider AppSettingsProvider
 @inject NavigationManager NavManager
 @inject IJSRuntime Js
 @inject IDialogService DialogService
@@ -73,7 +74,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _paginationStore = new ChapterPaginationStore(PaginationCacheService);
+        _paginationStore = new ChapterPaginationStore(PaginationCacheProvider);
 
         if (!string.IsNullOrEmpty(FilePath))
             await ReadBook(System.Net.WebUtility.UrlDecode(FilePath));

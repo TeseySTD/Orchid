@@ -1,6 +1,6 @@
-﻿using Orchid.Application.Models;
+﻿using Orchid.Application.Dto;
 
-namespace Orchid.Application.Common.Services;
+namespace Orchid.Application.Common.Providers;
 
 public interface ICloudStorageProvider
 {

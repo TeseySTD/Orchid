@@ -5,7 +5,8 @@ using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
-using Orchid.Application.Models;
+using Orchid.Application.Common.Providers;
+using Orchid.Application.Dto;
 using Orchid.Infrastructure.Cloud.Auth;
 
 namespace Orchid.Infrastructure.Cloud;
@@ -26,11 +27,11 @@ public class GoogleDriveProvider : ICloudStorageProvider
     public GoogleDriveProvider(
         string clientId,
         string? clientSecret,
-        ILocalSecureStorage secureStorage)
+        ISecureStorageProvider secureStorageProvider)
     {
         _clientId = clientId;
         _clientSecret = clientSecret;
-        _tokenStoreAdapter = new OAuthDataStoreAdapter(secureStorage);
+        _tokenStoreAdapter = new OAuthDataStoreAdapter(secureStorageProvider);
     }
 
     public async Task<bool> AuthenticateAsync(CancellationToken cancellationToken = default)
