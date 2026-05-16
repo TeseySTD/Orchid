@@ -40,6 +40,7 @@
     public int CurrentPageIndex => _currentChapterPageIndex;
     public int CurrentTotalPages => _currentChapterTotalPages;
     public ElementReference PaginationSandbox => _chapterView.PaginationSandbox;
+    private CancellationTokenSource? _clickCts;
 
     private ChapterView _chapterView = null!;
     private bool _showToolbar;
@@ -73,14 +74,47 @@
         await UpdatePageWindowAsync();
     }
 
+
     private async Task HandleReaderClick(MouseEventArgs e)
     {
-        var screenWidth = await Js.InvokeAsync<double>("eval", "window.innerWidth");
-        var x = e.ClientX;
+        if (_clickCts != null)
+        {
+            await _clickCts.CancelAsync();
+            _clickCts = null;
+            return;
+        }
 
-        if (x < screenWidth * 0.2) await PreviousPage();
-        else if (x > screenWidth * 0.8) await NextPage();
-        else _showToolbar = !_showToolbar;
+        _clickCts = new CancellationTokenSource();
+        var token = _clickCts.Token;
+
+        try
+        {
+            await Task.Delay(250, token);
+
+            var selectedText = await Js.InvokeAsync<string>("eval", token, "window.getSelection().toString()");
+            if (!string.IsNullOrWhiteSpace(selectedText))
+            {
+                return;
+            }
+
+            var screenWidth = await Js.InvokeAsync<double>("eval", token, "window.innerWidth");
+            var x = e.ClientX;
+
+            if (x < screenWidth * 0.2) await PreviousPage();
+            else if (x > screenWidth * 0.8) await NextPage();
+            else _showToolbar = !_showToolbar;
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        finally
+        {
+            if (_clickCts != null && _clickCts.Token == token)
+            {
+                _clickCts.Dispose();
+                _clickCts = null;
+            }
+        }
     }
 
     private async Task NextPage()
