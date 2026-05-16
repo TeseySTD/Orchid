@@ -24,20 +24,16 @@
         </MudMenuItem>
     </MudMenu>
 
-    <MudMenu Icon="@GetCurrentThemeIcon()" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight"
+    <MudMenu Icon="@GetThemeIcon(AppSettings.Theme)" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight"
              TransformOrigin="Origin.TopRight">
-        <MudMenuItem OnClick="@(() => SetTheme(AppThemeMode.Light))"
-                     Icon="@Icons.Material.Filled.LightMode"
-                     Class="@(AppSettings.Theme == AppThemeMode.Light ? "mud-primary-text" : "")">Light
-        </MudMenuItem>
-        <MudMenuItem OnClick="@(() => SetTheme(AppThemeMode.Dark))"
-                     Icon="@Icons.Material.Filled.DarkMode"
-                     Class="@(AppSettings.Theme == AppThemeMode.Dark ? "mud-primary-text" : "")">Dark
-        </MudMenuItem>
-        <MudMenuItem OnClick="@(() => SetTheme(AppThemeMode.System))"
-                     Icon="@Icons.Material.Filled.BrightnessAuto"
-                     Class="@(AppSettings.Theme == AppThemeMode.System ? "mud-primary-text" : "")">System
-        </MudMenuItem>
+        @foreach (var theme in Enum.GetValues<AppThemeMode>())
+        {
+            <MudMenuItem OnClick="@(() => SetTheme(theme))"
+                         Icon="@GetThemeIcon(theme)"
+                         Class="@(AppSettings.Theme == theme ? "mud-primary-text" : "")">
+                @theme.ToString()
+            </MudMenuItem>
+        }
     </MudMenu>
 </MudAppBar>
 
@@ -51,7 +47,10 @@
 
 @code {
     private bool _drawerOpen;
-    [CascadingParameter] public string CurrentLanguage { get; set; } = default!;
+    
+    [CascadingParameter] 
+    public string CurrentLanguage { get; set; } = default!;
+    
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 
     protected override void OnInitialized()
@@ -69,16 +68,15 @@
         LocalizationState.SetLanguage(culture);
     }
 
-    private string GetCurrentThemeIcon() => AppSettings.Theme switch
+    private string GetThemeIcon(AppThemeMode mode) => mode switch
     {
         AppThemeMode.Light => Icons.Material.Filled.LightMode,
         AppThemeMode.Dark => Icons.Material.Filled.DarkMode,
-        _ => Icons.Material.Filled.BrightnessAuto
+        _ => Icons.Material.Filled.Devices
     };
 
     public void Dispose()
     {
         AppSettings.OnSettingsChanged -= StateHasChanged;
     }
-
 }
