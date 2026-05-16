@@ -106,10 +106,10 @@
                             if (strictlyAfter) break;
                             node = walker.nextNode();
                         }
-                        
+
                         const startLocator = window.orchidReader._generateNodePath(element, sNode) + ":" + sOff;
                         let pageHtml = "";
-                        
+
                         try {
                             const range = document.createRange();
 
@@ -229,21 +229,39 @@
     _findOffsetAtX: (node, pageRight, containerLeft, startOffset = 0) => {
         const text = node.textContent;
         const range = document.createRange();
-        
-        for (let i = startOffset; i < text.length; i++) {
+        const step = 15;
+        let current = startOffset;
+
+        // Fast-forward to skip layout thrashing
+        while (current < text.length) {
+            range.setStart(node, current);
+            range.setEnd(node, Math.min(current + 1, text.length));
+            const rects = range.getClientRects();
+
+            if (rects.length > 0) {
+                const center = rects[0].left - containerLeft + (rects[0].width / 2);
+                if (center >= pageRight) break;
+            }
+            current += step;
+        }
+
+        // Exact linear scan only around the visual boundary
+        const back = Math.max(startOffset, current - step);
+
+        for (let i = back; i < text.length; i++) {
             range.setStart(node, i);
             range.setEnd(node, i + 1);
             const rects = range.getClientRects();
-            
-            if (rects.length === 0) continue; 
-            
-            const rect = rects[0];
-            const center = rect.left - containerLeft + (rect.width / 2);
-            
+
+            if (rects.length === 0) continue;
+
+            const center = rects[0].left - containerLeft + (rects[0].width / 2);
+
             if (center >= pageRight) {
                 return i;
             }
         }
+
         return text.length;
     },
 
