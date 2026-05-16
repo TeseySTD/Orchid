@@ -2,6 +2,7 @@
 @using Orchid.Application.Common.Providers
 @using Orchid.Application.Common.Services
 @using Orchid.Application.Dto
+@using Orchid.Presentation.Resources.Translations
 @inject ILibraryService LibraryService
 @inject NavigationManager NavManager
 @inject IAppSettingsProvider AppSettings
@@ -53,9 +54,8 @@
         position: relative;
         overflow: hidden;
         border-radius: 10px;
-        box-shadow:
-            0 2px 4px rgba(0,0,0,0.10),
-            0 6px 18px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.10),
+        0 6px 18px rgba(0, 0, 0, 0.08);
         cursor: pointer;
         background-color: var(--mud-palette-background-grey);
     }
@@ -78,10 +78,10 @@
         position: relative;
         overflow: hidden;
         border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.10), 0 6px 18px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.10), 0 6px 18px rgba(0, 0, 0, 0.08);
         cursor: pointer;
         background-color: var(--mud-palette-background-grey);
-        border: 2px solid transparent; 
+        border: 2px solid transparent;
         transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     }
 
@@ -97,7 +97,7 @@
         object-fit: cover;
         transition: transform 0.4s ease;
     }
-    
+
     .book-info-panel {
         position: absolute;
         bottom: 0;
@@ -145,11 +145,12 @@
         <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="mt-16 pa-8">
             <MudIcon Icon="@Icons.Material.Filled.LibraryAdd" Style="font-size: 5rem;" Color="Color.Primary"
                      Class="mb-2 opacity-50"/>
-            <MudText Typo="Typo.h5" Style="font-weight: 700;" Class="mb-1">Your library is empty</MudText>
-            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6">Open a file to start reading</MudText>
+            <MudText Typo="Typo.h5" Style="font-weight: 700;" Class="mb-1">@AppResources.HomeEmptyTitle</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary"
+                     Class="mb-6">@AppResources.HomeEmptySubtitle</MudText>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                        OnClick="PickFile" Class="rounded-pill px-8 py-3">
-                Add your first book
+                @AppResources.HomeAddFirstBookButton
             </MudButton>
         </MudStack>
     }
@@ -157,9 +158,8 @@
     {
         @if (_featuredBook != null)
         {
-            <MudText Typo="Typo.body2" Class="mb-3 section-label">Continue Reading</MudText>
-            <MudPaper Elevation="0" Class="pa-4 mb-8 featured-card"
-                      Style="max-width: 480px; cursor: pointer;"
+            <MudText Typo="Typo.body2" Class="mb-3 section-label">@AppResources.HomeContinueReading</MudText>
+            <MudPaper Elevation="0" Class="pa-4 mb-8 featured-card" Style="max-width: 480px; cursor: pointer;"
                       @onclick="() => OpenBook(_featuredBook.FilePath)">
                 <MudStack Row Spacing="4" AlignItems="AlignItems.Center">
                     <MudImage
@@ -185,7 +185,7 @@
             </MudPaper>
         }
 
-        <MudText Typo="Typo.body2" Class="mb-5 section-label">All Books</MudText>
+        <MudText Typo="Typo.body2" Class="mb-5 section-label">@AppResources.HomeAllBooks</MudText>
 
         @* Desktop Grid View *@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -201,13 +201,13 @@
                             <img src="@coverUrl" class="book-cover-image" alt="@book.Title"/>
 
                             <div class="book-info-panel">
-                                <MudText Typo="Typo.subtitle2" 
+                                <MudText Typo="Typo.subtitle2"
                                          Style="font-weight: 700; line-height: 1.25; letter-spacing: -0.01em;"
                                          Class="text-truncate d-block mb-1" title="@book.Title">
                                     @book.Title
                                 </MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary"
-                                         Class="text-truncate d-block" title="@book.Authors">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate d-block"
+                                         title="@book.Authors">
                                     @book.Authors
                                 </MudText>
                             </div>
@@ -246,8 +246,9 @@
         <div class="add-book-fab">
             @* Desktop *@
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Label="Add Book" OnClick="PickFile"
-                        Class="shadow-lg px-6" Style="border-radius: 16px; text-transform: none;"/>
+                <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                        Label="@AppResources.HomeAddBookFab"
+                        OnClick="PickFile" Class="shadow-lg px-6" Style="border-radius: 16px; text-transform: none;"/>
             </MudHidden>
 
             @* Mobile *@
@@ -259,10 +260,12 @@
     }
 </MudContainer>
 
+
 @code {
     private List<BookSummary>? _books;
     private BookSummary? _featuredBook;
     private List<BookSummary> _otherBooks = new();
+    [CascadingParameter] public string CurrentLanguage { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {

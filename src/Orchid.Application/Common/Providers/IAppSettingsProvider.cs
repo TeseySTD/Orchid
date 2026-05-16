@@ -9,6 +9,6 @@ public interface IAppSettingsProvider
     double ReaderLineHeight { get; set; }
     AppThemeMode Theme { get; set; }
     string? LastOpenedBookPath { get; set; }
-    
+    string AppLanguage { get; set; }
     event Action? OnSettingsChanged;
 }

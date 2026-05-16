@@ -1,6 +1,7 @@
 ﻿@using MudBlazor.Services
 @using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
+@using Orchid.Presentation.Resources.Translations
 @inject IBrowserViewportService BrowserViewportService
 @implements IAsyncDisposable
 
@@ -36,11 +37,11 @@
                                  Class="flex-shrink-0 mud-text-secondary"
                                  Style="margin-right: 6px; font-size: 0.75rem;"/>
                         <MudText Class="text-truncate mud-text-secondary" Style="@_dynamicSubtitleStyle">
-                            Chapter: @CurrentChapterTitle
+                            @AppResources.BookMenuChapter: @CurrentChapterTitle
                             <span style="margin: 0 4px; opacity: 0.4;">·</span>
-                            Page: @(CurrentChapterPageIndex.HasValue ? CurrentChapterPageIndex.Value + 1 : "–") / @(CurrentChapterTotalPages?.ToString() ?? "–")
+                            @AppResources.BookMenuPage: @(CurrentChapterPageIndex.HasValue ? CurrentChapterPageIndex.Value + 1 : "–") / @(CurrentChapterTotalPages?.ToString() ?? "–")
                             <span style="margin: 0 4px; opacity: 0.4;">·</span>
-                            Total: @TotalBookPages
+                            @AppResources.BookMenuTotal: @TotalBookPages
                         </MudText>
                     </div>
                 </div>
@@ -86,11 +87,11 @@
                         <MudIcon Icon="@Icons.Material.Filled.BookmarkBorder" Size="Size.Small"
                                  Class="flex-shrink-0 mud-text-secondary"/>
                         <MudText Class="mud-text-secondary" Style="@($"{_dynamicSubtitleStyle} white-space: nowrap;")">
-                            Chapter: @CurrentChapterTitle
+                            @AppResources.BookMenuChapter: @CurrentChapterTitle
                             <span style="margin: 0 6px; opacity: 0.35;">|</span>
-                            Page: @(CurrentChapterPageIndex.HasValue ? CurrentChapterPageIndex.Value + 1 : "–") / @(CurrentChapterTotalPages?.ToString() ?? "–")
+                            @AppResources.BookMenuPage: @(CurrentChapterPageIndex.HasValue ? CurrentChapterPageIndex.Value + 1 : "–") / @(CurrentChapterTotalPages?.ToString() ?? "–")
                             <span style="margin: 0 6px; opacity: 0.35;">|</span>
-                            Total: @TotalBookPages
+                            @AppResources.BookMenuTotal: @TotalBookPages
                         </MudText>
                     </div>
                 </div>
@@ -108,7 +109,7 @@
                                Size="Size.Small"
                                Class="flex-shrink-0 mud-text-secondary"
                                Style="@($"text-transform: none; font-size: {_dynamicButtonFontSize}; border-radius: 8px; padding: 4px 12px;")">
-                        Navigation
+                        @AppResources.BookMenuNavigationBtn
                     </MudButton>
                 </div>
             }
@@ -131,6 +132,9 @@
     
     [Parameter] public EventCallback OnNavigationClick { get; set; }
     [Parameter] public EventCallback OnSettingsClick { get; set; }
+    
+    [CascadingParameter] 
+    public string CurrentLanguage { get; set; } = default!;
 
     private bool DrawerOpen
     {

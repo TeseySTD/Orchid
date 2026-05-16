@@ -6,12 +6,11 @@
 @using Orchid.Core.Models
 @using Orchid.Core.Models.ValueObjects
 @using Orchid.Presentation.Models
-@using Orchid.Presentation.Services
+@using Orchid.Presentation.Resources.Translations
 @inject IBookResourcesService BookResourcesService
 @inject BookPaginationService BookPaginationService
 @inject ILibraryService LibraryService
 @inject IPaginationCacheProvider PaginationCacheProvider
-@inject IAppSettingsProvider AppSettingsProvider
 @inject NavigationManager NavManager
 @inject IJSRuntime Js
 @inject IDialogService DialogService
@@ -33,7 +32,7 @@
 />
 
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-0" Style="height: 100%; display: flex; flex-direction: column;">
-    <LoadingOverlay IsVisible="_isBookLoading" Text="Loading book..."/>
+    <LoadingOverlay IsVisible="_isBookLoading" Text="@AppResources.BookLoadingText"/>
 
     @if (_currentBook != null)
     {
@@ -54,6 +53,9 @@
 
     [SupplyParameterFromQuery(Name = "path")]
     public string? FilePath { get; set; }
+
+    [CascadingParameter] 
+    public string CurrentLanguage { get; set; } = default!;
 
     private Reader? _reader;
     private Book? _currentBook;
@@ -182,16 +184,16 @@
             {
                 case { State: SyncState.Downloaded, ResolvedProgress: not null }:
                     await LibraryService.SaveProgressAsync(result.ResolvedProgress);
-                    ShowSyncSnackbar("Progress is restored from cloud", Icons.Material.Filled.CloudDownload);
+                    ShowSyncSnackbar(AppResources.BookSyncProgressRestored, Icons.Material.Filled.CloudDownload);
                     return result.ResolvedProgress.Position;
                 case { State: SyncState.Uploaded, ResolvedProgress: not null }:
-                    ShowSyncSnackbar("Local progress uploaded to the cloud.", Icons.Material.Filled.CloudUpload);
+                    ShowSyncSnackbar(AppResources.BookSyncLocalProgressUploaded, Icons.Material.Filled.CloudUpload);
                     return result.ResolvedProgress.Position;
             }
         }
         catch (OperationCanceledException)
         {
-            ShowSyncSnackbar("Cloud is not responding. Retrieve data from local.", Icons.Material.Filled.CloudOff);
+            ShowSyncSnackbar(AppResources.BookSyncCloudNotResponding, Icons.Material.Filled.CloudOff);
         }
 
         return currentPosition;
@@ -315,13 +317,13 @@
                     await _reader.RestorePositionAsync(_currentPageIdentifier);
                 }
 
-                ShowSyncSnackbar("Progress updated.", Icons.Material.Filled.CloudDownload);
+                ShowSyncSnackbar(AppResources.BookSyncProgressUpdated, Icons.Material.Filled.CloudDownload);
                 StateHasChanged();
             });
         }
         else if (result is { State: SyncState.Uploaded, ResolvedProgress: not null })
         {
-            ShowSyncSnackbar("Progress uploaded to the cloud.", Icons.Material.Filled.CloudUpload);
+            ShowSyncSnackbar(AppResources.BookSyncLocalProgressUploaded, Icons.Material.Filled.CloudUpload);
             StateHasChanged();
         }
     }
@@ -362,5 +364,4 @@
         GC.Collect(2, GCCollectionMode.Forced, true);
         GC.WaitForPendingFinalizers();
     }
-
 }

@@ -1,4 +1,5 @@
 ﻿@using System.Text
+@using Orchid.Presentation.Resources.Translations
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
@@ -15,9 +16,9 @@
 
                 <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Large"
                          Style="width: 64px; height: 64px;"/>
-                <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Error">Something went wrong.</MudText>
+                <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Error">@AppResources.ErrorTitle</MudText>
                 <MudText Typo="Typo.body1" Align="Align.Center">
-                    Unhandled exception occured.
+                    @AppResources.ErrorSubtitle
                 </MudText>
 
                 <MudStack Row="true" Spacing="2" Justify="Justify.Center" Class="mt-4">
@@ -25,23 +26,23 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Refresh"
                                OnClick="Reload">
-                        Reload
+                        @AppResources.ErrorReloadBtn
                     </MudButton>
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Secondary"
                                StartIcon="@Icons.Material.Filled.Home"
                                OnClick="GoHome">
-                        Go to Home
+                        @AppResources.ErrorGoHomeBtn
                     </MudButton>
                 </MudStack>
 
                 <MudExpansionPanels Class="mt-4" Style="width: 100%;">
-                    <MudExpansionPanel Text="Exception details:" Icon="@Icons.Material.Filled.Code">
+                    <MudExpansionPanel Text="@AppResources.ErrorDetailsPanel" Icon="@Icons.Material.Filled.Code">
                         <div class="d-flex justify-end mb-2">
                             <MudButton Size="Size.Small"
                                        StartIcon="@Icons.Material.Filled.ContentCopy"
                                        OnClick="@(() => CopyErrorToClipboard(exception))">
-                                Copy
+                                @AppResources.ErrorCopyBtn
                             </MudButton>
                         </div>
 
@@ -56,7 +57,7 @@
 
                         @if (exception.InnerException != null)
                         {
-                            <MudText Typo="Typo.subtitle2" Color="Color.Error" Class="mt-3">Inner Exception:</MudText>
+                            <MudText Typo="Typo.subtitle2" Color="Color.Error" Class="mt-3">@AppResources.ErrorInnerException</MudText>
                             <MudText Typo="Typo.body2"
                                      Style="word-break: break-word;">@exception.InnerException.Message</MudText>
                             <div class="code-container mt-1">
@@ -75,6 +76,9 @@
 
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    
+    [CascadingParameter] 
+    public string CurrentLanguage { get; set; } = default!;
 
     private void Reload()
     {
@@ -103,7 +107,7 @@
 
         await Clipboard.Default.SetTextAsync(sb.ToString());
 
-        Snackbar.Add("Details are copied to clipboard.", Severity.Success, options =>
+        Snackbar.Add(AppResources.ErrorCopiedMessage, Severity.Success, options =>
         {
             options.ShowTransitionDuration = 300;
             options.VisibleStateDuration = 1000;

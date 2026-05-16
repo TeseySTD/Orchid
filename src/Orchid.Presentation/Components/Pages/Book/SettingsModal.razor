@@ -1,12 +1,12 @@
 ﻿@using Orchid.Application.Common.Providers
-@using Orchid.Application.Common.Services
+@using Orchid.Presentation.Resources.Translations
 @inject IAppSettingsProvider AppSettingsProvider
 
 <MudDialog Class="orchid-settings-modal">
     <TitleContent>
         <div class="d-flex align-center gap-2">
             <MudIcon Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" Size="Size.Medium" />
-            <MudText Typo="Typo.h6" Class="fw-bold">Reader settings</MudText>
+            <MudText Typo="Typo.h6" Class="fw-bold">@AppResources.BookSettingsTitle</MudText>
         </div>
     </TitleContent>
     
@@ -17,7 +17,7 @@
                 <div class="d-flex justify-space-between align-center mb-1">
                     <div class="d-flex align-center gap-2">
                         <MudIcon Icon="@Icons.Material.Filled.FormatSize" Size="Size.Small" Class="mud-text-secondary" />
-                        <MudText Typo="Typo.body1" Class="fw-bold">Font Size</MudText>
+                        <MudText Typo="Typo.body1" Class="fw-bold">@AppResources.BookSettingsFontSize</MudText>
                     </div>
                     <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Class="fw-bold">
                         @_draftFontSize px
@@ -36,7 +36,7 @@
                 <div class="d-flex justify-space-between align-center mb-1">
                     <div class="d-flex align-center gap-2">
                         <MudIcon Icon="@Icons.Material.Filled.FormatLineSpacing" Size="Size.Small" Class="mud-text-secondary" />
-                        <MudText Typo="Typo.body1" Class="fw-bold">Line Height</MudText>
+                        <MudText Typo="Typo.body1" Class="fw-bold">@AppResources.BookSettingsLineHeight</MudText>
                     </div>
                     <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Class="fw-bold">
                         @_draftLineHeight.ToString("0.0")
@@ -61,7 +61,7 @@
                    FullWidth="true"
                    Class="py-2 fw-bold"
                    StartIcon="@Icons.Material.Filled.Done">
-            Save settings
+            @AppResources.BookSettingsSave
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -76,6 +76,9 @@
 @code {
     [CascadingParameter] 
     public IMudDialogInstance MudDialog { get; set; } = null!;
+    
+    [CascadingParameter] 
+    public string CurrentLanguage { get; set; } = default!;
 
     private int _draftFontSize;
     private double _draftLineHeight;

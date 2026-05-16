@@ -61,4 +61,10 @@ public class MauiAppSettingsProvider : IAppSettingsProvider
             OnSettingsChanged?.Invoke();
         }
     }
+
+    public string AppLanguage
+    {
+        get => Preferences.Get(nameof(AppLanguage), "en-US");
+        set => Preferences.Set(nameof(AppLanguage), value);
+    }
 }

@@ -1,10 +1,9 @@
 ﻿@page "/settings"
 @using Orchid.Application
-@using Orchid.Application.Common
 @using Orchid.Application.Common.Providers
 @using Orchid.Application.Common.Repo
-@using Orchid.Application.Common.Services
 @using Orchid.Application.Dto
+@using Orchid.Presentation.Resources.Translations
 @inject IAppSettingsProvider AppSettings
 @inject IPaginationCacheProvider PaginationCache
 @inject IImagesRepository ImagesRepo
@@ -15,7 +14,7 @@
               Style="height: calc(100vh - 64px); overflow-y: auto; -webkit-overflow-scrolling: touch;">
     <div class="d-flex align-center gap-3 mb-6">
         <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Large" Color="Color.Primary"/>
-        <MudText Typo="Typo.h4" Class="fw-bold">Settings</MudText>
+        <MudText Typo="Typo.h4" Class="fw-bold">@AppResources.SettingsTitle</MudText>
     </div>
 
     <MudGrid>
@@ -24,31 +23,31 @@
             <MudPaper Elevation="2" Class="pa-4 h-100" Style="border-radius: 16px;">
                 <div class="d-flex align-center gap-2 mb-4">
                     <MudIcon Icon="@Icons.Material.Filled.Tune" Color="Color.Secondary"/>
-                    <MudText Typo="Typo.h6" Class="fw-bold">General</MudText>
+                    <MudText Typo="Typo.h6" Class="fw-bold">@AppResources.SettingsGeneral</MudText>
                 </div>
 
                 <div class="d-flex flex-column gap-6">
                     @* App theme *@
                     <div>
-                        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-1">Appearance</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-1">@AppResources.SettingsAppearance</MudText>
                         <MudSelect T="AppThemeMode"
                                    Value="AppSettings.Theme"
                                    ValueChanged="OnThemeChanged"
                                    Variant="Variant.Outlined"
                                    Dense="true"
                                    AnchorOrigin="Origin.BottomCenter">
-                            <MudSelectItem Value="AppThemeMode.System">System Default</MudSelectItem>
-                            <MudSelectItem Value="AppThemeMode.Light">Light Mode</MudSelectItem>
-                            <MudSelectItem Value="AppThemeMode.Dark">Dark Mode</MudSelectItem>
+                            <MudSelectItem Value="AppThemeMode.System">@AppResources.SettingsThemeSystem</MudSelectItem>
+                            <MudSelectItem Value="AppThemeMode.Light">@AppResources.SettingsThemeLight</MudSelectItem>
+                            <MudSelectItem Value="AppThemeMode.Dark">@AppResources.SettingsThemeDark</MudSelectItem>
                         </MudSelect>
                     </div>
 
                     @* Startup activity *@
                     <div class="d-flex justify-space-between align-center">
                         <div>
-                            <MudText Typo="Typo.body1">Open last book</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">Resume reading automatically on
-                                startup
+                            <MudText Typo="Typo.body1">@AppResources.SettingsStartupTitle</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @AppResources.SettingsStartupDesc
                             </MudText>
                         </div>
                         <MudSwitch T="bool"
@@ -65,14 +64,14 @@
             <MudPaper Elevation="2" Class="pa-4 h-100" Style="border-radius: 16px;">
                 <div class="d-flex align-center gap-2 mb-4">
                     <MudIcon Icon="@Icons.Material.Filled.Storage" Color="Color.Secondary"/>
-                    <MudText Typo="Typo.h6" Class="fw-bold">Storage</MudText>
+                    <MudText Typo="Typo.h6" Class="fw-bold">@AppResources.SettingsStorage</MudText>
                 </div>
 
                 <div class="d-flex flex-column gap-4">
                     @* Pagiantion *@
                     <div class="d-flex justify-space-between align-center">
                         <div class="d-flex flex-column">
-                            <MudText Typo="Typo.body1">Pagination Data</MudText>
+                            <MudText Typo="Typo.body1">@AppResources.SettingsPaginationData</MudText>
                             <MudText Typo="Typo.caption"
                                      Class="mud-text-secondary">@FormatBytes(_paginationCacheSize.TotalBytes)</MudText>
                         </div>
@@ -81,7 +80,7 @@
                                    Size="Size.Small"
                                    OnClick="ClearPaginationCache"
                                    Disabled="@(_paginationCacheSize.RemovableBytes == 0)">
-                            Clear
+                            @AppResources.SettingsClearBtn
                         </MudButton>
                     </div>
 
@@ -90,15 +89,14 @@
                     @* Images *@
                     <div class="d-flex justify-space-between align-center">
                         <div class="d-flex flex-column">
-                            <MudText Typo="Typo.body1">Book Covers & Images</MudText>
+                            <MudText Typo="Typo.body1">@AppResources.SettingsImagesData</MudText>
                             <MudText Typo="Typo.caption"
                                      Class="mud-text-secondary">@FormatBytes(_imagesCacheSize.TotalBytes)</MudText>
                             @if (_imagesCacheSize.RemovableBytes == 0 && _imagesCacheSize.PersistentBytes != 0)
                             {
                                 <MudText Typo="Typo.caption"
-                                         Class="mud-text-secondary">@FormatBytes(_imagesCacheSize.PersistentBytes) are
-                                    taken
-                                    by covers and cannot be removed
+                                         Class="mud-text-secondary">
+                                    @AppResources.SettingsImagesPersistentWarning(FormatBytes(_imagesCacheSize.PersistentBytes))
                                 </MudText>
                             }
                         </div>
@@ -107,13 +105,13 @@
                                    Size="Size.Small"
                                    OnClick="ClearImagesCache"
                                    Disabled="@(_imagesCacheSize.RemovableBytes == 0)">
-                            Clear
+                            @AppResources.SettingsClearBtn
                         </MudButton>
                     </div>
 
                     @* Deleting alert *@
                     <MudAlert Severity="Severity.Info" Class="mt-2 py-1" Variant="Variant.Outlined" Dense="true">
-                        Clearing cache will not delete your books or reading progress.
+                        @AppResources.SettingsCacheAlert
                     </MudAlert>
                 </div>
             </MudPaper>
@@ -124,6 +122,9 @@
 @code {
     private CacheSizeInfo _paginationCacheSize = new(0, 0);
     private CacheSizeInfo _imagesCacheSize = new(0, 0);
+    
+    [CascadingParameter] 
+    public string CurrentLanguage { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -149,31 +150,31 @@
     private async Task ClearPaginationCache()
     {
         var confirmed = await DialogService.ShowMessageBox(
-            "Clear Cache",
-            "Are you sure you want to clear the pagination cache?",
-            yesText: "Clear", cancelText: "Cancel");
+            AppResources.SettingsDialogClearCacheTitle,
+            AppResources.SettingsDialogClearPaginationMsg,
+            yesText: AppResources.SettingsClearBtn, cancelText: AppResources.SettingsDialogCancel);
 
         if (confirmed != true) return;
 
         PaginationCache.ClearCache();
         await LoadCacheSizesAsync();
 
-        ShowOrchidSnackbar("Pagination cache has been cleared", Icons.Material.Filled.CheckCircle);
+        ShowOrchidSnackbar(AppResources.SettingsSnackbarPaginationCleared, Icons.Material.Filled.CheckCircle);
     }
 
     private async Task ClearImagesCache()
     {
         var confirmed = await DialogService.ShowMessageBox(
-            "Clear Cache",
-            "Are you sure you want to clear the images cache?",
-            yesText: "Clear", cancelText: "Cancel");
+            AppResources.SettingsDialogClearCacheTitle,
+            AppResources.SettingsDialogClearImagesMsg,
+            yesText: AppResources.SettingsClearBtn, cancelText: AppResources.SettingsDialogCancel);
 
         if (confirmed != true) return;
 
         ImagesRepo.ClearCache([Constants.BookCoverFileName]);
         await LoadCacheSizesAsync();
 
-        ShowOrchidSnackbar("Images cache has been cleared", Icons.Material.Filled.CheckCircle);
+        ShowOrchidSnackbar(AppResources.SettingsSnackbarImagesCleared, Icons.Material.Filled.CheckCircle);
     }
 
     private void ShowOrchidSnackbar(string message, string icon)
@@ -199,5 +200,4 @@
 
         return $"{num} {suffixes[place]}";
     }
-
 }

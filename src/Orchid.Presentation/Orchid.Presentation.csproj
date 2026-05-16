@@ -43,6 +43,8 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+        
+        <SupportedCultures>en-US;uk-UA</SupportedCultures>
     </PropertyGroup>
 
     <ItemGroup>
@@ -87,6 +89,9 @@
     <ItemGroup>
       <Content Remove="appsettings.json" />
       <EmbeddedResource Include="appsettings.secrets.json" />
+      <EmbeddedResource Update="Resources\Translations\AppResources.resx">
+        <Generator>PublicResXFileCodeGenerator</Generator>
+      </EmbeddedResource>
     </ItemGroup>
 
 </Project>

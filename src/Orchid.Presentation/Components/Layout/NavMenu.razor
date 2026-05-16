@@ -1,6 +1,6 @@
 ﻿@using Orchid.Application.Common.Providers
-@using Orchid.Application.Common.Services
 @using Orchid.Application.Dto
+@using Orchid.Presentation.Resources.Translations
 @inject IEnumerable<ICloudStorageProvider> CloudProviders
 @inject ISnackbar Snackbar
 
@@ -13,9 +13,9 @@
     </div>
 
     <MudNavMenu Class="flex-grow-1 w-100 px-2">
-        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.LibraryBooks">Library</MudNavLink>
-        <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">Settings</MudNavLink>
-        <MudNavLink Href="https://github.com/TeseySTD/Orchid" Target="_blank" Icon="@Icons.Custom.Brands.GitHub">GitHub</MudNavLink>
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.LibraryBooks">@AppResources.NavMenuLibrary</MudNavLink>
+        <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">@AppResources.NavMenuSettings</MudNavLink>
+        <MudNavLink Href="https://github.com/TeseySTD/Orchid" Target="_blank" Icon="@Icons.Custom.Brands.GitHub">@AppResources.NavMenuGitHub</MudNavLink>
     </MudNavMenu>
 
     <MudDivider Class="mb-4 mx-4"/>
@@ -23,7 +23,7 @@
     <div class="px-4 pb-6 w-100" style="box-sizing: border-box;">
         @if (_provider == null)
         {
-            <MudText Typo="Typo.caption" Color="Color.Error" Class="px-2">No providers configured</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Error" Class="px-2">@AppResources.NavMenuNoProviders</MudText>
         }
         else if (_isAuthenticating || _isLoadingProfile)
         {
@@ -70,7 +70,7 @@
                                Size="Size.Small"
                                StartIcon="@Icons.Material.Filled.Logout"
                                OnClick="HandleLogoutAsync">
-                        Logout
+                        @AppResources.NavMenuLogout
                     </MudButton>
                 </MudStack>
             </MudPaper>
@@ -83,7 +83,7 @@
                        Class="rounded-lg py-2 fw-bold"
                        StartIcon="@Icons.Material.Filled.CloudSync"
                        OnClick="HandleLoginAsync">
-                Connect Cloud
+                @AppResources.NavMenuConnectCloud
             </MudButton>
         }
     </div>
@@ -94,6 +94,9 @@
     private CloudUserProfile? _userProfile;
     private bool _isAuthenticating;
     private bool _isLoadingProfile;
+
+    [CascadingParameter] 
+    public string CurrentLanguage { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -137,7 +140,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Login failed: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{AppResources.NavMenuLoginFailed}: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -158,7 +161,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Profile loading failed: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{AppResources.NavMenuProfileLoadFailed}: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -178,8 +181,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Logout failed: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{AppResources.NavMenuLogoutFailed}: {ex.Message}", Severity.Error);
         }
     }
-
 }

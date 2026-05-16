@@ -1,9 +1,10 @@
 ﻿@using Orchid.Core.Models.ValueObjects
+@using Orchid.Presentation.Resources.Translations
 @inject IJSRuntime Js
 
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6" Class="fw-bold">Navigation menu</MudText>
+        <MudText Typo="Typo.h6" Class="fw-bold">@AppResources.NavigationModalTitle</MudText>
     </TitleContent>
     <DialogContent>
         <div style="max-height: 70vh; overflow-y: auto;" class="pr-2">
@@ -17,10 +18,12 @@
 @code {
     [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
 
+    [CascadingParameter] public string CurrentLanguage { get; set; } = default!;
+
     [Parameter] public Navigation? Navigation { get; set; }
     [Parameter] public IReadOnlyDictionary<int, int> ChapterPageCounts { get; set; } = new Dictionary<int, int>();
     [Parameter] public int CurrentChapterIndex { get; set; }
-    private const string ActiveChapterId = "active-chapter-node"; 
+    private const string ActiveChapterId = "active-chapter-node";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -52,7 +55,8 @@
                             @if (pagesCount > 0)
                             {
                                 <MudText Typo="Typo.caption"
-                                         Class="mud-text-secondary ml-4 flex-shrink-0">@pagesCount p.
+                                         Class="mud-text-secondary ml-4 flex-shrink-0">
+                                    @AppResources.NavigationModalPages(pagesCount)
                                 </MudText>
                             }
                         </div>
@@ -69,7 +73,8 @@
                         <MudText Typo="Typo.body1" Class="@textClass">@item.ChapterTitle</MudText>
                         @if (pagesCount > 0)
                         {
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary ml-4 flex-shrink-0">@pagesCount p.
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary ml-4 flex-shrink-0">
+                                @AppResources.NavigationModalPages(pagesCount)
                             </MudText>
                         }
                     </div>

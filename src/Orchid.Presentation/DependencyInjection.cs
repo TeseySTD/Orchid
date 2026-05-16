@@ -11,6 +11,7 @@ public static class DependencyInjection
     public static IServiceCollection AddPresentationServices(this IServiceCollection services)
     {
         services.AddSingleton<BookPaginationService>();
+        services.AddSingleton<LocalizationStateService>();
         services.AddSingleton<ISecureStorageProvider, MauiSecureStorageProvider>();
         services.AddSingleton<IAppSettingsProvider, MauiAppSettingsProvider>();
         services.AddMudServices(config =>
@@ -18,6 +19,7 @@ public static class DependencyInjection
             config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
         });
         services.AddTransient<MainPage>();
+        services.AddLocalization();
         return services;
     }
 }

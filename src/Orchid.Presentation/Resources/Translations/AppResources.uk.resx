@@ -1,0 +1,176 @@
+﻿<root>
+    <data name="HomeEmptyTitle" xml:space="preserve">
+    <value>Твоя бібліотека порожня</value>
+  </data>
+    <data name="HomeEmptySubtitle" xml:space="preserve">
+    <value>Відкрий файл, щоб почати читати</value>
+  </data>
+    <data name="HomeAddFirstBookButton" xml:space="preserve">
+    <value>Додати першу книгу</value>
+  </data>
+    <data name="HomeContinueReading" xml:space="preserve">
+    <value>Продовжити читання</value>
+  </data>
+    <data name="HomeAllBooks" xml:space="preserve">
+    <value>Усі книги</value>
+  </data>
+    <data name="HomeAddBookFab" xml:space="preserve">
+    <value>Додати книгу</value>
+  </data>
+    <data name="NavMenuLibrary" xml:space="preserve">
+    <value>Бібліотека</value>
+  </data>
+    <data name="NavMenuSettings" xml:space="preserve">
+    <value>Налаштування</value>
+  </data>
+    <data name="NavMenuGitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+    <data name="NavMenuNoProviders" xml:space="preserve">
+    <value>Провайдери не налаштовані</value>
+  </data>
+    <data name="NavMenuLogout" xml:space="preserve">
+    <value>Вийти</value>
+  </data>
+    <data name="NavMenuConnectCloud" xml:space="preserve">
+    <value>Підключити хмару</value>
+  </data>
+    <data name="NavMenuLoginFailed" xml:space="preserve">
+    <value>Помилка входу</value>
+  </data>
+    <data name="NavMenuProfileLoadFailed" xml:space="preserve">
+    <value>Помилка завантаження профілю</value>
+  </data>
+    <data name="NavMenuLogoutFailed" xml:space="preserve">
+    <value>Помилка виходу</value>
+  </data>
+    <data name="ErrorTitle" xml:space="preserve">
+    <value>Щось пішло не так.</value>
+  </data>
+    <data name="ErrorSubtitle" xml:space="preserve">
+    <value>Сталася непередбачена помилка.</value>
+  </data>
+    <data name="ErrorReloadBtn" xml:space="preserve">
+    <value>Перезавантажити</value>
+  </data>
+    <data name="ErrorGoHomeBtn" xml:space="preserve">
+    <value>На головну</value>
+  </data>
+    <data name="ErrorDetailsPanel" xml:space="preserve">
+    <value>Деталі помилки:</value>
+  </data>
+    <data name="ErrorCopyBtn" xml:space="preserve">
+    <value>Копіювати</value>
+  </data>
+    <data name="ErrorInnerException" xml:space="preserve">
+    <value>Внутрішня помилка (Inner Exception):</value>
+  </data>
+    <data name="ErrorCopiedMessage" xml:space="preserve">
+    <value>Деталі скопійовано в буфер обміну.</value>
+  </data>
+    <data name="SettingsTitle" xml:space="preserve">
+    <value>Налаштування</value>
+  </data>
+    <data name="SettingsGeneral" xml:space="preserve">
+    <value>Загальні</value>
+  </data>
+    <data name="SettingsAppearance" xml:space="preserve">
+    <value>Зовнішній вигляд</value>
+  </data>
+    <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>Системна тема</value>
+  </data>
+    <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Світла тема</value>
+  </data>
+    <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Темна тема</value>
+  </data>
+    <data name="SettingsStartupTitle" xml:space="preserve">
+    <value>Відкривати останню книгу</value>
+  </data>
+    <data name="SettingsStartupDesc" xml:space="preserve">
+    <value>Автоматично продовжувати читання при запуску</value>
+  </data>
+    <data name="SettingsStorage" xml:space="preserve">
+    <value>Сховище</value>
+  </data>
+    <data name="SettingsPaginationData" xml:space="preserve">
+    <value>Дані пагінації</value>
+  </data>
+    <data name="SettingsClearBtn" xml:space="preserve">
+    <value>Очистити</value>
+  </data>
+    <data name="SettingsImagesData" xml:space="preserve">
+    <value>Обкладинки та зображення</value>
+  </data>
+    <data name="SettingsImagesPersistentWarning" xml:space="preserve">
+    <value>{0} зайнято обкладинками і не може бути видалено</value>
+  </data>
+    <data name="SettingsCacheAlert" xml:space="preserve">
+    <value>Очищення кешу не видалить ваші книги або прогрес читання.</value>
+  </data>
+    <data name="SettingsDialogClearCacheTitle" xml:space="preserve">
+    <value>Очистити кеш</value>
+  </data>
+    <data name="SettingsDialogClearPaginationMsg" xml:space="preserve">
+    <value>Ви впевнені, що хочете очистити кеш пагінації?</value>
+  </data>
+    <data name="SettingsDialogClearImagesMsg" xml:space="preserve">
+    <value>Ви впевнені, що хочете очистити кеш зображень?</value>
+  </data>
+    <data name="SettingsDialogCancel" xml:space="preserve">
+    <value>Скасувати</value>
+  </data>
+    <data name="SettingsSnackbarPaginationCleared" xml:space="preserve">
+    <value>Кеш пагінації очищено</value>
+  </data>
+    <data name="SettingsSnackbarImagesCleared" xml:space="preserve">
+    <value>Кеш зображень очищено</value>
+  </data>
+    <data name="BookLoadingText" xml:space="preserve">
+    <value>Завантаження книги...</value>
+  </data>
+    <data name="BookSyncProgressRestored" xml:space="preserve">
+    <value>Прогрес відновлено з хмари</value>
+  </data>
+    <data name="BookSyncLocalProgressUploaded" xml:space="preserve">
+    <value>Локальний прогрес вивантажено в хмару.</value>
+  </data>
+    <data name="BookSyncCloudNotResponding" xml:space="preserve">
+    <value>Хмара не відповідає. Отримано локальні дані.</value>
+  </data>
+    <data name="BookSyncProgressUpdated" xml:space="preserve">
+    <value>Прогрес оновлено.</value>
+  </data>
+    <data name="BookMenuChapter" xml:space="preserve">
+    <value>Розділ</value>
+  </data>
+    <data name="BookMenuPage" xml:space="preserve">
+    <value>Сторінка</value>
+  </data>
+    <data name="BookMenuTotal" xml:space="preserve">
+    <value>Всього</value>
+  </data>
+    <data name="BookMenuNavigationBtn" xml:space="preserve">
+    <value>Навігація</value>
+  </data>
+    <data name="BookSettingsTitle" xml:space="preserve">
+    <value>Налаштування читалки</value>
+  </data>
+    <data name="BookSettingsFontSize" xml:space="preserve">
+    <value>Розмір шрифту</value>
+  </data>
+    <data name="BookSettingsLineHeight" xml:space="preserve">
+    <value>Міжрядковий інтервал</value>
+  </data>
+    <data name="BookSettingsSave" xml:space="preserve">
+    <value>Зберегти налаштування</value>
+  </data>
+    <data name="NavigationModalTitle" xml:space="preserve">
+    <value>Меню навігації</value>
+  </data>
+    <data name="NavigationModalPages" xml:space="preserve">
+    <value>{0} ст.</value>
+  </data>
+</root>

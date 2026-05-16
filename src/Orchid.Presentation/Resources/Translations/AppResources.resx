@@ -1,0 +1,176 @@
+﻿<root>
+    <data name="HomeEmptyTitle" xml:space="preserve">
+    <value>Your library is empty</value>
+  </data>
+    <data name="HomeEmptySubtitle" xml:space="preserve">
+    <value>Open a file to start reading</value>
+  </data>
+    <data name="HomeAddFirstBookButton" xml:space="preserve">
+    <value>Add your first book</value>
+  </data>
+    <data name="HomeContinueReading" xml:space="preserve">
+    <value>Continue Reading</value>
+  </data>
+    <data name="HomeAllBooks" xml:space="preserve">
+    <value>All Books</value>
+  </data>
+    <data name="HomeAddBookFab" xml:space="preserve">
+    <value>Add Book</value>
+  </data>
+    <data name="NavMenuLibrary" xml:space="preserve">
+    <value>Library</value>
+  </data>
+    <data name="NavMenuSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+    <data name="NavMenuGitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+    <data name="NavMenuNoProviders" xml:space="preserve">
+    <value>No providers configured</value>
+  </data>
+    <data name="NavMenuLogout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+    <data name="NavMenuConnectCloud" xml:space="preserve">
+    <value>Connect Cloud</value>
+  </data>
+    <data name="NavMenuLoginFailed" xml:space="preserve">
+    <value>Login failed</value>
+  </data>
+    <data name="NavMenuProfileLoadFailed" xml:space="preserve">
+    <value>Profile loading failed</value>
+  </data>
+    <data name="NavMenuLogoutFailed" xml:space="preserve">
+    <value>Logout failed</value>
+  </data>
+    <data name="ErrorTitle" xml:space="preserve">
+    <value>Something went wrong.</value>
+  </data>
+    <data name="ErrorSubtitle" xml:space="preserve">
+    <value>Unhandled exception occurred.</value>
+  </data>
+    <data name="ErrorReloadBtn" xml:space="preserve">
+    <value>Reload</value>
+  </data>
+    <data name="ErrorGoHomeBtn" xml:space="preserve">
+    <value>Go to Home</value>
+  </data>
+    <data name="ErrorDetailsPanel" xml:space="preserve">
+    <value>Exception details:</value>
+  </data>
+    <data name="ErrorCopyBtn" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+    <data name="ErrorInnerException" xml:space="preserve">
+    <value>Inner Exception:</value>
+  </data>
+    <data name="ErrorCopiedMessage" xml:space="preserve">
+    <value>Details are copied to clipboard.</value>
+  </data>
+    <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+    <data name="SettingsGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+    <data name="SettingsAppearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+    <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>System Default</value>
+  </data>
+    <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light Mode</value>
+  </data>
+    <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark Mode</value>
+  </data>
+    <data name="SettingsStartupTitle" xml:space="preserve">
+    <value>Open last book</value>
+  </data>
+    <data name="SettingsStartupDesc" xml:space="preserve">
+    <value>Resume reading automatically on startup</value>
+  </data>
+    <data name="SettingsStorage" xml:space="preserve">
+    <value>Storage</value>
+  </data>
+    <data name="SettingsPaginationData" xml:space="preserve">
+    <value>Pagination Data</value>
+  </data>
+    <data name="SettingsClearBtn" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+    <data name="SettingsImagesData" xml:space="preserve">
+    <value>Book Covers &amp; Images</value>
+  </data>
+    <data name="SettingsImagesPersistentWarning" xml:space="preserve">
+    <value>{0} are taken by covers and cannot be removed</value>
+  </data>
+    <data name="SettingsCacheAlert" xml:space="preserve">
+    <value>Clearing cache will not delete your books or reading progress.</value>
+  </data>
+    <data name="SettingsDialogClearCacheTitle" xml:space="preserve">
+    <value>Clear Cache</value>
+  </data>
+    <data name="SettingsDialogClearPaginationMsg" xml:space="preserve">
+    <value>Are you sure you want to clear the pagination cache?</value>
+  </data>
+    <data name="SettingsDialogClearImagesMsg" xml:space="preserve">
+    <value>Are you sure you want to clear the images cache?</value>
+  </data>
+    <data name="SettingsDialogCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+    <data name="SettingsSnackbarPaginationCleared" xml:space="preserve">
+    <value>Pagination cache has been cleared</value>
+  </data>
+    <data name="SettingsSnackbarImagesCleared" xml:space="preserve">
+    <value>Images cache has been cleared</value>
+  </data>
+    <data name="BookLoadingText" xml:space="preserve">
+    <value>Loading book...</value>
+  </data>
+    <data name="BookSyncProgressRestored" xml:space="preserve">
+    <value>Progress is restored from cloud</value>
+  </data>
+    <data name="BookSyncLocalProgressUploaded" xml:space="preserve">
+    <value>Local progress uploaded to the cloud.</value>
+  </data>
+    <data name="BookSyncCloudNotResponding" xml:space="preserve">
+    <value>Cloud is not responding. Retrieve data from local.</value>
+  </data>
+    <data name="BookSyncProgressUpdated" xml:space="preserve">
+    <value>Progress updated.</value>
+  </data>
+    <data name="BookMenuChapter" xml:space="preserve">
+    <value>Chapter</value>
+  </data>
+    <data name="BookMenuPage" xml:space="preserve">
+    <value>Page</value>
+  </data>
+    <data name="BookMenuTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+    <data name="BookMenuNavigationBtn" xml:space="preserve">
+    <value>Navigation</value>
+  </data>
+    <data name="BookSettingsTitle" xml:space="preserve">
+    <value>Reader settings</value>
+  </data>
+    <data name="BookSettingsFontSize" xml:space="preserve">
+    <value>Font Size</value>
+  </data>
+    <data name="BookSettingsLineHeight" xml:space="preserve">
+    <value>Line Height</value>
+  </data>
+    <data name="BookSettingsSave" xml:space="preserve">
+    <value>Save settings</value>
+  </data>
+    <data name="NavigationModalTitle" xml:space="preserve">
+    <value>Navigation menu</value>
+  </data>
+    <data name="NavigationModalPages" xml:space="preserve">
+    <value>{0} p.</value>
+  </data>
+</root>
