@@ -14,6 +14,8 @@ public static class DependencyInjection
         services.AddSingleton<LocalizationStateService>();
         services.AddSingleton<ISecureStorageProvider, MauiSecureStorageProvider>();
         services.AddSingleton<IAppSettingsProvider, MauiAppSettingsProvider>();
+        services.AddSingleton<IWebAuthenticatorProvider, MauiWebAuthenticatorProvider>();
+        services.AddSingleton<IPlatformEnvironmentProvider, MauiPlatformEnvironmentProvider>();
         services.AddMudServices(config =>
         {
             config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;

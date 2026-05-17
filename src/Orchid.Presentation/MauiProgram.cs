@@ -54,10 +54,8 @@ public static class MauiProgram
                 builder.Configuration
                     .GetSection(GoogleAuthOptions.SectionName)
                     .Bind(options.GoogleAuthOptions);
-#if ANDROID
-        options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.AndroidClientId;
-#elif IOS
-                options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.IosClientId;
+#if ANDROID || IOS
+        options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.OAuthClientId;
 #elif MACCATALYST || WINDOWS
         options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.DesktopClientId;
         options.GoogleAuthOptions.ClientSecret = options.GoogleAuthOptions.DesktopClientSecret;

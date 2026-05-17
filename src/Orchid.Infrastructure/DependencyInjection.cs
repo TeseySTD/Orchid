@@ -29,8 +29,14 @@ public static class DependencyInjection
         {
             var options = builder.GoogleAuthOptions;
             var secureStorage = sp.GetRequiredService<ISecureStorageProvider>();
+            var webAuthenticatorProvider = sp.GetRequiredService<IWebAuthenticatorProvider>();
+            var envProvider = sp.GetRequiredService<IPlatformEnvironmentProvider>();
 
-            return new GoogleDriveProvider(options.ClientId, options.ClientSecret, secureStorage);
+            return new GoogleDriveProvider(
+                options.ClientId, options.ClientSecret,
+                secureStorage,
+                webAuthenticatorProvider,
+                envProvider);
         });
         return services;
     }

@@ -8,6 +8,7 @@ public class GoogleAuthOptions
     public string IosClientId { get; init; } = string.Empty;
     public string DesktopClientId { get; init; } = string.Empty;
     public string DesktopClientSecret { get; init; } = string.Empty;
+    public string OAuthClientId { get; init; } = string.Empty;
     public string ClientId { get; set; } = string.Empty;
     public string? ClientSecret { get; set; } = string.Empty;
 }
