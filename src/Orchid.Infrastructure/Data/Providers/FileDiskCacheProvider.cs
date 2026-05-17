@@ -94,41 +94,86 @@ public class FileDiskCacheProvider : IDiskCacheProvider
         var path = Path.Combine(GetFullCachePath, folderName);
         if (!Directory.Exists(path)) return;
 
-        try
-        {
-            var excludedSet = excludeFileNames != null
-                ? new HashSet<string>(excludeFileNames, StringComparer.OrdinalIgnoreCase)
-                : [];
+        var excludedSet = excludeFileNames != null
+            ? new HashSet<string>(excludeFileNames, StringComparer.OrdinalIgnoreCase)
+            : [];
 
-            if (excludedSet.Count == 0)
+        var trashDirectory = Path.Combine(GetFullCachePath, "trash");
+
+        if (excludedSet.Count == 0)
+        {
+            try
             {
                 Directory.Delete(path, true);
                 Directory.CreateDirectory(path);
                 return;
             }
-
-            var dirInfo = new DirectoryInfo(path);
-            foreach (var file in dirInfo.EnumerateFiles("*", SearchOption.AllDirectories))
+            catch (IOException)
             {
-                if (!excludedSet.Contains(file.Name))
+                // Fallback to granular deletion if the root directory or files inside are locked
+            }
+        }
+
+        var dirInfo = new DirectoryInfo(path);
+
+        foreach (var file in dirInfo.EnumerateFiles("*", SearchOption.AllDirectories))
+        {
+            if (!excludedSet.Contains(file.Name))
+            {
+                try
                 {
                     file.Delete();
                 }
-            }
+                catch (IOException)
+                {
+                    // File is locked by another process (WebView cache). Apply Rename Workaround.
+                    try
+                    {
+                        if (!Directory.Exists(trashDirectory))
+                        {
+                            Directory.CreateDirectory(trashDirectory);
+                        }
 
-            foreach (var dir in dirInfo.EnumerateDirectories("*", SearchOption.AllDirectories).Reverse())
+                        var tempFilePath = Path.Combine(trashDirectory, $"{Guid.NewGuid()}.tmp");
+
+                        // Moving a locked file releases its original path immediately
+                        file.MoveTo(tempFilePath);
+
+                        // Attempt immediate deletion, if it fails, it will remain in trash until restart
+                        File.Delete(tempFilePath);
+                    }
+                    catch (Exception ex)
+                    {
+#if DEBUG
+                        Console.WriteLine($"Failed to move locked file '{file.Name}': {ex.Message}");
+#endif
+                    }
+                }
+                catch (Exception ex)
+                {
+#if DEBUG
+                    Console.WriteLine($"Error deleting file '{file.Name}': {ex.Message}");
+#endif
+                }
+            }
+        }
+
+        // Clear empty directories 
+        foreach (var dir in dirInfo.EnumerateDirectories("*", SearchOption.AllDirectories).Reverse())
+        {
+            try
             {
                 if (dir.GetFiles().Length == 0 && dir.GetDirectories().Length == 0)
                 {
                     dir.Delete();
                 }
             }
-        }
-        catch (Exception ex)
-        {
+            catch (Exception ex)
+            {
 #if DEBUG
-            Console.WriteLine($"Error clearing selective folder cache: {ex.Message}");
+                Console.WriteLine($"Skipping locked directory '{dir.Name}': {ex.Message}");
 #endif
+            }
         }
     }
 
