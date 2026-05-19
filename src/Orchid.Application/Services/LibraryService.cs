@@ -1,16 +1,16 @@
 ﻿using Orchid.Application.Common.Providers;
 using Orchid.Application.Dto;
 using Orchid.Core.Models.ValueObjects;
-
-namespace Orchid.Application.Services;
-
 using Orchid.Application.Common.Services;
 using Orchid.Core.Models;
+
+namespace Orchid.Application.Services;
 
 public class LibraryService(IJsonStorageProvider jsonStorage) : ILibraryService
 {
     private const string SummariesFolder = "library_summaries";
     private const string ProgressFolder = "reading_progress";
+    private readonly SemaphoreSlim _fileLock = new(1, 1);
 
     public async Task TrackBookAsync(Book book)
     {
@@ -46,7 +46,15 @@ public class LibraryService(IJsonStorageProvider jsonStorage) : ILibraryService
             progress.Position.Locator,
             progress.UpdatedAt);
 
-        await jsonStorage.SaveAsync(key, dto);
+        await _fileLock.WaitAsync();
+        try
+        {
+            await jsonStorage.SaveAsync(key, dto);
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
     }
 
     public async Task<ReadingProgress?> GetProgressAsync(string bookId)
@@ -61,6 +69,13 @@ public class LibraryService(IJsonStorageProvider jsonStorage) : ILibraryService
         var position = PageIdentifier.Create(dto.ChapterIndex, dto.Position);
 
         return new ReadingProgress(id, position, dto.UpdatedAt);
+    }
+
+    public Task DeleteBookAsync(string bookId)
+    {
+        jsonStorage.Delete($"{SummariesFolder}/{bookId}");
+        jsonStorage.Delete($"{ProgressFolder}/{bookId}");
+        return Task.CompletedTask;
     }
 
     public bool IsBookAvailableLocally(string filePath)

@@ -6,6 +6,7 @@
 @inject ILibraryService LibraryService
 @inject NavigationManager NavManager
 @inject IAppSettingsProvider AppSettings
+@inject IDialogService DialogService
 
 <style>
     .featured-card {
@@ -109,6 +110,19 @@
         z-index: 2;
     }
 
+    .delete-btn-overlay {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 10;
+    }
+
+    .book-cover-card:hover .delete-btn-overlay {
+        opacity: 1;
+    }
+
     .mobile-list-item {
         transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
         border-radius: 12px;
@@ -181,6 +195,13 @@
                             </MudText>
                         </MudStack>
                     </MudStack>
+                    <div @onclick:stopPropagation="true" >
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Size="Size.Medium"
+                                       OnClick="() => DeleteBookConfirmAsync(_featuredBook)"
+                                       Class="flex-shrink-0 opacity-70 hover-opacity-100"/>
+                    </div>
                 </MudStack>
             </MudPaper>
         }
@@ -199,6 +220,15 @@
                     <MudItem md="3" lg="2">
                         <div class="book-cover-card" @onclick="() => OpenBook(book.FilePath)">
                             <img src="@coverUrl" class="book-cover-image" alt="@book.Title"/>
+
+                            <div class="delete-btn-overlay" @onclick:stopPropagation="true">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               Variant="Variant.Filled"
+                                               Style="background-color: var(--mud-palette-surface); border-radius: 50%;"
+                                               OnClick="() => DeleteBookConfirmAsync(book)"/>
+                            </div>
 
                             <div class="book-info-panel">
                                 <MudText Typo="Typo.subtitle2"
@@ -236,6 +266,14 @@
                                 <MudText Typo="Typo.body2" Color="Color.Secondary"
                                          Class="text-truncate mt-1">@book.Authors</MudText>
                             </div>
+
+                            <div @onclick:stopPropagation="true" class="flex-shrink-0">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="() => DeleteBookConfirmAsync(book)"/>
+                            </div>
+
                         </div>
                     </div>
                 }
@@ -265,18 +303,35 @@
     private List<BookSummary>? _books;
     private BookSummary? _featuredBook;
     private List<BookSummary> _otherBooks = new();
+
     [CascadingParameter] public string CurrentLanguage { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadBooksAsync();
+    }
+
+    private async Task LoadBooksAsync()
+    {
         var summaries = await LibraryService.GetLibraryBooksAsync();
         _books = summaries.ToList();
+        UpdateBookLists();
+    }
 
-        if (_books.Any())
+    private void UpdateBookLists()
+    {
+        if (_books != null && _books.Any())
         {
             _featuredBook = _books.First();
             _otherBooks = _books.Skip(1).ToList();
         }
+        else
+        {
+            _featuredBook = null;
+            _otherBooks.Clear();
+        }
+
+        StateHasChanged();
     }
 
     private async Task PickFile()
@@ -294,6 +349,22 @@
 
         var encodedPath = System.Net.WebUtility.UrlEncode(filePath);
         NavManager.NavigateTo($"/book?path={encodedPath}");
+    }
+
+    private async Task DeleteBookConfirmAsync(BookSummary book)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            AppResources.DeleteBookConfirmTitle,
+            $"{AppResources.DeleteBookConfirmMessage} \"{book.Title}\"?",
+            yesText: AppResources.Delete,
+            cancelText: AppResources.Cancel);
+
+        if (result == true)
+        {
+            await LibraryService.DeleteBookAsync(book.Id);
+            _books?.Remove(book);
+            UpdateBookLists();
+        }
     }
 
 }

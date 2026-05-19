@@ -7,6 +7,7 @@ using Orchid.Core.Models;
 public interface ILibraryService
 {
     Task TrackBookAsync(Book book);
+    Task DeleteBookAsync(string bookId);
     Task<IEnumerable<BookSummary>> GetLibraryBooksAsync();
 
     Task SaveProgressAsync(ReadingProgress progress);

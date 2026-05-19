@@ -173,4 +173,16 @@
     <data name="NavigationModalPages" xml:space="preserve">
     <value>{0} p.</value>
   </data>
+  <data name="DeleteBookConfirmMessage" xml:space="preserve">
+    <value>You sure that you want to delete this book</value>
+  </data>
+  <data name="DeleteBookConfirmTitle" xml:space="preserve">
+    <value>Book Deletion</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
 </root>

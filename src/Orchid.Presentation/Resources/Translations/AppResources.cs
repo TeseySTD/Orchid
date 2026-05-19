@@ -75,4 +75,8 @@ public class AppResources
     public static string NavigationModalTitle => Get(nameof(NavigationModalTitle));
     public static string NavigationModalPages(int count) =>
         string.Format(Get(nameof(NavigationModalPages)), count);
+    public static string DeleteBookConfirmTitle => Get(nameof(DeleteBookConfirmTitle));
+    public static string DeleteBookConfirmMessage => Get(nameof(DeleteBookConfirmMessage));
+    public static string Delete => Get(nameof(Delete));
+    public static string Cancel => Get(nameof(Cancel));
 }
