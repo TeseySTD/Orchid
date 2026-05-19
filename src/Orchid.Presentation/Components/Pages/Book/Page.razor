@@ -282,13 +282,13 @@
         {
             try
             {
-                await Task.Delay(3000, token);
 
                 if (!token.IsCancellationRequested && _currentBook != null)
                 {
                     var progress = new ReadingProgress(_currentBook.Id, position, DateTimeOffset.UtcNow);
 
                     await LibraryService.SaveProgressAsync(progress);
+                    await Task.Delay(3000, token);
                     await PerformCloudSyncAsync(progress, token);
                 }
             }
