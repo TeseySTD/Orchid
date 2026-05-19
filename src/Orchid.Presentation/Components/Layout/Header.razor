@@ -1,5 +1,6 @@
 ﻿@using Orchid.Application.Common.Providers
 @using Orchid.Application.Dto
+@using Orchid.Presentation.Resources.Translations
 @inject IAppSettingsProvider AppSettings
 @inject LocalizationStateService LocalizationState
 @implements IDisposable
@@ -31,7 +32,7 @@
             <MudMenuItem OnClick="@(() => SetTheme(theme))"
                          Icon="@GetThemeIcon(theme)"
                          Class="@(AppSettings.Theme == theme ? "mud-primary-text" : "")">
-                @theme.ToString()
+                @GetThemeLabel(theme)
             </MudMenuItem>
         }
     </MudMenu>
@@ -73,6 +74,13 @@
         AppThemeMode.Light => Icons.Material.Filled.LightMode,
         AppThemeMode.Dark => Icons.Material.Filled.DarkMode,
         _ => Icons.Material.Filled.Devices
+    };
+
+    private string GetThemeLabel(AppThemeMode mode) => mode switch
+    {
+        AppThemeMode.Light => AppResources.SettingsThemeLight,
+        AppThemeMode.Dark => AppResources.SettingsThemeDark,
+        _ => AppResources.SettingsThemeSystem
     };
 
     public void Dispose()
