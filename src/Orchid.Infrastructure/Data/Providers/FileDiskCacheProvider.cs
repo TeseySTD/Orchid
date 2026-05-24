@@ -28,20 +28,16 @@ public class FileDiskCacheProvider : IDiskCacheProvider
     {
         var path = GetPath(key);
         EnsureDirectoryExists(path);
-        if (!File.Exists(path))
-        {
-            await File.WriteAllTextAsync(path, content, Encoding.UTF8);
-        }
+
+        await File.WriteAllTextAsync(path, content, Encoding.UTF8);
     }
 
     public async Task SaveBytesAsync(string key, byte[] content)
     {
         var path = GetPath(key);
         EnsureDirectoryExists(path);
-        if (!File.Exists(path))
-        {
-            await File.WriteAllBytesAsync(path, content);
-        }
+
+        await File.WriteAllBytesAsync(path, content);
     }
 
     public Stream GetStream(string key)
