@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Orchid.Application.Common.Providers;
@@ -12,6 +13,9 @@ public class BookPaginationService : IDisposable
 {
     private CancellationTokenSource? _calcPagesCts;
     private readonly IPaginationCacheProvider _paginationCacheProvider;
+
+    private BookId? _runningBookId;
+    private string? _runningContextHash;
 
     public BookPaginationService(IPaginationCacheProvider paginationCacheProvider)
     {
@@ -27,69 +31,146 @@ public class BookPaginationService : IDisposable
         Func<Task> onAllPagesCalculated,
         IJSRuntime jsRuntime)
     {
-        StopCalculation();
-        _calcPagesCts = new CancellationTokenSource();
-
-        _ = BackgroundPageCalculation(
-            bookId,
-            chapters,
-            element,
-            store,
-            onChapterPagesCalculated,
-            onAllPagesCalculated,
-            jsRuntime,
-            _calcPagesCts.Token
+        _ = ProcessPageCalculationAsync(
+            bookId, chapters, element, store,
+            onChapterPagesCalculated, onAllPagesCalculated, jsRuntime
         );
     }
 
-    private async Task BackgroundPageCalculation(
+    private async Task ProcessPageCalculationAsync(
         BookId bookId,
         IEnumerable<Chapter> chapters,
         ElementReference element,
         ChapterPaginationStore store,
         Func<int, int, Task> onChapterCalculated,
         Func<Task> onAllCalculated,
-        IJSRuntime jsRuntime,
-        CancellationToken ct)
+        IJSRuntime jsRuntime)
     {
         var context = await GetPaginationContext(element, jsRuntime);
         if (context == null) return;
 
-        store.Init(bookId, context);
-        var chapterList = chapters.ToList();
+        var hash = GenerateHash(context);
+        
+        // Check if book and context have changed to prevent race condition
+        if (_runningBookId == bookId && _runningContextHash == hash &&
+            _calcPagesCts is { IsCancellationRequested: false })
+        {
+            Debug.WriteLine(
+                $"[Pagination] Calculation for Book {bookId.Value} with hash {hash} is already running. Skip restart.");
+            return;
+        }
+
+        StopCalculation();
+
+        _calcPagesCts = new CancellationTokenSource();
+        _runningBookId = bookId;
+        _runningContextHash = hash;
+
+        var ct = _calcPagesCts.Token;
+        var totalSw = Stopwatch.StartNew();
+
+        Debug.WriteLine($"[Pagination] Start calculation for Book: {bookId.Value}, Hash: {hash}");
 
         try
         {
-            for (int i = 0; i < chapterList.Count; i++)
-            {
-                ct.ThrowIfCancellationRequested();
-                int pagesCount;
+            store.Init(bookId, context);
+            var chapterList = chapters.ToList();
+            var manifest = await _paginationCacheProvider.GetManifestAsync(bookId, context) ?? [];
 
-                if (_paginationCacheProvider.ChapterExists(bookId, context, i))
-                {
-                    var cachedPages = await _paginationCacheProvider.GetChapterAsync(bookId, context, i);
-                    pagesCount = cachedPages?.Length ?? 0;
-                }
-                else
-                {
-                    var pages = await CalculateSingleChapterAsync(chapterList[i], element, jsRuntime, ct);
-                    await _paginationCacheProvider.SaveChapterAsync(bookId, context, i, pages);
-                    store.Invalidate(i);
-                    pagesCount = pages.Length;
-                }
-
-                await onChapterCalculated(i, pagesCount);
-                await Task.Delay(20, ct);
-            }
+            await ProcessChaptersPaginationAsync(
+                bookId, context, chapterList, manifest, element, store, onChapterCalculated, jsRuntime, ct);
 
             await onAllCalculated();
+
+            totalSw.Stop();
+            Debug.WriteLine(
+                $"[Pagination] SUCCESS. All chapters calculated. Total time: {totalSw.ElapsedMilliseconds}ms");
         }
         catch (OperationCanceledException)
         {
+            Debug.WriteLine($"[Pagination] Calculation cancelled for Book: {bookId.Value}");
+            if (ct == _calcPagesCts?.Token) ResetRunningState();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Pagination] CRITICAL ERROR: {ex.Message}");
+            ResetRunningState();
         }
         finally
         {
+            if (!ct.IsCancellationRequested && ct == _calcPagesCts?.Token)
+            {
+                ResetRunningState();
+            }
+
             await jsRuntime.InvokeVoidAsync("orchidReader.cleanupSandbox");
+        }
+    }
+
+    private async Task ProcessChaptersPaginationAsync(
+        BookId bookId,
+        PaginationContext context,
+        List<Chapter> chapterList,
+        Dictionary<string, int> manifest,
+        ElementReference element,
+        ChapterPaginationStore store,
+        Func<int, int, Task> onChapterCalculated,
+        IJSRuntime jsRuntime,
+        CancellationToken ct)
+    {
+        for (int i = 0; i < chapterList.Count; i++)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            int pagesCount;
+            var chapterKey = i.ToString();
+            bool fromManifest = false;
+            string source;
+
+            var chapterSw = Stopwatch.StartNew();
+
+            if (manifest.TryGetValue(chapterKey, out var cachedCount) &&
+                _paginationCacheProvider.ChapterExists(bookId, context, i))
+            {
+                pagesCount = cachedCount;
+                fromManifest = true;
+                source = "MANIFEST";
+            }
+            else if (_paginationCacheProvider.ChapterExists(bookId, context, i))
+            {
+                var cachedPages = await _paginationCacheProvider.GetChapterAsync(bookId, context, i);
+                pagesCount = cachedPages?.Length ?? 0;
+
+                if (pagesCount > 0 && cachedPages != null)
+                {
+                    manifest[chapterKey] = pagesCount;
+                    await _paginationCacheProvider.SaveManifestAsync(bookId, context, manifest);
+                }
+
+                source = "CHAPTER_CACHE (Manifest repaired)";
+            }
+            else
+            {
+                var pages = await CalculateSingleChapterAsync(chapterList[i], element, jsRuntime, ct);
+                await _paginationCacheProvider.SaveChapterAsync(bookId, context, i, pages);
+                store.Invalidate(i);
+                pagesCount = pages.Length;
+
+                manifest[chapterKey] = pagesCount;
+                await _paginationCacheProvider.SaveManifestAsync(bookId, context, manifest);
+                source = "JS_ENGINE_CALCULATION";
+            }
+
+            chapterSw.Stop();
+            Debug.WriteLine(
+                $"[Pagination] Chapter [{i + 1}/{chapterList.Count}] -> Pages: {pagesCount} | Source: {source} | Time: {chapterSw.ElapsedMilliseconds}ms");
+
+            await onChapterCalculated(i, pagesCount);
+
+            if (!fromManifest)
+            {
+                await Task.Delay(20, ct);
+            }
         }
     }
 
@@ -130,6 +211,20 @@ public class BookPaginationService : IDisposable
         _calcPagesCts?.Cancel();
         _calcPagesCts?.Dispose();
         _calcPagesCts = null;
+        ResetRunningState();
+    }
+
+    private void ResetRunningState()
+    {
+        _runningBookId = null;
+        _runningContextHash = null;
+    }
+
+    private string GenerateHash(PaginationContext ctx)
+    {
+        var raw = $"{ctx.Width:F1}_{ctx.Height:F1}_{ctx.FontSize}_{ctx.FontFamily}_{ctx.LineHeight}";
+        var bytes = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(raw));
+        return Convert.ToHexString(bytes)[..8];
     }
 
     public int FindPageIndexByLocator(PageData[] pages, string targetLocator)

@@ -185,4 +185,7 @@
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="BookSyncingText" xml:space="preserve">
+    <value>Syncing your reading progress...</value>
+  </data>
 </root>
