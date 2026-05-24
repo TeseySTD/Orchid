@@ -185,7 +185,16 @@
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
-  <data name="BookSyncingText" xml:space="preserve">
-    <value>Syncing your reading progress...</value>
+  <data name="BookSyncDialogTitle" xml:space="preserve">
+    <value>Progress Syncing</value>
+  </data>
+  <data name="BookSyncDialogMessage" xml:space="preserve">
+    <value>Found a newer reading position in the cloud. Go to it?</value>
+  </data>
+  <data name="BookSyncDialogGo" xml:space="preserve">
+    <value>Go</value>
+  </data>
+  <data name="BookSyncDialogStay" xml:space="preserve">
+    <value>Stay</value>
   </data>
 </root>

@@ -1,5 +1,6 @@
 ﻿@page "/book"
 @using System.Collections.Concurrent
+@using System.Diagnostics
 @using Orchid.Application.Common.Providers
 @using Orchid.Application.Common.Services
 @using Orchid.Application.Dto
@@ -32,7 +33,7 @@
 />
 
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-0" Style="height: 100%; display: flex; flex-direction: column;">
-    <LoadingOverlay IsVisible="_isBookLoading" Text="@_loadingText"/>
+    <LoadingOverlay IsVisible="_isBookLoading" Text="@AppResources.BookLoadingText"/>
 
     @if (_currentBook != null)
     {
@@ -69,10 +70,10 @@
 
     private PageIdentifier _currentPageIdentifier = PageIdentifier.Empty;
     private bool _isBookLoading;
-    private string _loadingText = AppResources.BookLoadingText;
     private bool _drawerOpen;
 
     private CancellationTokenSource? _syncCts;
+    private CancellationTokenSource? _bgLoadCts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,7 +87,6 @@
 
     private async Task ReadBook(string path)
     {
-        _loadingText = AppResources.BookLoadingText;
         _isBookLoading = true;
         StateHasChanged();
 
@@ -123,7 +123,6 @@
 
     private async Task OnPageContextChange()
     {
-        _loadingText = AppResources.BookLoadingText;
         _isBookLoading = true;
         _chapterPageCounts.Clear();
         await InvokeAsync(StateHasChanged);
@@ -151,7 +150,8 @@
             },
             async () =>
             {
-                _currentPageIdentifier = await ResolveInitialPositionAsync(_currentPageIdentifier);
+                var localProgress = await LibraryService.GetProgressAsync(_currentBook!.Id.Value);
+                _currentPageIdentifier = localProgress?.Position ?? PageIdentifier.Empty;
 
                 _isBookLoading = false;
                 await InvokeAsync(async () =>
@@ -159,49 +159,79 @@
                     await _reader.RestorePositionAsync(_currentPageIdentifier);
                     StateHasChanged();
                 });
+
+                _bgLoadCts?.Cancel();
+                _bgLoadCts = new CancellationTokenSource();
+                _ = BackgroundCloudSyncAsync(localProgress, _bgLoadCts.Token);
             },
             jsRuntime: Js
         );
     }
 
-    private async Task<PageIdentifier> ResolveInitialPositionAsync(PageIdentifier defaultPosition)
+    private async Task BackgroundCloudSyncAsync(ReadingProgress? localProgress, CancellationToken token)
     {
-        if (_currentBook == null) return defaultPosition;
-
-        var localProgress = await LibraryService.GetProgressAsync(_currentBook.Id.Value);
-        var currentPosition = localProgress?.Position ?? defaultPosition;
-
         var provider = CloudProviders.FirstOrDefault(p => p.IsAuthenticated);
-        if (provider == null) return currentPosition;
-
-        _loadingText = AppResources.BookSyncingText;
-        await InvokeAsync(StateHasChanged);
+        if (provider == null || _currentBook == null) return;
 
         // Force fallback to local position if network is slow/unreachable to prevent UI hanging
         using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCts.Token);
 
         try
         {
-            var initialProgress = localProgress ?? new ReadingProgress(_currentBook.Id, currentPosition, DateTimeOffset.MinValue);
-            var result = await CloudSyncService.TrySyncProgressAsync(provider.ProviderId, initialProgress, timeoutCts.Token);
+            var initialProgress = localProgress ?? new ReadingProgress(_currentBook.Id, _currentPageIdentifier, DateTimeOffset.MinValue);
+            var result = await CloudSyncService.TrySyncProgressAsync(provider.ProviderId, initialProgress, linkedCts.Token);
+
+            if (token.IsCancellationRequested || linkedCts.Token.IsCancellationRequested) return;
 
             switch (result)
             {
                 case { State: SyncState.Downloaded, ResolvedProgress: not null }:
-                    await LibraryService.SaveProgressAsync(result.ResolvedProgress);
-                    ShowSyncSnackbar(AppResources.BookSyncProgressRestored, Icons.Material.Filled.CloudDownload);
-                    return result.ResolvedProgress.Position;
+                {
+                    if (result.ResolvedProgress.Position.ChapterIndex == _currentPageIdentifier.ChapterIndex &&
+                        result.ResolvedProgress.Position.Locator == _currentPageIdentifier.Locator)
+                    {
+                        await LibraryService.SaveProgressAsync(result.ResolvedProgress);
+                        return;
+                    }
+
+                    bool? confirm = await DialogService.ShowMessageBox(
+                        AppResources.BookSyncDialogTitle,
+                        AppResources.BookSyncDialogMessage,
+                        yesText: AppResources.BookSyncDialogGo, cancelText: AppResources.BookSyncDialogStay);
+
+                    if (confirm == true)
+                    {
+                        await LibraryService.SaveProgressAsync(result.ResolvedProgress);
+
+                        await InvokeAsync(async () =>
+                        {
+                            _currentPageIdentifier = result.ResolvedProgress.Position;
+                            if (_reader != null)
+                            {
+                                await _reader.RestorePositionAsync(_currentPageIdentifier);
+                            }
+
+                            ShowSyncSnackbar(AppResources.BookSyncProgressRestored, Icons.Material.Filled.CloudDownload);
+                            StateHasChanged();
+                        });
+                    }
+
+                    break;
+                }
                 case { State: SyncState.Uploaded, ResolvedProgress: not null }:
                     ShowSyncSnackbar(AppResources.BookSyncLocalProgressUploaded, Icons.Material.Filled.CloudUpload);
-                    return result.ResolvedProgress.Position;
+                    break;
             }
         }
         catch (OperationCanceledException)
         {
             ShowSyncSnackbar(AppResources.BookSyncCloudNotResponding, Icons.Material.Filled.CloudOff);
         }
-
-        return currentPosition;
+        catch (Exception)
+        {
+            // ignored
+        }
     }
 
     private void ToggleDrawer()
@@ -258,7 +288,6 @@
 
             if (_reader != null)
             {
-                _loadingText = AppResources.BookLoadingText;
                 _isBookLoading = true;
                 StateHasChanged();
 
@@ -349,6 +378,8 @@
     {
         _syncCts?.Cancel();
         _syncCts?.Dispose();
+        _bgLoadCts?.Cancel();
+        _bgLoadCts?.Dispose();
 
         BookPaginationService.StopCalculation();
         try
@@ -360,7 +391,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"JS Cleanup failed: {ex.Message}");
+            Debug.WriteLine($"JS Cleanup failed: {ex.Message}");
         }
 
         _paginationStore.Clear();

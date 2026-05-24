@@ -185,7 +185,16 @@
   <data name="Cancel" xml:space="preserve">
     <value>Відмінити</value>
   </data>
-  <data name="BookSyncingText" xml:space="preserve">
-    <value>Синхронізація прогресу читання...</value>
+  <data name="BookSyncDialogMessage" xml:space="preserve">
+    <value>Знайдено новішу позицію читання в хмарі. Перейти до неї?</value>
+  </data>
+  <data name="BookSyncDialogGo" xml:space="preserve">
+    <value>Перейти</value>
+  </data>
+  <data name="BookSyncDialogStay" xml:space="preserve">
+    <value>Залишитись</value>
+  </data>
+  <data name="BookSyncDialogTitle" xml:space="preserve">
+    <value>Синхронізація Прогресу</value>
   </data>
 </root>

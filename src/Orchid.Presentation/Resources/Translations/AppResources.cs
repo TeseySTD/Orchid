@@ -60,7 +60,10 @@ public class AppResources
     public static string SettingsSnackbarPaginationCleared => Get(nameof(SettingsSnackbarPaginationCleared));
     public static string SettingsSnackbarImagesCleared => Get(nameof(SettingsSnackbarImagesCleared));
     public static string BookLoadingText => Get(nameof(BookLoadingText));
-    public static string BookSyncingText => Get(nameof(BookSyncingText));
+    public static string BookSyncDialogTitle => Get(nameof(BookSyncDialogTitle));
+    public static string BookSyncDialogMessage => Get(nameof(BookSyncDialogMessage));
+    public static string BookSyncDialogGo => Get(nameof(BookSyncDialogGo));
+    public static string BookSyncDialogStay => Get(nameof(BookSyncDialogStay));
     public static string BookSyncProgressRestored => Get(nameof(BookSyncProgressRestored));
     public static string BookSyncLocalProgressUploaded => Get(nameof(BookSyncLocalProgressUploaded));
     public static string BookSyncCloudNotResponding => Get(nameof(BookSyncCloudNotResponding));
