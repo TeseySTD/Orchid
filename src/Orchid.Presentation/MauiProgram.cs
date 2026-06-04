@@ -8,12 +8,21 @@ using Orchid.Engine;
 using Orchid.Infrastructure;
 using Orchid.Infrastructure.Cloud.Options;
 
+#if WINDOWS
+using Orchid.Presentation.Services;
+using Velopack;
+#endif
+
 namespace Orchid.Presentation;
 
 public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+#if WINDOWS
+        VelopackApp.Build().Run();
+#endif
+
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
@@ -23,9 +32,9 @@ public static class MauiProgram
         BlazorWebViewHandler.BlazorWebViewMapper.AppendToMapping("TransparentBackground", (handler, _) =>
         {
 #if WINDOWS
-        handler.PlatformView.DefaultBackgroundColor = Microsoft.UI.Colors.Transparent;
+            handler.PlatformView.DefaultBackgroundColor = Microsoft.UI.Colors.Transparent;
 #elif ANDROID
-        handler.PlatformView.SetBackgroundColor(Android.Graphics.Color.Transparent);
+            handler.PlatformView.SetBackgroundColor(Android.Graphics.Color.Transparent);
 #elif IOS || MACCATALYST
             handler.PlatformView.BackgroundColor = UIKit.UIColor.Clear;
             handler.PlatformView.Opaque = false;
@@ -34,6 +43,7 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
+        
         var assembly = Assembly.GetExecutingAssembly();
         using var stream = assembly.GetManifestResourceStream("Orchid.Presentation.appsettings.secrets.json");
         if (stream != null)
@@ -55,14 +65,18 @@ public static class MauiProgram
                     .GetSection(GoogleAuthOptions.SectionName)
                     .Bind(options.GoogleAuthOptions);
 #if ANDROID || IOS
-        options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.OAuthClientId;
+                options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.OAuthClientId;
 #elif MACCATALYST || WINDOWS
-        options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.DesktopClientId;
-        options.GoogleAuthOptions.ClientSecret = options.GoogleAuthOptions.DesktopClientSecret;
+                options.GoogleAuthOptions.ClientId = options.GoogleAuthOptions.DesktopClientId;
+                options.GoogleAuthOptions.ClientSecret = options.GoogleAuthOptions.DesktopClientSecret;
 #endif
             })
             .AddApplicationServices()
             .AddPresentationServices();
+
+#if WINDOWS
+        builder.Services.AddSingleton<DesktopUpdateService>();
+#endif
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

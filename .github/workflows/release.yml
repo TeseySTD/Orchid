@@ -1,0 +1,117 @@
+name: Orchid Release Pipeline
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "*.*.*"
+
+jobs:
+  build-android:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject Appsettings Secrets
+        shell: bash
+        run: |
+          mkdir -p src/Orchid.Presentation
+          echo '${{ secrets.APPSETTINGS_SECRETS_JSON }}' > src/Orchid.Presentation/appsettings.secrets.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Extract Version From Tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Install Android Workload
+        run: dotnet workload install maui-android
+
+      - name: Publish Android Package
+        run: >
+          dotnet publish src/Orchid.Presentation/Orchid.Presentation.csproj 
+          -f net9.0-android 
+          -c Release 
+          -p:RunAOTCompilation=true 
+          -p:AndroidEnableProfiledAot=true 
+          -p:ApplicationDisplayVersion=${{ env.VERSION }}
+          -p:ApplicationVersion=${{ github.run_number }}
+          -o ./artifacts/android
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-package
+          path: ./artifacts/android/*-Signed.apk
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject Appsettings Secrets
+        shell: bash
+        run: |
+          mkdir -p src/Orchid.Presentation
+          echo '${{ secrets.APPSETTINGS_SECRETS_JSON }}' > src/Orchid.Presentation/appsettings.secrets.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Extract Version From Tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Install Windows Workload
+        run: dotnet workload install maui-windows
+
+      - name: Install Velopack CLI Tool
+        run: dotnet tool install -g vpk
+
+      - name: Publish Windows Application
+        run: >
+          dotnet publish src/Orchid.Presentation/Orchid.Presentation.csproj 
+          -f net9.0-windows10.0.19041.0 
+          -c Release 
+          -p:RuntimeIdentifier=win10-x64 
+          -p:ApplicationDisplayVersion=${{ env.VERSION }}
+          -p:ApplicationVersion=${{ github.run_number }}
+          -o ./publish
+
+      - name: Fetch Remote Release Assets
+        run: vpk download github --repoUrl https://github.com/teseystd/orchid --outputDir ./releases
+        continue-on-error: true
+
+      - name: Execute Velopack Packaging
+        run: >
+          vpk pack 
+          --packId Orchid 
+          --packVersion ${{ env.VERSION }} 
+          --packDir ./publish 
+          --mainExe Orchid.Presentation.exe 
+          --outputDir ./releases
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: ./releases/*
+
+  create-github-release:
+    needs: [build-android, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: ./downloaded-artifacts
+
+      - name: Publish Deployment Assets to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./downloaded-artifacts/android-package/*-Signed.apk
+            ./downloaded-artifacts/windows-package/*
+          generate_release_notes: true
