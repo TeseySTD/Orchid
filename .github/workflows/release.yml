@@ -43,7 +43,8 @@ jobs:
           -f net9.0-android 
           -c Release 
           --no-restore
-          -p:RunAOTCompilation=true 
+          -p:RunAOTCompilation=true  
+          -p:RuntimeIdentifier=android-arm64
           -p:AndroidEnableProfiledAot=true 
           -p:ApplicationDisplayVersion=${{ env.VERSION }}
           -p:ApplicationVersion=${{ github.run_number }}
@@ -78,7 +79,7 @@ jobs:
         run: >
           dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj 
           -p:TargetFramework=net9.0-windows10.0.19041.0 
-          -p:RuntimeIdentifier=win10-x64
+          -p:RuntimeIdentifier=win-x64
 
       - name: Extract Version From Tag
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
@@ -93,13 +94,13 @@ jobs:
           -f net9.0-windows10.0.19041.0 
           -c Release 
           --no-restore
-          -p:RuntimeIdentifier=win10-x64 
+          -p:RuntimeIdentifier=win-x64 
           -p:ApplicationDisplayVersion=${{ env.VERSION }}
           -p:ApplicationVersion=${{ github.run_number }}
           -o ./publish
 
       - name: Fetch Remote Release Assets
-        run: vpk download github --repoUrl https://github.com/teseystd/orchid --outputDir ./releases
+        run: vpk download github --repoUrl https://github.com/TeseySTD/Orchid --outputDir ./releases
         continue-on-error: true
 
       - name: Execute Velopack Packaging
