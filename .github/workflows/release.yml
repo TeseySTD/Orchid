@@ -22,18 +22,24 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
+      # Install target workload first to prevent restore collision issues
+      - name: Install Android Workload
+        run: dotnet workload install maui-android
+
+      # Restore specifically for Android target identifier
+      - name: Restore Android Dependencies
+        run: dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj -p:TargetPlatformIdentifier=android
+
       - name: Extract Version From Tag
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
         shell: bash
-
-      - name: Install Android Workload
-        run: dotnet workload install maui-android
 
       - name: Publish Android Package
         run: >
           dotnet publish src/Orchid.Presentation/Orchid.Presentation.csproj 
           -f net9.0-android 
           -c Release 
+          --no-restore
           -p:RunAOTCompilation=true 
           -p:AndroidEnableProfiledAot=true 
           -p:ApplicationDisplayVersion=${{ env.VERSION }}
@@ -60,12 +66,17 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
+      # Install target workload first to prevent restore collision issues
+      - name: Install Windows Workload
+        run: dotnet workload install maui-windows
+
+      # Restore specifically for Windows target identifier
+      - name: Restore Windows Dependencies
+        run: dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj -p:TargetPlatformIdentifier=windows
+
       - name: Extract Version From Tag
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
         shell: bash
-
-      - name: Install Windows Workload
-        run: dotnet workload install maui-windows
 
       - name: Install Velopack CLI Tool
         run: dotnet tool install -g vpk
@@ -75,6 +86,7 @@ jobs:
           dotnet publish src/Orchid.Presentation/Orchid.Presentation.csproj 
           -f net9.0-windows10.0.19041.0 
           -c Release 
+          --no-restore
           -p:RuntimeIdentifier=win10-x64 
           -p:ApplicationDisplayVersion=${{ env.VERSION }}
           -p:ApplicationVersion=${{ github.run_number }}
