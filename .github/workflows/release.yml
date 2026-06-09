@@ -74,7 +74,6 @@ jobs:
       - name: Restore Windows Dependencies
         run: >
           dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj 
-          -p:TargetFramework=net9.0-windows10.0.19041.0 
           -r win-x64 
           -p:PublishReadyToRun=true 
           -p:CI_PLATFORM=windows
