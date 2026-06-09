@@ -30,15 +30,17 @@
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
                        OnClick="PreviousPage"
                        Disabled="@IsFirstPage"
+                       Style="@($"color: {(IsFirstPage ? "rgba(255,255,255,0.35)" : "#F4DDDF")} !important;")"
                        Size="Size.Medium"/>
 
-        <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="font-weight: 600; letter-spacing: 0.5px;">
+        <MudText Typo="Typo.caption" Style="font-weight: 700; letter-spacing: 0.5px; color: #F4DDDF !important;">
             @(CurrentChapterPageIndex + 1) / @CurrentChapterTotalPages
         </MudText>
 
         <MudIconButton Icon="@Icons.Material.Filled.ArrowForward"
                        OnClick="NextPage"
                        Disabled="@IsLastPage"
+                       Style="@($"color: {(IsLastPage ? "rgba(255,255,255,0.35)" : "#F4DDDF")} !important;")"
                        Size="Size.Medium"/>
     </MudPaper>
 </div>

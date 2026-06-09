@@ -222,12 +222,12 @@
                             <img src="@coverUrl" class="book-cover-image" alt="@book.Title"/>
 
                             <div class="delete-btn-overlay" @onclick:stopPropagation="true">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Color="Color.Error"
-                                               Size="Size.Small"
-                                               Variant="Variant.Filled"
-                                               Style="background-color: var(--mud-palette-surface); border-radius: 50%;"
-                                               OnClick="() => DeleteBookConfirmAsync(book)"/>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                   Color="Color.Error" 
+                                   Size="Size.Small" 
+                                   Variant="Variant.Filled" 
+                                   Style="border-radius: 50%;" 
+                                   OnClick="() => DeleteBookConfirmAsync(book)" />
                             </div>
 
                             <div class="book-info-panel">
