@@ -26,8 +26,8 @@ jobs:
       - name: Install Android Workload
         run: dotnet workload install maui-android
 
-      - name: Restore Solution
-        run: dotnet restore src/Orchid.sln -p:TargetFrameworks=net9.0-android
+      - name: Restore Android Dependencies
+        run: dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj -f net9.0-android -r android-arm64
 
       - name: Extract Version From Tag
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
@@ -39,8 +39,8 @@ jobs:
           -f net9.0-android 
           -c Release 
           --no-restore
+          -r android-arm64
           -p:RunAOTCompilation=true  
-          -p:RuntimeIdentifier=android-arm64
           -p:AndroidEnableProfiledAot=true 
           -p:ApplicationDisplayVersion=${{ env.VERSION }}
           -p:ApplicationVersion=${{ github.run_number }}
@@ -70,8 +70,8 @@ jobs:
       - name: Install Windows Workload
         run: dotnet workload install maui-windows
 
-      - name: Restore Solution
-        run: dotnet restore src/Orchid.sln -p:TargetFrameworks=net9.0-windows10.0.19041.0
+      - name: Restore Windows Dependencies
+        run: dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj -f net9.0-windows10.0.19041.0 -r win-x64
 
       - name: Extract Version From Tag
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
@@ -86,7 +86,7 @@ jobs:
           -f net9.0-windows10.0.19041.0 
           -c Release 
           --no-restore
-          -p:RuntimeIdentifier=win-x64 
+          -r win-x64 
           -p:ApplicationDisplayVersion=${{ env.VERSION }}
           -p:ApplicationVersion=${{ github.run_number }}
           -o ./publish
