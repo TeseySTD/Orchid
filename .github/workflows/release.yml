@@ -27,7 +27,7 @@ jobs:
         run: dotnet workload install maui-android
 
       - name: Restore Android Dependencies
-        run: dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj -f net9.0-android -r android-arm64
+        run: dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj -p:TargetFramework=net9.0-android -r android-arm64
 
       - name: Extract Version From Tag
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
@@ -71,7 +71,7 @@ jobs:
         run: dotnet workload install maui-windows
 
       - name: Restore Windows Dependencies
-        run: dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj -f net9.0-windows10.0.19041.0 -r win-x64
+        run: dotnet restore src/Orchid.Presentation/Orchid.Presentation.csproj -p:TargetFramework=net9.0-windows10.0.19041.0 -r win-x64
 
       - name: Extract Version From Tag
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
